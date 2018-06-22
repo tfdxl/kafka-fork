@@ -36,13 +36,13 @@ private class KafkaCSVMetricsReporter extends KafkaMetricsReporter
   with Logging {
 
   private var csvDir: File = null
+
+  //底层的reporter
   private var underlying: CsvReporter = null
   private var running = false
   private var initialized = false
 
-
   override def getMBeanName = "kafka:type=kafka.metrics.KafkaCSVMetricsReporter"
-
 
   override def init(props: VerifiableProperties) {
     synchronized {
@@ -60,7 +60,6 @@ private class KafkaCSVMetricsReporter extends KafkaMetricsReporter
     }
   }
 
-
   override def startReporter(pollingPeriodSecs: Long) {
     synchronized {
       if (initialized && !running) {
@@ -70,7 +69,6 @@ private class KafkaCSVMetricsReporter extends KafkaMetricsReporter
       }
     }
   }
-
 
   override def stopReporter() {
     synchronized {
@@ -82,6 +80,5 @@ private class KafkaCSVMetricsReporter extends KafkaMetricsReporter
       }
     }
   }
-
 }
 

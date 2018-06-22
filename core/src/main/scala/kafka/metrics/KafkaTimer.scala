@@ -33,3 +33,8 @@ class KafkaTimer(metric: Timer) {
     finally ctx.stop()
   }
 }
+
+object test{
+  def main(args: Array[String]): Unit = {
+  }
+}
