@@ -46,7 +46,8 @@ import scala.collection.mutable.{ArrayBuffer, Buffer}
 import scala.util.control.ControlThrowable
 
 /**
-  *
+  * Nio的socket服务器，线程模型是1个Acceptor线程处理新的链接，N个Processor线程处理来自socket的读请求
+  * M个Handler线程处理请求并且产生响应到processor线程去写
   * An NIO socket server. The threading model is
   * 1 Acceptor thread that handles new connections
   * Acceptor has N Processor threads that each have their own selector and read requests from sockets
@@ -54,12 +55,15 @@ import scala.util.control.ControlThrowable
   */
 class SocketServer(val config: KafkaConfig, val metrics: Metrics, val time: Time, val credentialProvider: CredentialProvider) extends Logging with KafkaMetricsGroup {
 
+  //最大的排队请求
   private val maxQueuedRequests = config.queuedMaxRequests
 
+  //每一个IP的最大连接数
   private val maxConnectionsPerIp = config.maxConnectionsPerIp
   private val maxConnectionsPerIpOverrides = config.maxConnectionsPerIpOverrides
 
   private val logContext = new LogContext(s"[SocketServer brokerId=${config.brokerId}] ")
+
   this.logIdent = logContext.logPrefix
 
   private val memoryPoolSensor = metrics.sensor("MemoryPoolUtilization")
@@ -820,6 +824,7 @@ class ConnectionQuotas(val defaultMax: Int, overrideQuotas: Map[String, Int]) {
   private val counts = mutable.Map[InetAddress, Int]()
 
   def inc(address: InetAddress) {
+    //先锁住counts表
     counts.synchronized {
       val count = counts.getOrElseUpdate(address, 0)
       counts.put(address, count + 1)
