@@ -26,7 +26,9 @@ import java.io.IOException;
  * Authentication for Channel
  */
 public interface Authenticator extends Closeable {
+
     /**
+     * 实现任何的认证机制，使用传输层读写token.
      * Implements any authentication mechanism. Use transportLayer to read or write tokens.
      * For security protocols PLAINTEXT and SSL, this is a no-op since no further authentication
      * needs to be done. For SASL_PLAINTEXT and SASL_SSL, this performs the SASL authentication.

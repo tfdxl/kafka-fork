@@ -51,6 +51,7 @@ public class SslTransportLayer implements TransportLayer {
     private ByteBuffer netWriteBuffer;
     private ByteBuffer appReadBuffer;
     private ByteBuffer emptyBuf = ByteBuffer.allocate(0);
+
     // Prefer `create`, only use this in tests
     SslTransportLayer(String channelId, SelectionKey key, SSLEngine sslEngine) throws IOException {
         this.channelId = channelId;
@@ -67,8 +68,9 @@ public class SslTransportLayer implements TransportLayer {
 
     // Visible for testing
     protected void startHandshake() throws IOException {
-        if (state != null)
+        if (state != null) {
             throw new IllegalStateException("startHandshake() can only be called once, state " + state);
+        }
 
         this.netReadBuffer = ByteBuffer.allocate(netReadBufferSize());
         this.netWriteBuffer = ByteBuffer.allocate(netWriteBufferSize());
