@@ -61,6 +61,7 @@ object CoreUtils extends Logging {
     */
   def runnable(fun: => Unit): Runnable =
     new Runnable {
+      //小闭包吗，把一个function包装到runnable中去
       def run() = fun
     }
 
