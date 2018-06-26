@@ -26,14 +26,14 @@ import org.apache.kafka.trogdor.task.TaskSpec;
  * The state which a task is in on the Coordinator.
  */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME,
-    include = JsonTypeInfo.As.PROPERTY,
-    property = "state")
+        include = JsonTypeInfo.As.PROPERTY,
+        property = "state")
 @JsonSubTypes({
         @JsonSubTypes.Type(value = TaskPending.class, name = "PENDING"),
         @JsonSubTypes.Type(value = TaskRunning.class, name = "RUNNING"),
         @JsonSubTypes.Type(value = TaskStopping.class, name = "STOPPING"),
         @JsonSubTypes.Type(value = TaskDone.class, name = "DONE")
-    })
+})
 public abstract class TaskState extends Message {
     private final TaskSpec spec;
 
