@@ -19,15 +19,14 @@ package org.apache.kafka.tools;
 import org.apache.kafka.common.Metric;
 import org.apache.kafka.common.MetricName;
 
-import java.util.Comparator;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 
 public class ToolsUtils {
 
     /**
      * print out the metrics in alphabetical order
-     * @param metrics   the metrics to be printed out
+     *
+     * @param metrics the metrics to be printed out
      */
     public static void printMetrics(Map<MetricName, ? extends Metric> metrics) {
         if (metrics != null && !metrics.isEmpty()) {
@@ -57,5 +56,31 @@ public class ToolsUtils {
                 System.out.println(String.format(outputFormat, entry.getKey(), entry.getValue()));
             }
         }
+    }
+
+    static class MyMetric implements Metric {
+
+        private static final Random r = new Random();
+
+        @Override
+        public MetricName metricName() {
+            return new MetricName("refCount", "kafka", "This is description", new HashMap<String, String>());
+        }
+
+        @Override
+        public double value() {
+            return r.nextDouble();
+        }
+
+        @Override
+        public Object metricValue() {
+            return 90;
+        }
+    }
+
+    public static void main(String[] args) {
+        final Map<MetricName, MyMetric> map = new HashMap<>();
+        map.put(new MetricName("refCount", "kafka", "This is description", new HashMap<String, String>()), new MyMetric());
+        printMetrics(map);
     }
 }

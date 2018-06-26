@@ -23,7 +23,8 @@ import java.util.Set;
  * Defines a node in a cluster topology
  */
 public interface Node {
-    public static class Util {
+
+    class Util {
         public static int getIntConfig(Node node, String key, int defaultVal) {
             String val = node.getConfig(key);
             if (val == null) {
