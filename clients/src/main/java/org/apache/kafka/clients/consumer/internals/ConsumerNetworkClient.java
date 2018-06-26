@@ -49,6 +49,8 @@ public class ConsumerNetworkClient implements Closeable {
 
     //缓冲队列
     private final UnsentRequests unsent = new UnsentRequests();
+
+    //用于管理kafka集群的元数据
     private final Metadata metadata;
     private final Time time;
     private final long retryBackoffMs;
@@ -280,6 +282,7 @@ public class ConsumerNetworkClient implements Closeable {
             // throw InterruptException if this thread is interrupted
             maybeThrowInterruptException();
 
+            //再次尝试发送请求，因为缓冲空间也行被清掉了，或者连接已经完成
             // try again to send requests since buffer space may have been
             // cleared or a connect finished in the poll
             trySend(now);
@@ -516,7 +519,9 @@ public class ConsumerNetworkClient implements Closeable {
             final Iterator<ClientRequest> iterator = unsent.requestIterator(node);
             while (iterator.hasNext()) {
                 final ClientRequest request = iterator.next();
+                //检测Network.ready是否可以发送请求
                 if (client.ready(node, now)) {
+                    //发送请求
                     client.send(request, now);
                     //从unset集合中删除此请求
                     iterator.remove();
