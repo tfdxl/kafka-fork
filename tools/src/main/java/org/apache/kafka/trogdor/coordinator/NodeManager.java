@@ -46,14 +46,7 @@ package org.apache.kafka.trogdor.coordinator;
 import org.apache.kafka.trogdor.agent.AgentClient;
 import org.apache.kafka.trogdor.common.Node;
 import org.apache.kafka.trogdor.common.ThreadUtils;
-import org.apache.kafka.trogdor.rest.AgentStatusResponse;
-import org.apache.kafka.trogdor.rest.CreateWorkerRequest;
-import org.apache.kafka.trogdor.rest.StopWorkerRequest;
-import org.apache.kafka.trogdor.rest.WorkerDone;
-import org.apache.kafka.trogdor.rest.WorkerReceiving;
-import org.apache.kafka.trogdor.rest.WorkerRunning;
-import org.apache.kafka.trogdor.rest.WorkerStarting;
-import org.apache.kafka.trogdor.rest.WorkerState;
+import org.apache.kafka.trogdor.rest.*;
 import org.apache.kafka.trogdor.task.TaskSpec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,11 +54,7 @@ import org.slf4j.LoggerFactory;
 import java.net.ConnectException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.Callable;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 /**
  * The NodeManager handles communicating with a specific agent node.
@@ -150,8 +139,8 @@ public final class NodeManager {
         this.client = new AgentClient(1, node.hostname(), Node.Util.getTrogdorAgentPort(node));
         this.workers = new HashMap<>();
         this.executor = Executors.newSingleThreadScheduledExecutor(
-            ThreadUtils.createThreadFactory("NodeManager(" + node.name() + ")",
-                false));
+                ThreadUtils.createThreadFactory("NodeManager(" + node.name() + ")",
+                        false));
         this.heartbeat = new NodeHeartbeat();
         rescheduleNextHeartbeat(HEARTBEAT_DELAY_MS);
     }
@@ -159,14 +148,14 @@ public final class NodeManager {
     /**
      * Reschedule the heartbeat runnable.
      *
-     * @param initialDelayMs        The initial delay to use.
+     * @param initialDelayMs The initial delay to use.
      */
     void rescheduleNextHeartbeat(long initialDelayMs) {
         if (this.heartbeatFuture != null) {
             this.heartbeatFuture.cancel(false);
         }
         this.heartbeatFuture = this.executor.scheduleAtFixedRate(heartbeat,
-            initialDelayMs, HEARTBEAT_DELAY_MS, TimeUnit.MILLISECONDS);
+                initialDelayMs, HEARTBEAT_DELAY_MS, TimeUnit.MILLISECONDS);
     }
 
     /**
@@ -177,7 +166,7 @@ public final class NodeManager {
         public void run() {
             rescheduleNextHeartbeat(HEARTBEAT_DELAY_MS);
             try {
-                AgentStatusResponse agentStatus = null;
+                AgentStatusResponse agentStatus;
                 try {
                     agentStatus = client.status();
                 } catch (ConnectException e) {
@@ -221,14 +210,14 @@ public final class NodeManager {
                         }
                     } else if (state instanceof WorkerDone) {
                         if (!(worker.state instanceof WorkerDone)) {
-                            WorkerDone workerDoneState =  (WorkerDone) state;
+                            WorkerDone workerDoneState = (WorkerDone) state;
                             String error = workerDoneState.error();
                             if (error.isEmpty()) {
                                 log.info("{}: Worker {} finished with status '{}'",
-                                    node.name(), id, workerDoneState.status());
+                                        node.name(), id, workerDoneState.status());
                             } else {
                                 log.warn("{}: Worker {} finished with error '{}' and status '{}'",
-                                    node.name(), id, error, workerDoneState.status());
+                                        node.name(), id, error, workerDoneState.status());
                             }
                             taskManager.handleWorkerCompletion(node.name(), worker.id, error);
                         }
@@ -244,8 +233,8 @@ public final class NodeManager {
     /**
      * Create a new worker.
      *
-     * @param id                    The new worker id.
-     * @param spec                  The task specification to use with the new worker.
+     * @param id   The new worker id.
+     * @param spec The task specification to use with the new worker.
      */
     public void createWorker(String id, TaskSpec spec) {
         executor.submit(new CreateWorker(id, spec));
@@ -280,7 +269,7 @@ public final class NodeManager {
     /**
      * Stop a worker.
      *
-     * @param id                    The id of the worker to stop.
+     * @param id The id of the worker to stop.
      */
     public void stopWorker(String id) {
         executor.submit(new StopWorker(id));
@@ -305,7 +294,7 @@ public final class NodeManager {
             }
             if (!worker.shouldRun) {
                 log.error("{}: The worker for task {} is already scheduled to stop.",
-                    node.name(), id);
+                        node.name(), id);
                 return null;
             }
             log.info("{}: scheduling worker {} on {} to stop.", node.name(), id);
