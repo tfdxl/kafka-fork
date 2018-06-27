@@ -186,8 +186,9 @@ public class SubscriptionState {
     }
 
     public void subscribe(Pattern pattern, ConsumerRebalanceListener listener) {
-        if (listener == null)
+        if (listener == null) {
             throw new IllegalArgumentException("RebalanceListener cannot be null");
+        }
 
         setSubscriptionType(SubscriptionType.AUTO_PATTERN);
 
@@ -422,11 +423,15 @@ public class SubscriptionState {
     }
 
     private enum SubscriptionType {
-        NONE, AUTO_TOPICS, AUTO_PATTERN, USER_ASSIGNED
+        NONE,//SubscriptionState.subscriptionType的初始值
+        AUTO_TOPICS,//按照指定的topic名字进行订阅，自动分配分区
+        AUTO_PATTERN, //按照指定的正则表达式匹配topic进行订阅，自动分配分区
+        USER_ASSIGNED//用户手动指定消费的topic和分区的编号
     }
 
     public interface Listener {
         /**
+         * 一个新的指定接受了会触发这个函数
          * Fired after a new assignment is received (after a group rebalance or when the user manually changes the
          * assignment).
          *
@@ -436,6 +441,7 @@ public class SubscriptionState {
     }
 
     private static class TopicPartitionState {
+
         private Long position; // last consumed position
         private Long highWatermark; // the high watermark from last fetch
         private Long lastStableOffset;
