@@ -145,6 +145,7 @@ public final class ConsumerCoordinator extends AbstractCoordinator {
     public void updatePatternSubscription(Cluster cluster) {
         final Set<String> topicsToSubscribe = new HashSet<>();
 
+        //通过pattern过滤topic
         for (String topic : cluster.topics())
             if (subscriptions.subscribedPattern().matcher(topic).matches() &&
                     !(excludeInternalTopics && cluster.internalTopics().contains(topic)))
@@ -165,6 +166,7 @@ public final class ConsumerCoordinator extends AbstractCoordinator {
                 if (!cluster.unauthorizedTopics().isEmpty())
                     throw new TopicAuthorizationException(new HashSet<>(cluster.unauthorizedTopics()));
 
+                //
                 if (subscriptions.hasPatternSubscription())
                     updatePatternSubscription(cluster);
 

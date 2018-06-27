@@ -21,6 +21,7 @@ import org.apache.kafka.common.TopicPartition;
 import java.util.Collection;
 
 /**
+ * 监听分区操作
  * A callback interface that the user can implement to trigger custom actions when the set of partitions assigned to the
  * consumer changes.
  * <p>
