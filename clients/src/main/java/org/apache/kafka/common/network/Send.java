@@ -25,6 +25,7 @@ import java.nio.channels.GatheringByteChannel;
 public interface Send {
 
     /**
+     * idString
      * The id for the destination of this send
      */
     String destination();
