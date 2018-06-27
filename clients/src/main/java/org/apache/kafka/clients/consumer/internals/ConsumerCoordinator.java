@@ -204,8 +204,9 @@ public final class ConsumerCoordinator extends AbstractCoordinator {
 
     private PartitionAssignor lookupAssignor(String name) {
         for (PartitionAssignor assignor : this.assignors) {
-            if (assignor.name().equals(name))
+            if (assignor.name().equals(name)) {
                 return assignor;
+            }
         }
         return null;
     }
@@ -216,8 +217,9 @@ public final class ConsumerCoordinator extends AbstractCoordinator {
                                   String assignmentStrategy,
                                   ByteBuffer assignmentBuffer) {
         // only the leader is responsible for monitoring for metadata changes (i.e. partition changes)
-        if (!isLeader)
+        if (!isLeader) {
             assignmentSnapshot = null;
+        }
 
         PartitionAssignor assignor = lookupAssignor(assignmentStrategy);
         if (assignor == null)
