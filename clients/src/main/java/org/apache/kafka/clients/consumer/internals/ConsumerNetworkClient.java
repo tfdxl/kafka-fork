@@ -267,10 +267,13 @@ public class ConsumerNetworkClient implements Closeable {
             // condition becomes satisfied after the call to shouldBlock() (because of a fired completion
             // handler), the client will be woken up.
             if (pendingCompletion.isEmpty() && (pollCondition == null || pollCondition.shouldBlock())) {
+
+                //如果没有还米有响应的请求，那么就不用阻塞比retry backoff更长的时间
                 // if there are no requests in flight, do not block longer than the retry backoff
                 if (client.inFlightRequestCount() == 0)
                     timeout = Math.min(timeout, retryBackoffMs);
                 client.poll(Math.min(maxPollTimeoutMs, timeout), now);
+                //重置当前时间
                 now = time.milliseconds();
             } else {
                 client.poll(0, now);

@@ -29,6 +29,7 @@ final class InFlightRequests {
      * 每一个连接最多的请求
      */
     private final int maxInFlightRequestsPerConnection;
+
     private final Map<String, Deque<NetworkClient.InFlightRequest>> requests = new HashMap<>();
     /**
      * Thread safe total number of in flight requests.
@@ -57,9 +58,11 @@ final class InFlightRequests {
      * Get the request queue for the given node
      */
     private Deque<NetworkClient.InFlightRequest> requestQueue(String node) {
+        //获取node下面没有响应的请求
         Deque<NetworkClient.InFlightRequest> reqs = requests.get(node);
-        if (reqs == null || reqs.isEmpty())
+        if (reqs == null || reqs.isEmpty()) {
             throw new IllegalStateException("There are no in-flight requests for node " + node);
+        }
         return reqs;
     }
 

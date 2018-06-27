@@ -46,8 +46,11 @@ import java.util.concurrent.atomic.AtomicReference;
 public class RequestFuture<T> implements ConsumerNetworkClient.PollCondition {
 
     private static final Object INCOMPLETE_SENTINEL = new Object();
+
     private final AtomicReference<Object> result = new AtomicReference<>(INCOMPLETE_SENTINEL);
+
     private final ConcurrentLinkedQueue<RequestFutureListener<T>> listeners = new ConcurrentLinkedQueue<>();
+
     private final CountDownLatch completedLatch = new CountDownLatch(1);
 
     public static <T> RequestFuture<T> failure(RuntimeException e) {
