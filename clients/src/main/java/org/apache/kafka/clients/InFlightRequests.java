@@ -25,6 +25,9 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 final class InFlightRequests {
 
+    /**
+     * 每一个连接最多的请求
+     */
     private final int maxInFlightRequestsPerConnection;
     private final Map<String, Deque<NetworkClient.InFlightRequest>> requests = new HashMap<>();
     /**
