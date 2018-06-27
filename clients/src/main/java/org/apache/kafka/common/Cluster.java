@@ -186,7 +186,7 @@ public final class Cluster {
      * @return The node that is the leader for this topic-partition, or null if there is currently no leader
      */
     public Node leaderFor(TopicPartition topicPartition) {
-        PartitionInfo info = partitionsByTopicPartition.get(topicPartition);
+        final PartitionInfo info = partitionsByTopicPartition.get(topicPartition);
         if (info == null)
             return null;
         else
