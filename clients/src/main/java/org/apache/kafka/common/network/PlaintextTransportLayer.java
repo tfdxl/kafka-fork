@@ -192,7 +192,6 @@ public class PlaintextTransportLayer implements TransportLayer {
     @Override
     public void addInterestOps(int ops) {
         key.interestOps(key.interestOps() | ops);
-
     }
 
     /**
