@@ -74,6 +74,7 @@ public class RequestFuture<T> implements ConsumerNetworkClient.PollCondition {
     }
 
     /**
+     * 当前请求是否完成，不管正常还是出现异常，都是true
      * Check whether the response is ready to be handled
      *
      * @return true if the response is ready, false otherwise
@@ -212,6 +213,7 @@ public class RequestFuture<T> implements ConsumerNetworkClient.PollCondition {
     }
 
     /**
+     * 添加监听器
      * Add a listener which will be notified when the future completes
      *
      * @param listener non-null listener to add
@@ -219,12 +221,15 @@ public class RequestFuture<T> implements ConsumerNetworkClient.PollCondition {
     public void addListener(RequestFutureListener<T> listener) {
         this.listeners.add(listener);
         if (failed())
+            //触发监听器failure
             fireFailure();
         else if (succeeded())
+            //触发success
             fireSuccess();
     }
 
     /**
+     * 适配器模式
      * Convert from a request future of one type to another type
      *
      * @param adapter The adapter which does the conversion
@@ -247,13 +252,25 @@ public class RequestFuture<T> implements ConsumerNetworkClient.PollCondition {
         return adapted;
     }
 
+    /**
+     * 责任链模式
+     *
+     * @param future
+     */
     public void chain(final RequestFuture<T> future) {
-        addListener(new RequestFutureListener<T>() {
+        this.addListener(new RequestFutureListener<T>() {//添加监听器
+            /**
+             *通过监听器将value传递给下一个RequestFuture对象
+             */
             @Override
             public void onSuccess(T value) {
                 future.complete(value);
             }
 
+            /**
+             * 通过监听器将异常信息传递给下一个RequestFuture对象
+             * @param e
+             */
             @Override
             public void onFailure(RuntimeException e) {
                 future.raise(e);
@@ -261,6 +278,11 @@ public class RequestFuture<T> implements ConsumerNetworkClient.PollCondition {
         });
     }
 
+    /**
+     * 完成了就不用阻塞了
+     *
+     * @return
+     */
     @Override
     public boolean shouldBlock() {
         return !isDone();
