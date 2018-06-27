@@ -51,8 +51,11 @@ public final class Metadata {
     private final Map<String, Long> topics;
     private final List<Listener> listeners;
     private final ClusterResourceListeners clusterResourceListeners;
+    //允许自动创建topic
     private final boolean allowAutoTopicCreation;
+    //允许topic过期
     private final boolean topicExpiryEnabled;
+    //版本？
     private int version;
     private long lastRefreshMs;
     private long lastSuccessfulRefreshMs;
