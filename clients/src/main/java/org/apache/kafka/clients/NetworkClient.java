@@ -228,8 +228,9 @@ public class NetworkClient implements KafkaClient {
         }
 
         //已经ready就不发起连接
-        if (isReady(node, now))
+        if (isReady(node, now)) {
             return true;
+        }
 
         if (connectionStates.canConnect(node.idString(), now))
             // if we are interested in sending to a node and we don't have a connection to it, initiate one
