@@ -25,7 +25,9 @@ public class PartitionInfo {
     private final int partition;
     private final Node leader;
     private final Node[] replicas;
+    //isr
     private final Node[] inSyncReplicas;
+    //offline
     private final Node[] offlineReplicas;
 
     // Used only by tests
