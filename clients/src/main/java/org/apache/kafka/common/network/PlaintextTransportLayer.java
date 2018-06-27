@@ -19,7 +19,6 @@ package org.apache.kafka.common.network;
 /*
  * Transport layer for PLAINTEXT communication
  */
-
 import org.apache.kafka.common.security.auth.KafkaPrincipal;
 
 import java.io.IOException;
@@ -52,6 +51,9 @@ public class PlaintextTransportLayer implements TransportLayer {
         return connected;
     }
 
+    /**
+     * 取消所有感兴趣的事件
+     */
     @Override
     public void disconnect() {
         key.cancel();
