@@ -956,8 +956,9 @@ public abstract class AbstractCoordinator implements Closeable {
                 log.debug("Heartbeat thread started");
                 while (true) {
                     synchronized (AbstractCoordinator.this) {
-                        if (closed)
+                        if (closed) {
                             return;
+                        }
 
                         //disable就停止下
                         if (!enabled) {
