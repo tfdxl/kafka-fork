@@ -120,6 +120,11 @@ public class ConsumerNetworkClient implements Closeable {
         return completionHandler.future;
     }
 
+    /**
+     * 查找kafka集群中负载最低的Node
+     *
+     * @return
+     */
     public Node leastLoadedNode() {
         lock.lock();
         try {
@@ -159,6 +164,7 @@ public class ConsumerNetworkClient implements Closeable {
             if (ex != null) {
                 throw ex;
             }
+            //当metadata版本没变和没超时的情况下，一直通过poll循环调用
         } while (this.metadata.version() == version && time.milliseconds() - startMs < timeout);
         return this.metadata.version() > version;
     }
@@ -327,9 +333,13 @@ public class ConsumerNetworkClient implements Closeable {
      * @return true If all requests finished, false if the timeout expired first
      */
     public boolean awaitPendingRequests(Node node, long timeoutMs) {
+
+        //开始时间
         long startMs = time.milliseconds();
+        //超时时间
         long remainingMs = timeoutMs;
 
+        //等待unset和inFlightRequest中的请求全部完成(正常收到响应，或者出现异常)
         while (hasPendingRequests(node) && remainingMs > 0) {
             poll(remainingMs);
             remainingMs = timeoutMs - (time.milliseconds() - startMs);
@@ -742,7 +752,7 @@ public class ConsumerNetworkClient implements Closeable {
             // the lock protects removal from a concurrent put which could otherwise mutate the
             // queue after it has been removed from the map
             synchronized (unsent) {
-                ConcurrentLinkedQueue<ClientRequest> requests = unsent.remove(node);
+                final ConcurrentLinkedQueue<ClientRequest> requests = unsent.remove(node);
                 return requests == null ? Collections.<ClientRequest>emptyList() : requests;
             }
         }

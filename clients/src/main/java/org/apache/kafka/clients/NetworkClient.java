@@ -553,10 +553,11 @@ public class NetworkClient implements KafkaClient {
      */
     @Override
     public Node leastLoadedNode(long now) {
+        //获取所有的节点
         List<Node> nodes = this.metadataUpdater.fetchNodes();
         int inflight = Integer.MAX_VALUE;
         Node found = null;
-
+        //[0,nodes.size]中获取一个随机数
         int offset = this.randOffset.nextInt(nodes.size());
         for (int i = 0; i < nodes.size(); i++) {
             int idx = (offset + i) % nodes.size();

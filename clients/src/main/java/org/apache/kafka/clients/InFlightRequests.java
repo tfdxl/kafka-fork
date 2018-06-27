@@ -109,6 +109,7 @@ final class InFlightRequests {
     }
 
     /**
+     * 返回指定node下面的没有返回响应的请求的个数
      * Return the number of in-flight requests directed at the given node
      *
      * @param node The node
@@ -184,5 +185,4 @@ final class InFlightRequests {
         }
         return nodeIds;
     }
-
 }
