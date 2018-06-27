@@ -39,7 +39,7 @@ public class GarbageCollectedMemoryPool extends SimpleMemoryPool implements Auto
     private final Map<BufferReference, BufferMetadata> buffersInFlight = new ConcurrentHashMap<>();
     private final GarbageCollectionListener gcListener = new GarbageCollectionListener();
     private final Thread gcListenerThread;
-    private volatile boolean alive = true;
+    private volatile boolean alive;
 
     public GarbageCollectedMemoryPool(long sizeBytes, int maxSingleAllocationSize, boolean strict, Sensor oomPeriodSensor) {
         super(sizeBytes, maxSingleAllocationSize, strict, oomPeriodSensor);
