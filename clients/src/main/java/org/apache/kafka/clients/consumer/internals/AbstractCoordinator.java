@@ -75,6 +75,8 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 public abstract class AbstractCoordinator implements Closeable {
     public static final String HEARTBEAT_THREAD_PREFIX = "kafka-coordinator-heartbeat-thread";
+
+    //再平衡超时时间，到底是哪个过程的时间
     protected final int rebalanceTimeoutMs;
 
     //当前消费者所属的Consumer group id
@@ -82,24 +84,46 @@ public abstract class AbstractCoordinator implements Closeable {
 
     //负责网络通信
     protected final ConsumerNetworkClient client;
+
+    //时间
     protected final Time time;
+
     protected final long retryBackoffMs;
+
+    //日志记录器
     private final Logger log;
+
+    //session的超时时间
     private final int sessionTimeoutMs;
+
+    //关闭的时候要不要离开consumer group
     private final boolean leaveGroupOnClose;
+
+    //统计
     private final GroupCoordinatorMetrics sensors;
+
+    //心跳的一些参数
     private final Heartbeat heartbeat;
+
     //定时任务，负责定时发送心跳请求和心跳响应的处理
     private HeartbeatThread heartbeatThread = null;
+
     private boolean rejoinNeeded = true;
+
     //标记是否需要执行发送JoinGroupRequest请求之前的准备操作
     private boolean needsJoinPrepare = true;
+
+    //作为成员的状态
     private MemberState state = MemberState.UNJOINED;
+
     private RequestFuture<ByteBuffer> joinFuture = null;
+
     //记录服务器GroupCoordinator所在的节点
     private Node coordinator = null;
+
     //服务端GroupCoordinator返回的年代信息，用来区分两次Rebalance操作
     private Generation generation = Generation.NO_GENERATION;
+
     private RequestFuture<Void> findCoordinatorFuture = null;
 
     /**
@@ -318,7 +342,7 @@ public abstract class AbstractCoordinator implements Closeable {
     }
 
     private void closeHeartbeatThread() {
-        HeartbeatThread thread = null;
+        HeartbeatThread thread;
         synchronized (this) {
             if (heartbeatThread == null)
                 return;
@@ -336,6 +360,7 @@ public abstract class AbstractCoordinator implements Closeable {
 
     // visible for testing. Joins the group without starting the heartbeat thread.
     void joinGroupIfNeeded() {
+        //需要join或者join没有完成
         while (needRejoin() || rejoinIncomplete()) {
             ensureCoordinatorReady();
 
@@ -613,6 +638,7 @@ public abstract class AbstractCoordinator implements Closeable {
     // visible for testing
     synchronized RequestFuture<Void> sendHeartbeatRequest() {
         log.debug("Sending Heartbeat request to coordinator {}", coordinator);
+        //心跳构建
         HeartbeatRequest.Builder requestBuilder =
                 new HeartbeatRequest.Builder(this.groupId, this.generation.generationId, this.generation.memberId);
         return client.send(coordinator, requestBuilder)
@@ -966,6 +992,8 @@ public abstract class AbstractCoordinator implements Closeable {
                             continue;
                         }
 
+                        //状态不是稳定的，可能是我们离开了consumer group也可能是coordinator提出我们，
+                        //所以停止心跳。等到主线程重新加入
                         if (state != MemberState.STABLE) {
                             // the group is not stable (perhaps because we left the group or because the coordinator
                             // kicked us out), so disable heartbeats and wait for the main thread to rejoin.
