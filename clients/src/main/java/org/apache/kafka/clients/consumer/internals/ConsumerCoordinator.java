@@ -52,13 +52,23 @@ import java.util.concurrent.atomic.AtomicInteger;
 public final class ConsumerCoordinator extends AbstractCoordinator {
     private final Logger log;
     private final List<PartitionAssignor> assignors;
+
+    //kafka集群的元信息
     private final Metadata metadata;
     private final ConsumerCoordinatorMetrics sensors;
     private final SubscriptionState subscriptions;
     private final OffsetCommitCallback defaultOffsetCommitCallback;
+
+    /**
+     * 是否开启了自动提交offset
+     */
     private final boolean autoCommitEnabled;
     private final int autoCommitIntervalMs;
     private final ConsumerInterceptors<?, ?> interceptors;
+
+    /**
+     * 是否内部排除内部topic
+     */
     private final boolean excludeInternalTopics;
     private final AtomicInteger pendingAsyncCommits;
 
@@ -68,7 +78,11 @@ public final class ConsumerCoordinator extends AbstractCoordinator {
 
     private boolean isLeader = false;
     private Set<String> joinedSubscription;
+    //用来存储Metadata的快照信息，主要用来检测Topic是否发生了分区数量的变化
     private MetadataSnapshot metadataSnapshot;
+
+    //也是用来存储Metadata的快照信息，不过是用来检测Partition分配的过程中有没有发生分区数量变化，
+    //具体是Leader消费者开始分区分配操作前，
     private MetadataSnapshot assignmentSnapshot;
     private long nextAutoCommitDeadline;
 
@@ -153,6 +167,7 @@ public final class ConsumerCoordinator extends AbstractCoordinator {
 
         subscriptions.subscribeFromPattern(topicsToSubscribe);
 
+        //更新metadata需要记录元数据的topic集合
         // note we still need to update the topics contained in the metadata. Although we have
         // specified that all topics should be fetched, only those set explicitly will be retained
         metadata.setTopics(subscriptions.groupSubscription());
@@ -166,13 +181,17 @@ public final class ConsumerCoordinator extends AbstractCoordinator {
                 if (!cluster.unauthorizedTopics().isEmpty())
                     throw new TopicAuthorizationException(new HashSet<>(cluster.unauthorizedTopics()));
 
-                //
-                if (subscriptions.hasPatternSubscription())
+                //AUTO_PATTERN模式的处理
+                if (subscriptions.hasPatternSubscription()) {
                     updatePatternSubscription(cluster);
+                }
 
+                //检测是否非AUTO_PATTERN或者AUTO_TOPICS模式
                 // check if there are any changes to the metadata which should trigger a rebalance
                 if (subscriptions.partitionsAutoAssigned()) {
+                    //创建快照
                     MetadataSnapshot snapshot = new MetadataSnapshot(subscriptions, cluster);
+                    //比较快照，记录快照
                     if (!snapshot.equals(metadataSnapshot))
                         metadataSnapshot = snapshot;
                 }

@@ -76,7 +76,11 @@ import java.util.concurrent.atomic.AtomicReference;
 public abstract class AbstractCoordinator implements Closeable {
     public static final String HEARTBEAT_THREAD_PREFIX = "kafka-coordinator-heartbeat-thread";
     protected final int rebalanceTimeoutMs;
+
+    //当前消费者所属的Consumer group id
     protected final String groupId;
+
+    //负责网络通信
     protected final ConsumerNetworkClient client;
     protected final Time time;
     protected final long retryBackoffMs;
@@ -85,12 +89,16 @@ public abstract class AbstractCoordinator implements Closeable {
     private final boolean leaveGroupOnClose;
     private final GroupCoordinatorMetrics sensors;
     private final Heartbeat heartbeat;
+    //定时任务，负责定时发送心跳请求和心跳响应的处理
     private HeartbeatThread heartbeatThread = null;
     private boolean rejoinNeeded = true;
+    //标记是否需要执行发送JoinGroupRequest请求之前的准备操作
     private boolean needsJoinPrepare = true;
     private MemberState state = MemberState.UNJOINED;
     private RequestFuture<ByteBuffer> joinFuture = null;
+    //记录服务器GroupCoordinator所在的节点
     private Node coordinator = null;
+    //服务端GroupCoordinator返回的年代信息，用来区分两次Rebalance操作
     private Generation generation = Generation.NO_GENERATION;
     private RequestFuture<Void> findCoordinatorFuture = null;
 
@@ -646,6 +654,9 @@ public abstract class AbstractCoordinator implements Closeable {
 
     }
 
+    /**
+     * 收到正常的JoinGroupResponse响应
+     */
     private class JoinGroupResponseHandler extends CoordinatorResponseHandler<JoinGroupResponse, ByteBuffer> {
         @Override
         public void handle(JoinGroupResponse joinResponse, RequestFuture<ByteBuffer> future) {
@@ -905,6 +916,9 @@ public abstract class AbstractCoordinator implements Closeable {
             super(HEARTBEAT_THREAD_PREFIX + (groupId.isEmpty() ? "" : " | " + groupId), true);
         }
 
+        /**
+         * 开启了那就通知他
+         */
         public void enable() {
             synchronized (AbstractCoordinator.this) {
                 log.debug("Enabling heartbeat thread");
@@ -945,6 +959,7 @@ public abstract class AbstractCoordinator implements Closeable {
                         if (closed)
                             return;
 
+                        //disable就停止下
                         if (!enabled) {
                             AbstractCoordinator.this.wait();
                             continue;
