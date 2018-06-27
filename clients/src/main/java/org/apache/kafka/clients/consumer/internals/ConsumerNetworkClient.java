@@ -90,6 +90,9 @@ public class ConsumerNetworkClient implements Closeable {
     }
 
     /**
+     * 发送一个请求
+     * 注意：请求并不会实际传输到网络，直到一次poll被调用，因此请求要么传输成功要么传输失败，通过future能够获取
+     * send的结果，
      * Send a new request. Note that the request is not actually transmitted on the
      * network until one of the {@link #poll(long)} variants is invoked. At this
      * point the request will either be transmitted successfully or will fail.
@@ -103,9 +106,13 @@ public class ConsumerNetworkClient implements Closeable {
      */
     public RequestFuture<ClientResponse> send(Node node, AbstractRequest.Builder<?> requestBuilder) {
         long now = time.milliseconds();
+
+        //构造请求future完成的处理器
         RequestFutureCompletionHandler completionHandler = new RequestFutureCompletionHandler();
         ClientRequest clientRequest = client.newClientRequest(node.idString(), requestBuilder, now, true,
                 completionHandler);
+
+        //放到对应node的没有发送的请求里面
         unsent.put(node, clientRequest);
 
         // wakeup the client in case it is blocking in poll so that we can send the queued request
@@ -287,9 +294,11 @@ public class ConsumerNetworkClient implements Closeable {
             // cleared or a connect finished in the poll
             trySend(now);
 
+            //使超时的请求失败掉
             // fail requests that couldn't be sent if they have expired
             failExpiredRequests(now);
 
+            //清除没有发送的请求集合，避免map无效增长
             // clean unsent requests collection to keep the map from growing indefinitely
             unsent.clean();
         } finally {
@@ -393,20 +402,26 @@ public class ConsumerNetworkClient implements Closeable {
         }
     }
 
+    /**
+     * 触发完成的请求
+     */
     private void firePendingCompletedRequests() {
         boolean completedRequestsFired = false;
         for (; ; ) {
-            RequestFutureCompletionHandler completionHandler = pendingCompletion.poll();
-            if (completionHandler == null)
+            final RequestFutureCompletionHandler completionHandler = pendingCompletion.poll();
+            if (completionHandler == null) {
                 break;
+            }
 
             completionHandler.fireCompletion();
             completedRequestsFired = true;
         }
 
+        //唤醒client若果阻塞在future的完成上
         // wakeup the client in case it is blocking in poll for this future's completion
-        if (completedRequestsFired)
+        if (completedRequestsFired) {
             client.wakeup();
+        }
     }
 
     /**
@@ -429,6 +444,7 @@ public class ConsumerNetworkClient implements Closeable {
 
             //如果connection已经断开了
             if (client.connectionFailed(node)) {
+
                 // Remove entry before invoking request callback to avoid callbacks handling
                 // coordinator failures traversing the unsent list again.
                 //清除掉node对应的所有的请求
@@ -516,6 +532,7 @@ public class ConsumerNetworkClient implements Closeable {
          * 此节点之间的链接，以及发送请求的条件，如果符合发送条件，那么调用send方法
          */
         for (Node node : unsent.nodes()) {
+            //获取node对应的请求
             final Iterator<ClientRequest> iterator = unsent.requestIterator(node);
             while (iterator.hasNext()) {
                 final ClientRequest request = iterator.next();
@@ -579,6 +596,7 @@ public class ConsumerNetworkClient implements Closeable {
     }
 
     /**
+     * 初始化一个连接如果当前可能
      * Initiate a connection if currently possible. This is only really useful for resetting the failed
      * status of a socket. If there is an actual request to send, then {@link #send(Node, AbstractRequest.Builder)}
      * should be used.
@@ -710,8 +728,9 @@ public class ConsumerNetworkClient implements Closeable {
                 Iterator<ConcurrentLinkedQueue<ClientRequest>> iterator = unsent.values().iterator();
                 while (iterator.hasNext()) {
                     ConcurrentLinkedQueue<ClientRequest> requests = iterator.next();
-                    if (requests.isEmpty())
+                    if (requests.isEmpty()) {
                         iterator.remove();
+                    }
                 }
             }
         }
@@ -725,22 +744,35 @@ public class ConsumerNetworkClient implements Closeable {
             }
         }
 
+        /**
+         * 获取node下面缓存的请求
+         *
+         * @param node
+         * @return
+         */
         public Iterator<ClientRequest> requestIterator(Node node) {
             ConcurrentLinkedQueue<ClientRequest> requests = unsent.get(node);
             return requests == null ? Collections.<ClientRequest>emptyIterator() : requests.iterator();
         }
 
+        /**
+         * 获取所有的node
+         *
+         * @return
+         */
         public Collection<Node> nodes() {
             return unsent.keySet();
         }
     }
 
     private class RequestFutureCompletionHandler implements RequestCompletionHandler {
+
         private final RequestFuture<ClientResponse> future;
         private ClientResponse response;
         private RuntimeException e;
 
         private RequestFutureCompletionHandler() {
+            //构造一个future
             this.future = new RequestFuture<>();
         }
 

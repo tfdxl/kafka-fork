@@ -77,7 +77,7 @@ public class GarbageCollectedMemoryPool extends SimpleMemoryPool implements Auto
     }
 
     @Override
-    public void close() throws Exception {
+    public void close() {
         alive = false;
         gcListenerThread.interrupt();
     }
@@ -140,7 +140,7 @@ public class GarbageCollectedMemoryPool extends SimpleMemoryPool implements Auto
         public void run() {
             while (alive) {
                 try {
-                    BufferReference ref = (BufferReference) garbageCollectedBuffers.remove(); //blocks
+                    final BufferReference ref = (BufferReference) garbageCollectedBuffers.remove(); //blocks
                     ref.clear();
                     //this cannot race with a release() call because an object is either reachable or not,
                     //release() can only happen before its GC'ed, and enqueue can only happen after.

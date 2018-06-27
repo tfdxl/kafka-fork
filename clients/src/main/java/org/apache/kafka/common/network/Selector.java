@@ -185,11 +185,17 @@ public class Selector implements Selectable, AutoCloseable {
      */
     @Override
     public void connect(String id, InetSocketAddress address, int sendBufferSize, int receiveBufferSize) throws IOException {
+
+        //保证ID没有注册过
         ensureNotRegistered(id);
+        //打开一个SocketChannel
         SocketChannel socketChannel = SocketChannel.open();
         try {
+            //设置SocketChannel的参数
             configureSocketChannel(socketChannel, sendBufferSize, receiveBufferSize);
+            //开始连接了
             boolean connected = doConnect(socketChannel, address);
+            //注册一个Connect事件
             SelectionKey key = registerChannel(id, socketChannel, SelectionKey.OP_CONNECT);
 
             if (connected) {
@@ -208,21 +214,37 @@ public class Selector implements Selectable, AutoCloseable {
     // in order to simulate "immediately connected" sockets.
     protected boolean doConnect(SocketChannel channel, InetSocketAddress address) throws IOException {
         try {
+            //socket channel连接到一个地址了，fuck
             return channel.connect(address);
         } catch (UnresolvedAddressException e) {
             throw new IOException("Can't resolve address: " + address, e);
         }
     }
 
+    /**
+     * 设置SocketChannel的参数
+     *
+     * @param socketChannel
+     * @param sendBufferSize
+     * @param receiveBufferSize
+     * @throws IOException
+     */
     private void configureSocketChannel(SocketChannel socketChannel, int sendBufferSize, int receiveBufferSize)
             throws IOException {
+        //非阻塞
         socketChannel.configureBlocking(false);
+        //underlying socket
         Socket socket = socketChannel.socket();
+        /**
+         * 这里他妈的很重要，长连接
+         */
         socket.setKeepAlive(true);
+        //设置socket读写buffer的大小
         if (sendBufferSize != Selectable.USE_DEFAULT_BUFFER_SIZE)
             socket.setSendBufferSize(sendBufferSize);
         if (receiveBufferSize != Selectable.USE_DEFAULT_BUFFER_SIZE)
             socket.setReceiveBufferSize(receiveBufferSize);
+        //不合并需求，延迟低，但是他妈的效率也打点折扣
         socket.setTcpNoDelay(true);
     }
 
@@ -249,19 +271,25 @@ public class Selector implements Selectable, AutoCloseable {
         if (this.channels.containsKey(id)) {
             throw new IllegalStateException("There is already a connection for id " + id);
         }
-        if (this.closingChannels.containsKey(id))
+        if (this.closingChannels.containsKey(id)) {
             throw new IllegalStateException("There is already a connection for id " + id + " that is still being closed");
+        }
     }
 
     private SelectionKey registerChannel(String id, SocketChannel socketChannel, int interestedOps) throws IOException {
+
+        //构建一个SelectionKey，关联感兴趣的操作
         SelectionKey key = socketChannel.register(nioSelector, interestedOps);
+        //将socketChannel attach到SelectionKey
         KafkaChannel channel = buildAndAttachKafkaChannel(socketChannel, id, key);
+        //nodeIdString--->Channel
         this.channels.put(id, channel);
         return key;
     }
 
     private KafkaChannel buildAndAttachKafkaChannel(SocketChannel socketChannel, String id, SelectionKey key) throws IOException {
         try {
+            //创建一个Kakfa的channel，关联到key
             KafkaChannel channel = channelBuilder.buildChannel(id, key, maxReceiveSize, memoryPool);
             key.attach(channel);
             return channel;

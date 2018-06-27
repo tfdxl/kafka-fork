@@ -223,8 +223,9 @@ public class NetworkClient implements KafkaClient {
      */
     @Override
     public boolean ready(Node node, long now) {
-        if (node.isEmpty())
+        if (node.isEmpty()) {
             throw new IllegalArgumentException("Cannot connect to empty node " + node);
+        }
 
         //已经ready就不发起连接
         if (isReady(node, now))
@@ -764,13 +765,17 @@ public class NetworkClient implements KafkaClient {
     }
 
     /**
+     * 初始化一个连接到指定的节点
      * Initiate a connection to the given node
      */
     private void initiateConnect(Node node, long now) {
         String nodeConnectionId = node.idString();
         try {
             log.debug("Initiating connection to node {}", node);
+            //连接状态设置为connecting
             this.connectionStates.connecting(nodeConnectionId, now);
+
+            //调用selector连接到一个节点
             selector.connect(nodeConnectionId,
                     new InetSocketAddress(node.host(), node.port()),
                     this.socketSendBuffer,
@@ -790,6 +795,16 @@ public class NetworkClient implements KafkaClient {
         return newClientRequest(nodeId, requestBuilder, createdTimeMs, expectResponse, null);
     }
 
+    /**
+     * 构造一个client请求
+     *
+     * @param nodeId         the node to send to
+     * @param requestBuilder the request builder to use
+     * @param createdTimeMs  the time in milliseconds to use as the creation time of the request
+     * @param expectResponse true iff we expect a response
+     * @param callback       the callback to invoke when we get a response
+     * @return
+     */
     @Override
     public ClientRequest newClientRequest(String nodeId, AbstractRequest.Builder<?> requestBuilder, long createdTimeMs,
                                           boolean expectResponse, RequestCompletionHandler callback) {
