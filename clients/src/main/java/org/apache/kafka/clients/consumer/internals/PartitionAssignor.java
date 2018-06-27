@@ -51,6 +51,7 @@ public interface PartitionAssignor {
     Subscription subscription(Set<String> topics);
 
     /**
+     * 子类要实现的，完成partition分配的抽象方法，调用发生在解析SyncGroupResponse之后
      * Perform the group assignment given the member subscriptions and current cluster metadata.
      *
      * @param metadata      Current topic/broker metadata known by consumer
@@ -62,6 +63,7 @@ public interface PartitionAssignor {
 
 
     /**
+     * 每个消费者收到Leader分配结果时的回调函数
      * Callback which is invoked when a group member receives its assignment from the leader.
      *
      * @param assignment The local member's assignment as provided by the leader in {@link #assign(Cluster, Map)}
@@ -77,7 +79,15 @@ public interface PartitionAssignor {
     String name();
 
     class Subscription {
+
+        /**
+         * 用户订阅信息，member订阅的topic集合
+         */
         private final List<String> topics;
+
+        /**
+         * 用户自定义信息，每一个消费者的权重
+         */
         private final ByteBuffer userData;
 
         public Subscription(List<String> topics, ByteBuffer userData) {
@@ -105,8 +115,19 @@ public interface PartitionAssignor {
         }
     }
 
+    /**
+     * 分区的分配结果
+     */
     class Assignment {
+
+        /**
+         * 分配给某个consumer的TopicPartition集合
+         */
         private final List<TopicPartition> partitions;
+
+        /**
+         * 用户自定义的数据
+         */
         private final ByteBuffer userData;
 
         public Assignment(List<TopicPartition> partitions, ByteBuffer userData) {

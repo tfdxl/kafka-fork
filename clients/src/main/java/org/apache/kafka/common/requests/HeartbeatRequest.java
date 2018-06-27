@@ -33,6 +33,8 @@ public class HeartbeatRequest extends AbstractRequest {
 
     /* v1 request is the same as v0. Throttle time has been added to response */
     private static final Schema HEARTBEAT_REQUEST_V1 = HEARTBEAT_REQUEST_V0;
+
+
     private final String groupId;
     private final int groupGenerationId;
     private final String memberId;
