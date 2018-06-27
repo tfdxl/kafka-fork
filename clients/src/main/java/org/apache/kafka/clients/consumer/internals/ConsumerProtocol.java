@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
+ * 消费者协议包含消费者订阅和指定
  * ConsumerProtocol contains the schemas for consumer subscriptions and assignments for use with
  * Kafka's generalized group management protocol. Below is the version 0 format:
  *

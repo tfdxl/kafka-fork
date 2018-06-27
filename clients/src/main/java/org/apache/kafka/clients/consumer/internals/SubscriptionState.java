@@ -57,6 +57,9 @@ public class SubscriptionState {
     /* the type of subscription */
     private SubscriptionType subscriptionType;
     /* the pattern user has requested */
+    /**
+     * 按照此记录的正则表达式对topic进行匹配
+     */
     private Pattern subscribedPattern;
     /* the list of topics the user has requested */
     private Set<String> subscription;
@@ -89,7 +92,7 @@ public class SubscriptionState {
     private void setSubscriptionType(SubscriptionType type) {
         if (this.subscriptionType == SubscriptionType.NONE)
             this.subscriptionType = type;
-        else if (this.subscriptionType != type)
+        else if (this.subscriptionType != type)//如果已经指定了其他模式，会报错
             throw new IllegalStateException(SUBSCRIPTION_EXCEPTION_MESSAGE);
     }
 
@@ -97,6 +100,7 @@ public class SubscriptionState {
         if (listener == null)
             throw new IllegalArgumentException("RebalanceListener cannot be null");
 
+        //自动topic
         setSubscriptionType(SubscriptionType.AUTO_TOPICS);
 
         this.rebalanceListener = listener;
@@ -247,8 +251,9 @@ public class SubscriptionState {
 
     private TopicPartitionState assignedState(TopicPartition tp) {
         TopicPartitionState state = this.assignment.stateValue(tp);
-        if (state == null)
+        if (state == null) {
             throw new IllegalStateException("No current assignment for partition " + tp);
+        }
         return state;
     }
 
@@ -440,11 +445,18 @@ public class SubscriptionState {
         void onAssignment(Set<TopicPartition> assignment);
     }
 
+    /**
+     * topic partition的消费状态
+     */
     private static class TopicPartitionState {
 
+        /**
+         * 记录了下一要从Kafka服务器获取的消息的offset
+         */
         private Long position; // last consumed position
         private Long highWatermark; // the high watermark from last fetch
         private Long lastStableOffset;
+        //当前的TopicPartition是否处理暂停状态
         private boolean paused;  // whether this partition has been paused by the user
         private OffsetResetStrategy resetStrategy;  // the strategy to use if the offset needs resetting
         private Long nextAllowedRetryTimeMs;
