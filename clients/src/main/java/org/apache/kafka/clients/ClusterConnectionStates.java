@@ -23,13 +23,19 @@ import java.util.Map;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
+ * 管理了到集群所有节点的连接
  * The state of our connection to each node in the cluster.
  */
 final class ClusterConnectionStates {
+
     private final static int RECONNECT_BACKOFF_EXP_BASE = 2;
     private final long reconnectBackoffInitMs;
+
+    //重试的间隔
     private final long reconnectBackoffMaxMs;
     private final double reconnectBackoffMaxExp;
+
+    //idString--->NodeConnectionState
     private final Map<String, NodeConnectionState> nodeState;
 
     public ClusterConnectionStates(long reconnectBackoffMs, long reconnectBackoffMaxMs) {
@@ -109,8 +115,11 @@ final class ClusterConnectionStates {
      * @param now the current time
      */
     public void connecting(String id, long now) {
+
+        //已经包含，那么重置连接
         if (nodeState.containsKey(id)) {
             NodeConnectionState node = nodeState.get(id);
+            //最后一次尝试连接时间
             node.lastConnectAttemptMs = now;
             node.state = ConnectionState.CONNECTING;
         } else {
@@ -274,13 +283,16 @@ final class ClusterConnectionStates {
     }
 
     /**
+     * 连接到一个node的状态
      * The state of our connection to a node.
      */
     private static class NodeConnectionState {
 
         ConnectionState state;
         AuthenticationException authenticationException;
+        //最后一次尝试连接的时间
         long lastConnectAttemptMs;
+        //失败的尝试
         long failedAttempts;
         long reconnectBackoffMs;
 

@@ -226,6 +226,7 @@ public class NetworkClient implements KafkaClient {
         if (node.isEmpty())
             throw new IllegalArgumentException("Cannot connect to empty node " + node);
 
+        //已经ready就不发起连接
         if (isReady(node, now))
             return true;
 

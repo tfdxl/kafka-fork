@@ -40,6 +40,7 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 /**
+ * nioSelector接口
  * A nioSelector interface for doing non-blocking multi-connection network I/O.
  * <p>
  * This class works with {@link NetworkSend} and {@link NetworkReceive} to transmit size-delimited network requests and
@@ -73,6 +74,8 @@ public class Selector implements Selectable, AutoCloseable {
     public static final long NO_IDLE_TIMEOUT_MS = -1;
     private final Logger log;
     private final java.nio.channels.Selector nioSelector;
+
+    //idString--->Channel
     private final Map<String, KafkaChannel> channels;
     private final Set<KafkaChannel> explicitlyMutedChannels;
     private final List<Send> completedSends;
@@ -96,6 +99,7 @@ public class Selector implements Selectable, AutoCloseable {
     //indicates if the previous call to poll was able to make progress in reading already-buffered data.
     //this is used to prevent tight loops when memory is not available to read any more data
     private boolean madeReadProgressLastPoll = true;
+
     /**
      * Create a new nioSelector
      *
@@ -165,6 +169,7 @@ public class Selector implements Selectable, AutoCloseable {
     }
 
     /**
+     * 开始连接到指定的地址，并且把连接添加到nioSelector关联到指定的id
      * Begin connecting to the given address and add the connection to this nioSelector associated with the given id
      * number.
      * <p>
@@ -241,8 +246,9 @@ public class Selector implements Selectable, AutoCloseable {
     }
 
     private void ensureNotRegistered(String id) {
-        if (this.channels.containsKey(id))
+        if (this.channels.containsKey(id)) {
             throw new IllegalStateException("There is already a connection for id " + id);
+        }
         if (this.closingChannels.containsKey(id))
             throw new IllegalStateException("There is already a connection for id " + id + " that is still being closed");
     }
