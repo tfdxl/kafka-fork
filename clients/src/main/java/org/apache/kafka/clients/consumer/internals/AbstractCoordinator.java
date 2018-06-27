@@ -641,6 +641,7 @@ public abstract class AbstractCoordinator implements Closeable {
         //心跳构建
         HeartbeatRequest.Builder requestBuilder =
                 new HeartbeatRequest.Builder(this.groupId, this.generation.generationId, this.generation.memberId);
+        //使用HeartbeatResponseHandler对RequestFuture进行适配
         return client.send(coordinator, requestBuilder)
                 .compose(new HeartbeatResponseHandler());
     }
@@ -828,6 +829,7 @@ public abstract class AbstractCoordinator implements Closeable {
             sensors.heartbeatLatency.record(response.requestLatencyMs());
             Errors error = heartbeatResponse.error();
             if (error == Errors.NONE) {
+                //成功接收到心跳应答
                 log.debug("Received successful Heartbeat response");
                 future.complete(null);
             } else if (error == Errors.COORDINATOR_NOT_AVAILABLE
@@ -857,6 +859,7 @@ public abstract class AbstractCoordinator implements Closeable {
     }
 
     protected abstract class CoordinatorResponseHandler<R, T> extends RequestFutureAdapter<ClientResponse, T> {
+
         protected ClientResponse response;
 
         public abstract void handle(R response, RequestFuture<T> future);
@@ -876,10 +879,12 @@ public abstract class AbstractCoordinator implements Closeable {
             try {
                 this.response = clientResponse;
                 R responseObj = (R) clientResponse.responseBody();
+                //模板模式，交给子类进行处理
                 handle(responseObj, future);
             } catch (RuntimeException e) {
-                if (!future.isDone())
+                if (!future.isDone()) {
                     future.raise(e);
+                }
             }
         }
 
@@ -1027,6 +1032,7 @@ public abstract class AbstractCoordinator implements Closeable {
                             sendHeartbeatRequest().addListener(new RequestFutureListener<Void>() {
                                 @Override
                                 public void onSuccess(Void value) {
+                                    //更新heartbeat记录的时间
                                     synchronized (AbstractCoordinator.this) {
                                         heartbeat.receiveHeartbeat(time.milliseconds());
                                     }
