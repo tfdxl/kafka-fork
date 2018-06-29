@@ -51,6 +51,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public final class ConsumerCoordinator extends AbstractCoordinator {
     private final Logger log;
+    //用户自定义的分区指定实现
     private final List<PartitionAssignor> assignors;
 
     //kafka集群的元信息
