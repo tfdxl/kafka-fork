@@ -109,7 +109,7 @@ public class ConsumerNetworkClient implements Closeable {
 
         //构造请求future完成的处理器
         RequestFutureCompletionHandler completionHandler = new RequestFutureCompletionHandler();
-        
+
         //包装成底层的请求
         ClientRequest clientRequest = client.newClientRequest(node.idString(), requestBuilder, now, true,
                 completionHandler);
@@ -194,6 +194,7 @@ public class ConsumerNetworkClient implements Closeable {
     }
 
     /**
+     * 无限阻塞，直到future完成
      * Block indefinitely until the given request future has finished.
      *
      * @param future The request future to await.
