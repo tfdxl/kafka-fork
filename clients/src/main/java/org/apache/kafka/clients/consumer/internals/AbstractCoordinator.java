@@ -439,6 +439,8 @@ public abstract class AbstractCoordinator implements Closeable {
             //发送请求
             joinFuture = sendJoinGroupRequest();
             joinFuture.addListener(new RequestFutureListener<ByteBuffer>() {
+
+                //已经加入组
                 @Override
                 public void onSuccess(ByteBuffer value) {
                     // handle join completion in the callback so that the callback will be invoked
@@ -446,13 +448,17 @@ public abstract class AbstractCoordinator implements Closeable {
                     synchronized (AbstractCoordinator.this) {
                         log.info("Successfully joined group with generation {}", generation.generationId);
                         state = MemberState.STABLE;
+                        //不用重新加入了
                         rejoinNeeded = false;
 
-                        if (heartbeatThread != null)
+                        //开启心跳线程
+                        if (heartbeatThread != null) {
                             heartbeatThread.enable();
+                        }
                     }
                 }
 
+                //加入组失败了
                 @Override
                 public void onFailure(RuntimeException e) {
                     // we handle failures below after the request finishes. if the join completes
