@@ -109,6 +109,8 @@ public class ConsumerNetworkClient implements Closeable {
 
         //构造请求future完成的处理器
         RequestFutureCompletionHandler completionHandler = new RequestFutureCompletionHandler();
+        
+        //包装成底层的请求
         ClientRequest clientRequest = client.newClientRequest(node.idString(), requestBuilder, now, true,
                 completionHandler);
 

@@ -360,8 +360,9 @@ public abstract class AbstractCoordinator implements Closeable {
     private void closeHeartbeatThread() {
         HeartbeatThread thread;
         synchronized (this) {
-            if (heartbeatThread == null)
+            if (heartbeatThread == null) {
                 return;
+            }
             heartbeatThread.close();
             thread = heartbeatThread;
             heartbeatThread = null;
@@ -385,6 +386,9 @@ public abstract class AbstractCoordinator implements Closeable {
             // on each iteration of the loop because an event requiring a rebalance (such as a metadata
             // refresh which changes the matched subscription set) can occur while another rebalance is
             // still in progress.
+            /**
+             * 标志位不会调用第二次
+             */
             if (needsJoinPrepare) {
                 onJoinPrepare(generation.generationId, generation.memberId);
                 needsJoinPrepare = false;
@@ -428,7 +432,9 @@ public abstract class AbstractCoordinator implements Closeable {
             // sending heartbeats if that callback takes some time.
             disableHeartbeatThread();
 
+            //这里设置rebalancing
             state = MemberState.REBALANCING;
+            //发送请求
             joinFuture = sendJoinGroupRequest();
             joinFuture.addListener(new RequestFutureListener<ByteBuffer>() {
                 @Override
@@ -466,11 +472,14 @@ public abstract class AbstractCoordinator implements Closeable {
      * @return A request future which wraps the assignment returned from the group leader
      */
     private RequestFuture<ByteBuffer> sendJoinGroupRequest() {
-        if (coordinatorUnknown())
+        //检查coordinator是否存在
+        if (coordinatorUnknown()) {
             return RequestFuture.coordinatorNotAvailable();
+        }
 
         // send a join group request to the coordinator
         log.info("(Re-)joining group");
+        //构造请求
         JoinGroupRequest.Builder requestBuilder = new JoinGroupRequest.Builder(
                 groupId,
                 this.sessionTimeoutMs,
@@ -715,8 +724,11 @@ public abstract class AbstractCoordinator implements Closeable {
                         // the group. In this case, we do not want to continue with the sync group.
                         future.raise(new UnjoinedGroupException());
                     } else {
+                        //构建一个新的generation
                         AbstractCoordinator.this.generation = new Generation(joinResponse.generationId(),
                                 joinResponse.memberId(), joinResponse.groupProtocol());
+
+                        //是leader
                         if (joinResponse.isLeader()) {
                             onJoinLeader(joinResponse).chain(future);
                         } else {

@@ -75,12 +75,18 @@ public class JoinGroupResponse extends AbstractResponse {
      */
 
     private final int throttleTimeMs;
+
     private final Errors error;
+
+    //Group Coordinator分配的年代信息
     private final int generationId;
+    //Group Coordinator选择的PartitionAssignor
     private final String groupProtocol;
+    //分配给消费者的ID
     private final String memberId;
+    //Leader的member_id
     private final String leaderId;
-    //其他的消费者信息吗
+    //Consumer Group中全部消费者的订阅信息 memberId--->订阅信息
     private final Map<String, ByteBuffer> members;
 
     public JoinGroupResponse(Errors error,
