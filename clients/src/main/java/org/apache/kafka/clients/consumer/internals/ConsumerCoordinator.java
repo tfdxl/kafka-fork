@@ -341,9 +341,12 @@ public final class ConsumerCoordinator extends AbstractCoordinator {
     protected Map<String, ByteBuffer> performAssignment(String leaderId,
                                                         String assignmentStrategy,
                                                         Map<String, ByteBuffer> allSubscriptions) {
+
+        //找到分区分配器
         PartitionAssignor assignor = lookupAssignor(assignmentStrategy);
-        if (assignor == null)
+        if (assignor == null) {
             throw new IllegalStateException("Coordinator selected invalid assignment protocol: " + assignmentStrategy);
+        }
 
         Set<String> allSubscribedTopics = new HashSet<>();
         Map<String, Subscription> subscriptions = new HashMap<>();
