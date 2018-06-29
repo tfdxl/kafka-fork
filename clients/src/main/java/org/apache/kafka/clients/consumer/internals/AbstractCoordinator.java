@@ -529,6 +529,7 @@ public abstract class AbstractCoordinator implements Closeable {
      * @return the current coordinator or null if it is unknown
      */
     protected synchronized Node checkAndGetCoordinator() {
+        //若果
         if (coordinator != null && client.connectionFailed(coordinator)) {
             markCoordinatorUnknown(true);
             return null;
@@ -770,10 +771,14 @@ public abstract class AbstractCoordinator implements Closeable {
         }
     }
 
+    /**
+     * 查找Coordinator的响应处理器
+     */
     private class FindCoordinatorResponseHandler extends RequestFutureAdapter<ClientResponse, Void> {
 
         @Override
         public void onSuccess(ClientResponse resp, RequestFuture<Void> future) {
+
             log.debug("Received FindCoordinator response {}", resp);
             clearFindCoordinatorFuture();
 
@@ -785,14 +790,19 @@ public abstract class AbstractCoordinator implements Closeable {
                     // for the coordinator in the underlying network client layer
                     int coordinatorConnectionId = Integer.MAX_VALUE - findCoordinatorResponse.node().id();
 
+                    //构建新的node
                     AbstractCoordinator.this.coordinator = new Node(
                             coordinatorConnectionId,
                             findCoordinatorResponse.node().host(),
                             findCoordinatorResponse.node().port());
                     log.info("Discovered group coordinator {}", coordinator);
+
+                    //尝试连接到coordinator
                     client.tryConnect(coordinator);
+                    //重新设置超时的时间
                     heartbeat.resetTimeouts(time.milliseconds());
                 }
+                //future完成了
                 future.complete(null);
             } else if (error == Errors.GROUP_AUTHORIZATION_FAILED) {
                 future.raise(new GroupAuthorizationException(groupId));
@@ -809,6 +819,9 @@ public abstract class AbstractCoordinator implements Closeable {
         }
     }
 
+    /**
+     * 离开group响应处理器
+     */
     private class LeaveGroupResponseHandler extends CoordinatorResponseHandler<LeaveGroupResponse, Void> {
         @Override
         public void handle(LeaveGroupResponse leaveResponse, RequestFuture<Void> future) {
@@ -827,6 +840,8 @@ public abstract class AbstractCoordinator implements Closeable {
         @Override
         public void handle(HeartbeatResponse heartbeatResponse, RequestFuture<Void> future) {
             sensors.heartbeatLatency.record(response.requestLatencyMs());
+
+            //解析错误码
             Errors error = heartbeatResponse.error();
             if (error == Errors.NONE) {
                 //成功接收到心跳应答
@@ -834,15 +849,18 @@ public abstract class AbstractCoordinator implements Closeable {
                 future.complete(null);
             } else if (error == Errors.COORDINATOR_NOT_AVAILABLE
                     || error == Errors.NOT_COORDINATOR) {
+                //找不到服务端对应的GroupCoordinator
                 log.debug("Attempt to heartbeat since coordinator {} is either not started or not valid.",
                         coordinator());
                 markCoordinatorUnknown();
                 future.raise(error);
             } else if (error == Errors.REBALANCE_IN_PROGRESS) {
+                //重新发送joinGroupRequest
                 log.debug("Attempt to heartbeat failed since group is rebalancing");
                 requestRejoin();
                 future.raise(Errors.REBALANCE_IN_PROGRESS);
             } else if (error == Errors.ILLEGAL_GENERATION) {
+                //
                 log.debug("Attempt to heartbeat failed since generation {} is not current", generation.generationId);
                 resetGeneration();
                 future.raise(Errors.ILLEGAL_GENERATION);
