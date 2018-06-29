@@ -30,16 +30,23 @@ import static org.apache.kafka.common.protocol.CommonFields.GROUP_ID;
 import static org.apache.kafka.common.protocol.types.Type.INT8;
 import static org.apache.kafka.common.protocol.types.Type.STRING;
 
+/**
+ * 他妈的，还要兼容两个版本
+ */
 public class FindCoordinatorRequest extends AbstractRequest {
+
     private static final String COORDINATOR_KEY_KEY_NAME = "coordinator_key";
     private static final String COORDINATOR_TYPE_KEY_NAME = "coordinator_type";
 
+    //v0版本
     private static final Schema FIND_COORDINATOR_REQUEST_V0 = new Schema(GROUP_ID);
 
+    //v1版本
     private static final Schema FIND_COORDINATOR_REQUEST_V1 = new Schema(
             new Field("coordinator_key", STRING, "Id to use for finding the coordinator (for groups, this is the groupId, " +
                     "for transactional producers, this is the transactional id)"),
             new Field("coordinator_type", INT8, "The type of coordinator to find (0 = group, 1 = transaction)"));
+
     private final String coordinatorKey;
     private final CoordinatorType coordinatorType;
 
@@ -48,6 +55,7 @@ public class FindCoordinatorRequest extends AbstractRequest {
         this.coordinatorType = coordinatorType;
         this.coordinatorKey = coordinatorKey;
     }
+
     public FindCoordinatorRequest(Struct struct, short version) {
         super(version);
 
