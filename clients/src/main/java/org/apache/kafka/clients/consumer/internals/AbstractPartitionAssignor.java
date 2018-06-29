@@ -47,11 +47,6 @@ public abstract class AbstractPartitionAssignor implements PartitionAssignor {
         return partitions;
     }
 
-    public static void main(String[] args) {
-        List<TopicPartition> topicPartitions = partitions("topic", 8);
-        System.err.println(topicPartitions);
-    }
-
     /**
      * Perform the group assignment given the partition counts and member subscriptions
      *
