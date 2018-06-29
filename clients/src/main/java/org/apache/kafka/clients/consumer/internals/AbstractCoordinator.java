@@ -504,6 +504,7 @@ public abstract class AbstractCoordinator implements Closeable {
 
     /**
      * follower同步
+     *
      * @return
      */
     private RequestFuture<ByteBuffer> onJoinFollower() {
@@ -517,6 +518,7 @@ public abstract class AbstractCoordinator implements Closeable {
 
     /**
      * 认定你是leader了，那么你要把partition分配好然后给group coordinator
+     *
      * @param joinResponse
      * @return
      */
@@ -537,8 +539,9 @@ public abstract class AbstractCoordinator implements Closeable {
     }
 
     private RequestFuture<ByteBuffer> sendSyncGroupRequest(SyncGroupRequest.Builder requestBuilder) {
-        if (coordinatorUnknown())
+        if (coordinatorUnknown()) {
             return RequestFuture.coordinatorNotAvailable();
+        }
         return client.send(coordinator, requestBuilder)
                 .compose(new SyncGroupResponseHandler());
     }
