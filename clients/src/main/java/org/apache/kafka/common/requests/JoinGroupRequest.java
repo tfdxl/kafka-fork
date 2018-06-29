@@ -65,11 +65,23 @@ public class JoinGroupRequest extends AbstractRequest {
                     "that the member supports"));
     /* v2 request is the same as v1. Throttle time has been added to response */
     private static final Schema JOIN_GROUP_REQUEST_V2 = JOIN_GROUP_REQUEST_V1;
+
+    //Consumer group的ID
     private final String groupId;
+
+    //Group Coordinator超过session_timeout的时间没有收到心跳，认为消费者下线
     private final int sessionTimeout;
+
+    //rebalance的超时时间
     private final int rebalanceTimeout;
+
+    //Group Coordinator分配的member id
     private final String memberId;
+
+    //ConsumerGroup实现的协议
     private final String protocolType;
+
+    //包含此消费者支持的全部PartitionAssignor类型
     private final List<ProtocolMetadata> groupProtocols;
 
     private JoinGroupRequest(short version, String groupId, int sessionTimeout,
@@ -193,7 +205,11 @@ public class JoinGroupRequest extends AbstractRequest {
     }
 
     public static class ProtocolMetadata {
+
+        //PartitionAssignor的名称
         private final String name;
+
+        //针对不同的PartitionAssignor序列化后的消费者的订阅信息，其中包含用户自定义的数据userData
         private final ByteBuffer metadata;
 
         public ProtocolMetadata(String name, ByteBuffer metadata) {

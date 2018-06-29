@@ -142,11 +142,13 @@ public class FindCoordinatorRequest extends AbstractRequest {
             super(ApiKeys.FIND_COORDINATOR);
             this.coordinatorType = coordinatorType;
             this.coordinatorKey = coordinatorKey;
+            //最小的版本
             this.minVersion = coordinatorType == CoordinatorType.TRANSACTION ? (short) 1 : (short) 0;
         }
 
         @Override
         public FindCoordinatorRequest build(short version) {
+            //版本比最小的还要小
             if (version < minVersion)
                 throw new UnsupportedVersionException("Cannot create a v" + version + " FindCoordinator request " +
                         "because we require features supported only in " + minVersion + " or later.");

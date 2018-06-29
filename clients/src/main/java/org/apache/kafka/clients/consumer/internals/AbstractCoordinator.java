@@ -216,6 +216,7 @@ public abstract class AbstractCoordinator implements Closeable {
     }
 
     /**
+     * 保证协调者能够接受请求
      * Ensure that the coordinator is ready to receive requests.
      *
      * @param startTimeMs Current time in milliseconds
@@ -227,18 +228,24 @@ public abstract class AbstractCoordinator implements Closeable {
 
         while (coordinatorUnknown()) {
             RequestFuture<Void> future = lookupCoordinator();
+            //发送一次
             client.poll(future, remainingMs);
 
             if (future.failed()) {
+                //可以重试的
                 if (future.isRetriable()) {
                     remainingMs = timeoutMs - (time.milliseconds() - startTimeMs);
+                    //超时了
                     if (remainingMs <= 0)
                         break;
 
                     log.debug("Coordinator discovery failed, refreshing metadata");
+                    //阻塞更新Metadata记录的集群元数
                     client.awaitMetadataUpdate(remainingMs);
-                } else
+                } else {
                     throw future.exception();
+                }
+                //coordinator找到了，但是连接失败，那么睡眠retryBackoffMs然后重试
             } else if (coordinator != null && client.connectionFailed(coordinator)) {
                 // we found the coordinator, but the connection has failed, so mark
                 // it dead and backoff before retrying discovery
@@ -254,15 +261,24 @@ public abstract class AbstractCoordinator implements Closeable {
         return !coordinatorUnknown();
     }
 
+    /**
+     * 寻找服务端的Coordinator
+     *
+     * @return
+     */
     protected synchronized RequestFuture<Void> lookupCoordinator() {
+
         if (findCoordinatorFuture == null) {
             // find a node to ask about the coordinator
+            //寻找一个负载最低的Node:也就是InFlightRequest中没有确认的请求里面最少的
             Node node = this.client.leastLoadedNode();
             if (node == null) {
+                //找不到可用的节点，那么返回一个异常结束的RequestFuture
                 log.debug("No broker available to send FindCoordinator request");
                 return RequestFuture.noBrokersAvailable();
-            } else
+            } else {
                 findCoordinatorFuture = sendFindCoordinatorRequest(node);
+            }
         }
         return findCoordinatorFuture;
     }
@@ -780,8 +796,11 @@ public abstract class AbstractCoordinator implements Closeable {
         public void onSuccess(ClientResponse resp, RequestFuture<Void> future) {
 
             log.debug("Received FindCoordinator response {}", resp);
+
+            //把保存的future清除掉
             clearFindCoordinatorFuture();
 
+            //获取到响应
             FindCoordinatorResponse findCoordinatorResponse = (FindCoordinatorResponse) resp.responseBody();
             Errors error = findCoordinatorResponse.error();
             if (error == Errors.NONE) {
