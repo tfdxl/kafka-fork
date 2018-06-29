@@ -181,6 +181,7 @@ public abstract class AbstractCoordinator implements Closeable {
     protected abstract void onJoinPrepare(int generation, String memberId);
 
     /**
+     * consumer group的分配操作，group下面的leader将分配状态推送到组内成员
      * Perform assignment for the group. This is used by the leader to push state to all the members
      * of the group (e.g. to push partition assignments in the case of the new consumer)
      *
@@ -254,8 +255,9 @@ public abstract class AbstractCoordinator implements Closeable {
             }
 
             remainingMs = timeoutMs - (time.milliseconds() - startTimeMs);
-            if (remainingMs <= 0)
+            if (remainingMs <= 0) {
                 break;
+            }
         }
 
         return !coordinatorUnknown();
