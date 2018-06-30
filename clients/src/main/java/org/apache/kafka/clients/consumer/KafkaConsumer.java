@@ -528,6 +528,8 @@ public class KafkaConsumer<K, V> implements Consumer<K, V> {
     final Metrics metrics;
 
     private final Logger log;
+
+    //clientId
     private final String clientId;
 
     //消费者协调器，这是个什么鬼？控制着consumer和服务端GroupCoordinator之间的通信逻辑
