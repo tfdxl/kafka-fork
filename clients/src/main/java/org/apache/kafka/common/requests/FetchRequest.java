@@ -151,9 +151,25 @@ public class FetchRequest extends AbstractRequest {
             EPOCH,
             new Field(TOPICS_KEY_NAME, new ArrayOf(FETCH_REQUEST_TOPIC_V5), "Topics to fetch in the order provided."),
             new Field(FORGOTTEN_TOPICS_DATA, new ArrayOf(FORGOTTEN_TOPIC_DATA), "Topics to remove from the fetch session."));
+
+
+    /**
+     * 用来标志Follower的ID，Consumer和Follower都使用FetchRequest从Leader获取消息，Consumer默认是-1
+     */
     private final int replicaId;
+    /**
+     * 请求的最大等待时间
+     */
     private final int maxWait;
+
+    /**
+     * 响应的最小负载
+     */
     private final int minBytes;
+
+    /**
+     * 每次fetch的最大字节数
+     */
     private final int maxBytes;
     private final IsolationLevel isolationLevel;
     // Note: the iteration order of this map is significant, since it determines the order
@@ -162,6 +178,7 @@ public class FetchRequest extends AbstractRequest {
     private final Map<TopicPartition, PartitionData> fetchData;
     private final List<TopicPartition> toForget;
     private final FetchMetadata metadata;
+
     private FetchRequest(short version, int replicaId, int maxWait, int minBytes, int maxBytes,
                          Map<TopicPartition, PartitionData> fetchData, IsolationLevel isolationLevel,
                          List<TopicPartition> toForget, FetchMetadata metadata) {

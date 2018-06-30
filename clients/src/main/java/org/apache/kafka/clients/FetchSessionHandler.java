@@ -32,6 +32,7 @@ import java.util.Map.Entry;
 import static org.apache.kafka.common.requests.FetchMetadata.INVALID_SESSION_ID;
 
 /**
+ * 获取消息的session处理器维护了fetch的session信息和broker之间
  * FetchSessionHandler maintains the fetch session state for connecting to a broker.
  * <p>
  * Using the protocol outlined by KIP-227, clients can create incremental fetch sessions.

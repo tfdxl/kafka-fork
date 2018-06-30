@@ -162,7 +162,7 @@ public class Fetcher<K, V> implements SubscriptionState.Listener, Closeable {
      * Set-up a fetch request for any node that we have assigned partitions for which doesn't already have
      * an in-flight fetch or pending fetch data.
      *
-     * @return number of fetches sent
+     * @return number of fetches sent 发送的fetch的数量
      */
     public int sendFetches() {
         Map<Node, FetchSessionHandler.FetchRequestData> fetchRequestMap = prepareFetchRequests();
@@ -767,6 +767,11 @@ public class Fetcher<K, V> implements SubscriptionState.Listener, Closeable {
             future.complete(new ListOffsetResult(fetchedOffsets, partitionsToRetry));
     }
 
+    /**
+     * 查找fetchable的分区
+     *
+     * @return
+     */
     private List<TopicPartition> fetchablePartitions() {
         Set<TopicPartition> exclude = new HashSet<>();
         List<TopicPartition> fetchable = subscriptions.fetchablePartitions();
@@ -787,6 +792,10 @@ public class Fetcher<K, V> implements SubscriptionState.Listener, Closeable {
     private Map<Node, FetchSessionHandler.FetchRequestData> prepareFetchRequests() {
         // create the fetch info
         Cluster cluster = metadata.fetch();
+
+        /**
+         * 按照条件查找fetchable分区
+         */
         Map<Node, FetchSessionHandler.Builder> fetchable = new LinkedHashMap<>();
         for (TopicPartition partition : fetchablePartitions()) {
             Node node = cluster.leaderFor(partition);

@@ -27,6 +27,10 @@ import java.util.*;
 public final class Cluster {
 
     private final boolean isBootstrapConfigured;
+
+    /**
+     * 所有的节点
+     */
     private final List<Node> nodes;
     private final Set<String> unauthorizedTopics;
     //kafka内部使用的topic
