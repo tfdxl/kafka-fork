@@ -50,7 +50,9 @@ import java.util.concurrent.atomic.AtomicInteger;
  * This class manages the coordination process with the consumer coordinator.
  */
 public final class ConsumerCoordinator extends AbstractCoordinator {
+
     private final Logger log;
+
     //用户自定义的分区指定实现
     private final List<PartitionAssignor> assignors;
 
@@ -58,6 +60,10 @@ public final class ConsumerCoordinator extends AbstractCoordinator {
     private final Metadata metadata;
     private final ConsumerCoordinatorMetrics sensors;
     private final SubscriptionState subscriptions;
+
+    /**
+     * 缺省OffsetCommit回调
+     */
     private final OffsetCommitCallback defaultOffsetCommitCallback;
 
     /**
