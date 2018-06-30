@@ -611,10 +611,14 @@ public final class ConsumerCoordinator extends AbstractCoordinator {
         long startMs = now;
         long remainingMs = timeoutMs;
         do {
+
+            //coordinator未知
             if (coordinatorUnknown()) {
+
+                //连接失败
                 if (!ensureCoordinatorReady(now, remainingMs))
                     return false;
-
+                //剩余的时间
                 remainingMs = timeoutMs - (time.milliseconds() - startMs);
             }
 
@@ -632,12 +636,17 @@ public final class ConsumerCoordinator extends AbstractCoordinator {
                 return true;
             }
 
-            if (future.failed() && !future.isRetriable())
+            //失败了，并且不能重试那就抛异常
+            if (future.failed() && !future.isRetriable()) {
                 throw future.exception();
+            }
 
+            //休息重试的时间间隔
             time.sleep(retryBackoffMs);
 
             now = time.milliseconds();
+
+            //剩下的时间
             remainingMs = timeoutMs - (now - startMs);
         } while (remainingMs > 0);
 
