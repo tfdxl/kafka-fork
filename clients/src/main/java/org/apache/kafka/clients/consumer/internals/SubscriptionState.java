@@ -98,8 +98,9 @@ public class SubscriptionState {
     }
 
     public void subscribe(Set<String> topics, ConsumerRebalanceListener listener) {
-        if (listener == null)
+        if (listener == null) {
             throw new IllegalArgumentException("RebalanceListener cannot be null");
+        }
 
         //自动topic
         setSubscriptionType(SubscriptionType.AUTO_TOPICS);
