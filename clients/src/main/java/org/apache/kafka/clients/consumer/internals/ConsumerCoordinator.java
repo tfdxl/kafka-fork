@@ -654,7 +654,12 @@ public final class ConsumerCoordinator extends AbstractCoordinator {
     }
 
     public void maybeAutoCommitOffsetsAsync(long now) {
+
+        /**
+         * 自动提交，并且时间大于下次时间
+         */
         if (autoCommitEnabled && now >= nextAutoCommitDeadline) {
+            //重新设置下次提交时间
             this.nextAutoCommitDeadline = now + autoCommitIntervalMs;
             doAutoCommitOffsetsAsync();
         }
