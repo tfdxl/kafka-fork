@@ -495,6 +495,7 @@ public final class ConsumerCoordinator extends AbstractCoordinator {
             RequestFuture<Map<TopicPartition, OffsetAndMetadata>> future = sendOffsetFetchRequest(partitions);
             client.poll(future);
 
+            //返回从服务端得到的offset
             if (future.succeeded()) {
                 return future.value();
             }
