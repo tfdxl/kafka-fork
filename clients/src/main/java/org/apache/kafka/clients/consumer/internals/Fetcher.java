@@ -84,6 +84,8 @@ public class Fetcher<K, V> implements SubscriptionState.Listener, Closeable {
 
     //每个FetchResponse首先会转换成为CompletedFetch对象进入队列进行缓存，此时并没有解析消息
     private final ConcurrentLinkedQueue<CompletedFetch> completedFetches;
+
+    //解压缩
     private final BufferSupplier decompressionBufferSupplier = BufferSupplier.create();
 
     //key,value的反序列化器
@@ -345,8 +347,9 @@ public class Fetcher<K, V> implements SubscriptionState.Listener, Closeable {
     public void resetOffsetsIfNeeded() {
         // Raise exception from previous offset fetch if there is one
         RuntimeException exception = cachedListOffsetsException.getAndSet(null);
-        if (exception != null)
+        if (exception != null) {
             throw exception;
+        }
 
         Set<TopicPartition> partitions = subscriptions.partitionsNeedingReset(time.milliseconds());
         if (partitions.isEmpty())
