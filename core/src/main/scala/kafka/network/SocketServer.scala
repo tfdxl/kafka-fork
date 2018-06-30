@@ -242,6 +242,7 @@ class SocketServer(val config: KafkaConfig, val metrics: Metrics, val time: Time
   */
 private[kafka] abstract class AbstractServerThread(connectionQuotas: ConnectionQuotas) extends Runnable with Logging {
 
+  //标志当前startup是否完成
   private val startupLatch = new CountDownLatch(1)
 
   // `shutdown()` is invoked before `startupComplete` and `shutdownComplete` if an exception is thrown in the constructor
@@ -249,6 +250,7 @@ private[kafka] abstract class AbstractServerThread(connectionQuotas: ConnectionQ
   // latch and then replace it in `startupComplete()`.
   @volatile private var shutdownLatch = new CountDownLatch(0)
 
+  //标志当前的线程是否存活
   private val alive = new AtomicBoolean(true)
 
   def wakeup(): Unit
