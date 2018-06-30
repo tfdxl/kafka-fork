@@ -784,7 +784,11 @@ public final class ConsumerCoordinator extends AbstractCoordinator {
         }
     }
 
+    /**
+     * offset完成
+     */
     private static class OffsetCommitCompletion {
+
         private final OffsetCommitCallback callback;
         private final Map<TopicPartition, OffsetAndMetadata> offsets;
         private final Exception exception;
@@ -796,8 +800,9 @@ public final class ConsumerCoordinator extends AbstractCoordinator {
         }
 
         public void invoke() {
-            if (callback != null)
+            if (callback != null) {
                 callback.onComplete(offsets, exception);
+            }
         }
     }
 
