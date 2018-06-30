@@ -712,6 +712,7 @@ public final class ConsumerCoordinator extends AbstractCoordinator {
         final Generation generation;
         if (subscriptions.partitionsAutoAssigned())
             generation = generation();
+            //用户指定的分配
         else
             generation = Generation.NO_GENERATION;
 

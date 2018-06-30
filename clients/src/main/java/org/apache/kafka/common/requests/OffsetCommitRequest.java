@@ -96,11 +96,18 @@ public class OffsetCommitRequest extends AbstractRequest {
             new Field(TOPICS_KEY_NAME, new ArrayOf(OFFSET_COMMIT_REQUEST_TOPIC_V2), "Topics to commit offsets."));
     /* v3 request is same as v2. Throttle time has been added to response */
     private static final Schema OFFSET_COMMIT_REQUEST_V3 = OFFSET_COMMIT_REQUEST_V2;
+
+    //Consumer GroupId
     private final String groupId;
+    //Group Coordinator分配给消费者的ID
     private final String memberId;
+    //消费者保存的年代信息
     private final int generationId;
+    //此offset最长的保存时间
     private final long retentionTime;
+    //topic+partition-->offset+metadata
     private final Map<TopicPartition, PartitionData> offsetData;
+
     private OffsetCommitRequest(String groupId, int generationId, String memberId, long retentionTime,
                                 Map<TopicPartition, PartitionData> offsetData, short version) {
         super(version);
