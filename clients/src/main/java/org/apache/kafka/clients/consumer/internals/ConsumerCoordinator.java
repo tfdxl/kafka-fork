@@ -85,6 +85,7 @@ public final class ConsumerCoordinator extends AbstractCoordinator {
     // of offset commit requests, which may be invoked from the heartbeat thread
     private final ConcurrentLinkedQueue<OffsetCommitCompletion> completedOffsetCommits;
 
+    //是不是consumer group的leader
     private boolean isLeader = false;
     private Set<String> joinedSubscription;
     //用来存储Metadata的快照信息，主要用来检测Topic是否发生了分区数量的变化
@@ -93,6 +94,8 @@ public final class ConsumerCoordinator extends AbstractCoordinator {
     //也是用来存储Metadata的快照信息，不过是用来检测Partition分配的过程中有没有发生分区数量变化，
     //具体是Leader消费者开始分区分配操作前，
     private MetadataSnapshot assignmentSnapshot;
+
+    //下次自动提交的时间
     private long nextAutoCommitDeadline;
 
     /**
