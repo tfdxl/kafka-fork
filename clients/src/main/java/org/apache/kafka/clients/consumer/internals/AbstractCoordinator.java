@@ -108,6 +108,7 @@ public abstract class AbstractCoordinator implements Closeable {
     //定时任务，负责定时发送心跳请求和心跳响应的处理
     private HeartbeatThread heartbeatThread = null;
 
+    //是否需要重新join
     private boolean rejoinNeeded = true;
 
     //标记是否需要执行发送JoinGroupRequest请求之前的准备操作
