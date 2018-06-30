@@ -77,8 +77,9 @@ public class SubscriptionState {
 
     private static Map<TopicPartition, TopicPartitionState> partitionToStateMap(Collection<TopicPartition> assignments) {
         Map<TopicPartition, TopicPartitionState> map = new HashMap<>(assignments.size());
-        for (TopicPartition tp : assignments)
+        for (TopicPartition tp : assignments) {
             map.put(tp, new TopicPartitionState());
+        }
         return map;
     }
 

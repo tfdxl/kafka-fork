@@ -168,10 +168,14 @@ public class Fetcher<K, V> implements SubscriptionState.Listener, Closeable {
         Map<Node, FetchSessionHandler.FetchRequestData> fetchRequestMap = prepareFetchRequests();
         for (Map.Entry<Node, FetchSessionHandler.FetchRequestData> entry : fetchRequestMap.entrySet()) {
             final Node fetchTarget = entry.getKey();
+            //获取请求数据
             final FetchSessionHandler.FetchRequestData data = entry.getValue();
             final FetchRequest.Builder request = FetchRequest.Builder
+                    //consumer的数据
                     .forConsumer(this.maxWaitMs, this.minBytes, data.toSend())
+                    //隔离级别
                     .isolationLevel(isolationLevel)
+                    //获取的最大的字节数
                     .setMaxBytes(this.maxBytes)
                     .metadata(data.metadata())
                     .toForget(data.toForget());

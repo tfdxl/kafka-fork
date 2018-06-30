@@ -33,6 +33,7 @@ import java.util.*;
  */
 public class PartitionStates<S> {
 
+    //TopicPartition ---> PartitionState
     private final LinkedHashMap<TopicPartition, S> map = new LinkedHashMap<>();
 
     public PartitionStates() {
