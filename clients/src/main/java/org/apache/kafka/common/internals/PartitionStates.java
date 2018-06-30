@@ -88,6 +88,12 @@ public class PartitionStates<S> {
         return new ArrayList<>(map.values());
     }
 
+    /**
+     * 获取TopicPartition下面的state
+     *
+     * @param topicPartition
+     * @return
+     */
     public S stateValue(TopicPartition topicPartition) {
         return map.get(topicPartition);
     }
