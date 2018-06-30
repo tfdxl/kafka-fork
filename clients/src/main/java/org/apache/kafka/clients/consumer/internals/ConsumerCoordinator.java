@@ -484,8 +484,9 @@ public final class ConsumerCoordinator extends AbstractCoordinator {
      * @return A map from partition to the committed offset
      */
     public Map<TopicPartition, OffsetAndMetadata> fetchCommittedOffsets(Set<TopicPartition> partitions) {
-        if (partitions.isEmpty())
+        if (partitions.isEmpty()) {
             return Collections.emptyMap();
+        }
 
         while (true) {
             ensureCoordinatorReady();
@@ -494,11 +495,14 @@ public final class ConsumerCoordinator extends AbstractCoordinator {
             RequestFuture<Map<TopicPartition, OffsetAndMetadata>> future = sendOffsetFetchRequest(partitions);
             client.poll(future);
 
-            if (future.succeeded())
+            if (future.succeeded()) {
                 return future.value();
+            }
 
-            if (!future.isRetriable())
+            //如果是RetriableException异常，那么退避一段时间，重试
+            if (!future.isRetriable()) {
                 throw future.exception();
+            }
 
             time.sleep(retryBackoffMs);
         }
