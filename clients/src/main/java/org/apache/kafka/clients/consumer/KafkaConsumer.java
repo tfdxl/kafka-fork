@@ -1100,11 +1100,13 @@ public class KafkaConsumer<K, V> implements Consumer<K, V> {
     public ConsumerRecords<K, V> poll(long timeout) {
         acquireAndEnsureOpen();
         try {
-            if (timeout < 0)
+            if (timeout < 0) {
                 throw new IllegalArgumentException("Timeout must not be negative");
+            }
 
-            if (this.subscriptions.hasNoSubscriptionOrUserAssignment())
+            if (this.subscriptions.hasNoSubscriptionOrUserAssignment()) {
                 throw new IllegalStateException("Consumer is not subscribed to any topics or assigned any partitions");
+            }
 
             // poll for new data until the timeout expires
             long start = time.milliseconds();
