@@ -62,24 +62,40 @@ public class Fetcher<K, V> implements SubscriptionState.Listener, Closeable {
     private final Time time;
     private final int minBytes;
     private final int maxBytes;
+
+    //等待FetchResponse的最长时间，服务端根据此时间决定合适进行响应
     private final int maxWaitMs;
+
     //每次fetch操作最大的字节数
     private final int fetchSize;
     private final long retryBackoffMs;
     private final long requestTimeoutMs;
+
+    //每次获取Record的最大数量
     private final int maxPollRecords;
     private final boolean checkCrcs;
+
+    //kafka的元信息
     private final Metadata metadata;
     private final FetchManagerMetrics sensors;
+
+    //每一个TopicPartition的消费状态
     private final SubscriptionState subscriptions;
+
+    //每个FetchResponse首先会转换成为CompletedFetch对象进入队列进行缓存，此时并没有解析消息
     private final ConcurrentLinkedQueue<CompletedFetch> completedFetches;
     private final BufferSupplier decompressionBufferSupplier = BufferSupplier.create();
+
+    //key,value的反序列化器
     private final ExtendedDeserializer<K> keyDeserializer;
     private final ExtendedDeserializer<V> valueDeserializer;
+
+    //
     private final IsolationLevel isolationLevel;
     private final Map<Integer, FetchSessionHandler> sessionHandlers;
     private final AtomicReference<RuntimeException> cachedListOffsetsException = new AtomicReference<>();
 
+    //
     private PartitionRecords nextInLineRecords = null;
 
     public Fetcher(LogContext logContext,
