@@ -1150,8 +1150,9 @@ public class KafkaConsumer<K, V> implements Consumer<K, V> {
 
         // if data is available already, return it immediately
         Map<TopicPartition, List<ConsumerRecord<K, V>>> records = fetcher.fetchedRecords();
-        if (!records.isEmpty())
+        if (!records.isEmpty()) {
             return records;
+        }
 
         // send any new fetches (won't resend pending fetches)
         fetcher.sendFetches();
