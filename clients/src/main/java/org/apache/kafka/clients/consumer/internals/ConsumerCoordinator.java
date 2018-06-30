@@ -601,8 +601,9 @@ public final class ConsumerCoordinator extends AbstractCoordinator {
     public boolean commitOffsetsSync(Map<TopicPartition, OffsetAndMetadata> offsets, long timeoutMs) {
         invokeCompletedOffsetCommitCallbacks();
 
-        if (offsets.isEmpty())
+        if (offsets.isEmpty()) {
             return true;
+        }
 
         long now = time.milliseconds();
         long startMs = now;
