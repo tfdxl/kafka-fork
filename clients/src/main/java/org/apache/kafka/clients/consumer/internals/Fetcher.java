@@ -53,13 +53,17 @@ import static org.apache.kafka.common.serialization.ExtendedDeserializer.Wrapper
  * This class manage the fetching process with the brokers.
  */
 public class Fetcher<K, V> implements SubscriptionState.Listener, Closeable {
+
     private final Logger log;
+
     private final LogContext logContext;
+    //负责网络通信
     private final ConsumerNetworkClient client;
     private final Time time;
     private final int minBytes;
     private final int maxBytes;
     private final int maxWaitMs;
+    //每次fetch操作最大的字节数
     private final int fetchSize;
     private final long retryBackoffMs;
     private final long requestTimeoutMs;
