@@ -304,6 +304,7 @@ public class SubscriptionState {
 
     public Map<TopicPartition, OffsetAndMetadata> allConsumed() {
         Map<TopicPartition, OffsetAndMetadata> allConsumed = new HashMap<>();
+        //把所有的offset追加进去
         for (PartitionStates.PartitionState<TopicPartitionState> state : assignment.partitionStates()) {
             if (state.value().hasValidPosition())
                 allConsumed.put(state.topicPartition(), new OffsetAndMetadata(state.value().position));
