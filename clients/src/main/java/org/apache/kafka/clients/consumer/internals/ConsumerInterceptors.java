@@ -71,6 +71,7 @@ public class ConsumerInterceptors<K, V> implements Closeable {
     }
 
     /**
+     * 当commit请求从broker返回的时候回调
      * This is called when commit request returns successfully from the broker.
      * <p>
      * This method calls {@link ConsumerInterceptor#onCommit(Map)} method for each interceptor.

@@ -71,6 +71,8 @@ public final class ConsumerCoordinator extends AbstractCoordinator {
      */
     private final boolean autoCommitEnabled;
     private final int autoCommitIntervalMs;
+
+    //拦截器
     private final ConsumerInterceptors<?, ?> interceptors;
 
     /**
