@@ -107,7 +107,6 @@ public class OffsetCommitRequest extends AbstractRequest {
     private final long retentionTime;
     //topic+partition-->offset+metadata
     private final Map<TopicPartition, PartitionData> offsetData;
-
     private OffsetCommitRequest(String groupId, int generationId, String memberId, long retentionTime,
                                 Map<TopicPartition, PartitionData> offsetData, short version) {
         super(version);
