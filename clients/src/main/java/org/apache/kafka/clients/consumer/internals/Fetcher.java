@@ -257,8 +257,9 @@ public class Fetcher<K, V> implements SubscriptionState.Listener, Closeable {
             RequestFuture<ClientResponse> future = sendMetadataRequest(request);
             client.poll(future, remaining);
 
-            if (future.failed() && !future.isRetriable())
+            if (future.failed() && !future.isRetriable()) {
                 throw future.exception();
+            }
 
             if (future.succeeded()) {
                 MetadataResponse response = (MetadataResponse) future.value().responseBody();
