@@ -714,12 +714,15 @@ public final class ConsumerCoordinator extends AbstractCoordinator {
      * @return A request future whose value indicates whether the commit was successful or not
      */
     private RequestFuture<Void> sendOffsetCommitRequest(final Map<TopicPartition, OffsetAndMetadata> offsets) {
-        if (offsets.isEmpty())
+        if (offsets.isEmpty()) {
             return RequestFuture.voidSuccess();
+        }
 
+        //group coordinator
         Node coordinator = checkAndGetCoordinator();
-        if (coordinator == null)
+        if (coordinator == null) {
             return RequestFuture.coordinatorNotAvailable();
+        }
 
         // create the offset commit request
         Map<TopicPartition, OffsetCommitRequest.PartitionData> offsetData = new HashMap<>(offsets.size());
@@ -741,8 +744,9 @@ public final class ConsumerCoordinator extends AbstractCoordinator {
 
         // if the generation is null, we are not part of an active group (and we expect to be).
         // the only thing we can do is fail the commit and let the user rejoin the group in poll()
-        if (generation == null)
+        if (generation == null) {
             return RequestFuture.failure(new CommitFailedException());
+        }
 
         OffsetCommitRequest.Builder builder = new OffsetCommitRequest.Builder(this.groupId, offsetData).
                 setGenerationId(generation.generationId).
