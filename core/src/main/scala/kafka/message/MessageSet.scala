@@ -29,6 +29,7 @@ object MessageSet {
 
   val MessageSizeLength = 4
   val OffsetLength = 8
+  //LogOverhead的size大小
   val LogOverhead = MessageSizeLength + OffsetLength
   val Empty = new ByteBufferMessageSet(ByteBuffer.allocate(0))
 
