@@ -29,9 +29,23 @@ import java.nio.ByteBuffer;
 
 import static org.apache.kafka.common.protocol.ApiKeys.API_VERSIONS;
 
+/**
+ * 请求的上下文
+ */
 public class RequestContext {
+    /**
+     * 请求头
+     */
     public final RequestHeader header;
+
+    /**
+     * 服务端的连接标识符
+     */
     public final String connectionId;
+
+    /**
+     * 客户端的地址
+     */
     public final InetAddress clientAddress;
     public final KafkaPrincipal principal;
     public final ListenerName listenerName;

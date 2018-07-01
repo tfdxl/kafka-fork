@@ -401,4 +401,7 @@ public class ProducerConfig extends AbstractConfig {
         return CommonClientConfigs.postProcessReconnectBackoffConfigs(this, parsedValues);
     }
 
+    public static void main(String[] args) {
+
+    }
 }

@@ -49,9 +49,16 @@ public class RequestHeader extends AbstractRequestResponse {
             new Field(API_VERSION_FIELD_NAME, INT16, "The version of the API."),
             new Field(CORRELATION_ID_FIELD_NAME, INT32, "A user-supplied integer value that will be passed back with the response"));
 
+    //具体的API
     private final ApiKeys apiKey;
+
+    //API的版本
     private final short apiVersion;
+
+    //客户端的id，用户定义的标识符，给客户端来标识请求
     private final String clientId;
+
+    //关联id，用户定义的数字，将会在响应中传输给客户端
     private final int correlationId;
 
     public RequestHeader(Struct struct) {

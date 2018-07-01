@@ -30,6 +30,9 @@ import java.io.IOException;
 import java.nio.channels.*;
 import java.security.Principal;
 
+/**
+ * 传输层
+ */
 public interface TransportLayer extends ScatteringByteChannel, GatheringByteChannel {
 
     /**

@@ -41,6 +41,10 @@ public class KafkaChannel {
     // Track connection and mute state of channels to enable outstanding requests on channels to be
     // processed after the channel is disconnected.
     private boolean disconnected;
+
+    /**
+     * 是否静音了
+     */
     private boolean muted;
     private ChannelState state;
 
@@ -130,6 +134,9 @@ public class KafkaChannel {
         muted = true;
     }
 
+    /**
+     * 取消静音，继续注册读取事件
+     */
     void unmute() {
         if (!disconnected)
             transportLayer.addInterestOps(SelectionKey.OP_READ);
@@ -179,10 +186,23 @@ public class KafkaChannel {
         return socket.getInetAddress().toString();
     }
 
+    /**
+     * 设置要发送的数据，并且注册写事件
+     *
+     * @param send
+     */
     public void setSend(Send send) {
-        if (this.send != null)
+
+        /**
+         * 已经有send数据那么就等待
+         */
+        if (this.send != null) {
             throw new IllegalStateException("Attempt to begin a send operation with prior send operation still in progress, connection id is " + id);
+        }
         this.send = send;
+        /**
+         * 注册写事件
+         */
         this.transportLayer.addInterestOps(SelectionKey.OP_WRITE);
     }
 

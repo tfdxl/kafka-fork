@@ -514,7 +514,7 @@ private[kafka] object Processor {
 }
 
 /**
-  * 线程处理来自一个链接的所有的请求:主要用于请求和写回响应的操作
+  * 线程处理来自一个链接的所有的请求:主要用于请求和写回响应的操作,不参与真正的业务逻辑处理，也就是个框架的作用
   * Thread that processes all requests from a single connection. There are N of these running in parallel
   * each of which has its own selector
   */
@@ -630,7 +630,15 @@ private[kafka] class Processor(val id: Int,
           // setup any new connections that have been queued up
           configureNewConnections()
           // register any new responses for writing
+          /**
+            * 处理要发送的响应
+            */
           processNewResponses()
+
+          /**
+            * 读取请求，发送响应
+            * 每次调用都会将读取的请求，发送成功的请求以及断开的连接加入completedReceives,completedSends,disconnected队列中等待处理
+            */
           poll()
           processCompletedReceives()
           processCompletedSends()
@@ -670,6 +678,7 @@ private[kafka] class Processor(val id: Int,
   private def processNewResponses() {
     var curr: RequestChannel.Response = null
     while ( {
+      //竟然能拆分成两个语句执行，其实它关心的是最后一句的判别
       curr = dequeueResponse();
       curr != null
     }) {
@@ -684,10 +693,12 @@ private[kafka] class Processor(val id: Int,
             trace("Socket server received empty response to send, registering for read: " + curr)
             openOrClosingChannel(channelId).foreach(c => selector.unmute(c.id))
           case RequestChannel.SendAction =>
+            //表示Response需要发送给客户端，则查找对应的KafkaChannel,为它注册WRITE时间
             val responseSend = curr.responseSend.getOrElse(
               throw new IllegalStateException(s"responseSend must be defined for SendAction, response: $curr"))
             sendResponse(curr, responseSend)
           case RequestChannel.CloseConnectionAction =>
+            //关闭连接
             updateRequestMetrics(curr)
             trace("Closing socket connection actively according to the response code.")
             close(channelId)
@@ -712,7 +723,10 @@ private[kafka] class Processor(val id: Int,
     // removed from the Selector after discarding any pending staged receives.
     // `openOrClosingChannel` can be None if the selector closed the connection because it was idle for too long
     if (openOrClosingChannel(connectionId).isDefined) {
+
+      //发送响应
       selector.send(responseSend)
+      //加入待发送的响应
       inflightResponses += (connectionId -> response)
     }
   }
@@ -728,17 +742,25 @@ private[kafka] class Processor(val id: Int,
     }
   }
 
+  /**
+    * 处理已经完成的接收的请求
+    */
   private def processCompletedReceives() {
     selector.completedReceives.asScala.foreach { receive =>
       try {
         openOrClosingChannel(receive.source) match {
           case Some(channel) =>
+            //抽取RequestHeader
             val header = RequestHeader.parse(receive.payload)
+            //封装上下文
             val context = new RequestContext(header, receive.source, channel.socketAddress,
               channel.principal, listenerName, securityProtocol)
+            //封装成请求
             val req = new RequestChannel.Request(processor = id, context = context,
               startTimeNanos = time.nanoseconds, memoryPool, receive.payload, requestChannel.metrics)
+            //添加到requestQueue等待后续处理
             requestChannel.sendRequest(req)
+            //取消注册OP_READ事件，连接不再读取数据
             selector.mute(receive.source)
           case None =>
             // This should never happen since completed receives are processed immediately after `poll()`
@@ -756,10 +778,13 @@ private[kafka] class Processor(val id: Int,
   private def processCompletedSends() {
     selector.completedSends.asScala.foreach { send =>
       try {
+        //将inflightResponse里保存的数据删除
         val resp = inflightResponses.remove(send.destination).getOrElse {
           throw new IllegalStateException(s"Send for ${send.destination} completed, but not in `inflightResponses`")
         }
+        //更新一些统计
         updateRequestMetrics(resp)
+        //为对应的连接注册OP_READ事件，允许从该连接读取数据
         selector.unmute(send.destination)
       } catch {
         case e: Throwable => processChannelException(send.destination,
@@ -769,11 +794,15 @@ private[kafka] class Processor(val id: Int,
   }
 
   private def updateRequestMetrics(response: RequestChannel.Response) {
+    //获取到请求
     val request = response.request
     val networkThreadTimeNanos = openOrClosingChannel(request.context.connectionId).fold(0L)(_.getAndResetNetworkThreadTimeNanos())
     request.updateRequestMetrics(networkThreadTimeNanos, response)
   }
 
+  /**
+    * 处理断开的请求
+    */
   private def processDisconnected() {
     selector.disconnected.keySet.asScala.foreach { connectionId =>
       try {
@@ -869,9 +898,12 @@ private[kafka] class Processor(val id: Int,
   }
 
   private def dequeueResponse(): RequestChannel.Response = {
+    //从响应队列中拿出响应
     val response = responseQueue.poll()
-    if (response != null)
-      response.request.responseDequeueTimeNanos = Time.SYSTEM.nanoseconds
+    if (response != null) {
+      //在请求中写入响应的队列拿出的时间
+      response.request.responseDequeueTimeNanos = Time.SYSTEM.nanoseconds()
+    }
     response
   }
 

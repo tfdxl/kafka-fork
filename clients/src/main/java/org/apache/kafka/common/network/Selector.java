@@ -333,13 +333,20 @@ public class Selector implements Selectable, AutoCloseable {
     }
 
     /**
+     * 排队待发送的数据，等待后续的poll的调用进行发送
      * Queue the given request for sending in the subsequent {@link #poll(long)} calls
      *
      * @param send The request to send
      */
     public void send(Send send) {
+
+        //获取连接标识符
         String connectionId = send.destination();
+
+        //获取channel
         KafkaChannel channel = openOrClosingChannelOrFail(connectionId);
+
+        //如果正在关闭的channel包含了连接，那么就不发送
         if (closingChannels.containsKey(connectionId)) {
             // ensure notification via `disconnected`, leave channel in the state in which closing was triggered
             this.failedSends.add(connectionId);
@@ -347,6 +354,9 @@ public class Selector implements Selectable, AutoCloseable {
             try {
                 channel.setSend(send);
             } catch (Exception e) {
+                /**
+                 * 发送失败的情况
+                 */
                 // update the state for consistency, the channel will be discarded after `close`
                 channel.state(ChannelState.FAILED_SEND);
                 // ensure notification via `disconnected` when `failedSends` are processed in the next poll
@@ -393,8 +403,9 @@ public class Selector implements Selectable, AutoCloseable {
      */
     @Override
     public void poll(long timeout) throws IOException {
-        if (timeout < 0)
+        if (timeout < 0) {
             throw new IllegalArgumentException("timeout should be >= 0");
+        }
 
         boolean madeReadProgressLastCall = madeReadProgressLastPoll;
         clear();
@@ -658,6 +669,7 @@ public class Selector implements Selectable, AutoCloseable {
     }
 
     /**
+     * 清除之前的poll的结果
      * Clear the results from the prior poll
      */
     private void clear() {
