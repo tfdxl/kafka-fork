@@ -39,7 +39,9 @@ import scala.reflect.ClassTag
 object RequestChannel extends Logging {
   private val requestLogger = Logger("kafka.request.logger")
 
+  //请求队列的大小
   val RequestQueueSizeMetric = "RequestQueueSize"
+  //相应队列的大小
   val ResponseQueueSizeMetric = "ResponseQueueSize"
   val ProcessorMetricTag = "processor"
 
@@ -246,7 +248,10 @@ object RequestChannel extends Logging {
 class RequestChannel(val queueSize: Int) extends KafkaMetricsGroup {
   import RequestChannel._
   val metrics = new RequestChannel.Metrics
+  //请求的队列，有界队列
   private val requestQueue = new ArrayBlockingQueue[BaseRequest](queueSize)
+
+  //ProcessorId-->Processor
   private val processors = new ConcurrentHashMap[Int, Processor]()
 
   newGauge(RequestQueueSizeMetric, new Gauge[Int] {
