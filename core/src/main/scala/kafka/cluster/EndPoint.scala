@@ -60,6 +60,7 @@ object EndPoint {
 }
 
 /**
+  * 封装了要监听的host,port以及使用的网络协议
  * Part of the broker definition - matching host/port pair to a protocol
  */
 case class EndPoint(host: String, port: Int, listenerName: ListenerName, securityProtocol: SecurityProtocol) {

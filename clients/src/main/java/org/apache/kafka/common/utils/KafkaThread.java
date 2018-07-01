@@ -52,9 +52,4 @@ public class KafkaThread extends Thread {
             }
         });
     }
-
-    public static void main(String[] args) {
-        KafkaThread thread = new KafkaThread("Thread-01",true);
-        thread.start();
-    }
 }

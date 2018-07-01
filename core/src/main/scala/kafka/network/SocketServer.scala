@@ -64,6 +64,7 @@ class SocketServer(val config: KafkaConfig, val metrics: Metrics, val time: Time
 
   private val logContext = new LogContext(s"[SocketServer brokerId=${config.brokerId}] ")
 
+  //
   this.logIdent = logContext.logPrefix
 
   private val memoryPoolSensor = metrics.sensor("MemoryPoolUtilization")
@@ -127,11 +128,13 @@ class SocketServer(val config: KafkaConfig, val metrics: Metrics, val time: Time
 
     val brokerId = config.brokerId
 
+    //遍历所有的host+port
     endpoints.foreach { endpoint =>
       val listenerName = endpoint.listenerName
       val securityProtocol = endpoint.securityProtocol
 
       val acceptor = new Acceptor(endpoint, sendBufferSize, recvBufferSize, brokerId, connectionQuotas)
+      //绑定到一个线程
       KafkaThread.nonDaemon(s"kafka-socket-acceptor-$listenerName-$securityProtocol-${endpoint.port}", acceptor).start()
       acceptor.awaitStartup()
       acceptors.put(endpoint, acceptor)
