@@ -721,12 +721,18 @@ public class ConsumerNetworkClient implements Closeable {
             return false;
         }
 
+        /**
+         * 删除一些过期的请求
+         * @param now
+         * @param unsentExpiryMs
+         * @return
+         */
         public Collection<ClientRequest> removeExpiredRequests(long now, long unsentExpiryMs) {
-            List<ClientRequest> expiredRequests = new ArrayList<>();
+            final List<ClientRequest> expiredRequests = new ArrayList<>();
             for (ConcurrentLinkedQueue<ClientRequest> requests : unsent.values()) {
-                Iterator<ClientRequest> requestIterator = requests.iterator();
+                final Iterator<ClientRequest> requestIterator = requests.iterator();
                 while (requestIterator.hasNext()) {
-                    ClientRequest request = requestIterator.next();
+                    final ClientRequest request = requestIterator.next();
                     if (request.createdTimeMs() < now - unsentExpiryMs) {
                         expiredRequests.add(request);
                         requestIterator.remove();
