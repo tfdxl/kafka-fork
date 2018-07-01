@@ -46,6 +46,7 @@ import scala.collection.mutable.ListBuffer
 abstract class DelayedOperation(override val delayMs: Long,
     lockOpt: Option[Lock] = None) extends TimerTask with Logging {
 
+  //是否已经完成了
   private val completed = new AtomicBoolean(false)
   private val tryCompletePending = new AtomicBoolean(false)
   // Visible for testing
