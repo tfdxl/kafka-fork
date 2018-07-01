@@ -50,13 +50,20 @@ import java.util.concurrent.atomic.AtomicInteger;
  * This class manages the coordination process with the consumer coordinator.
  */
 public final class ConsumerCoordinator extends AbstractCoordinator {
+
     private final Logger log;
+
+    //用户自定义的分区指定实现
     private final List<PartitionAssignor> assignors;
 
     //kafka集群的元信息
     private final Metadata metadata;
     private final ConsumerCoordinatorMetrics sensors;
     private final SubscriptionState subscriptions;
+
+    /**
+     * 缺省OffsetCommit回调
+     */
     private final OffsetCommitCallback defaultOffsetCommitCallback;
 
     /**
@@ -64,6 +71,8 @@ public final class ConsumerCoordinator extends AbstractCoordinator {
      */
     private final boolean autoCommitEnabled;
     private final int autoCommitIntervalMs;
+
+    //拦截器
     private final ConsumerInterceptors<?, ?> interceptors;
 
     /**
@@ -76,6 +85,7 @@ public final class ConsumerCoordinator extends AbstractCoordinator {
     // of offset commit requests, which may be invoked from the heartbeat thread
     private final ConcurrentLinkedQueue<OffsetCommitCompletion> completedOffsetCommits;
 
+    //是不是consumer group的leader
     private boolean isLeader = false;
     private Set<String> joinedSubscription;
     //用来存储Metadata的快照信息，主要用来检测Topic是否发生了分区数量的变化
@@ -84,6 +94,8 @@ public final class ConsumerCoordinator extends AbstractCoordinator {
     //也是用来存储Metadata的快照信息，不过是用来检测Partition分配的过程中有没有发生分区数量变化，
     //具体是Leader消费者开始分区分配操作前，
     private MetadataSnapshot assignmentSnapshot;
+
+    //下次自动提交的时间
     private long nextAutoCommitDeadline;
 
     /**
@@ -340,9 +352,12 @@ public final class ConsumerCoordinator extends AbstractCoordinator {
     protected Map<String, ByteBuffer> performAssignment(String leaderId,
                                                         String assignmentStrategy,
                                                         Map<String, ByteBuffer> allSubscriptions) {
+
+        //找到分区分配器
         PartitionAssignor assignor = lookupAssignor(assignmentStrategy);
-        if (assignor == null)
+        if (assignor == null) {
             throw new IllegalStateException("Coordinator selected invalid assignment protocol: " + assignmentStrategy);
+        }
 
         Set<String> allSubscribedTopics = new HashSet<>();
         Map<String, Subscription> subscriptions = new HashMap<>();
@@ -469,8 +484,9 @@ public final class ConsumerCoordinator extends AbstractCoordinator {
      * @return A map from partition to the committed offset
      */
     public Map<TopicPartition, OffsetAndMetadata> fetchCommittedOffsets(Set<TopicPartition> partitions) {
-        if (partitions.isEmpty())
+        if (partitions.isEmpty()) {
             return Collections.emptyMap();
+        }
 
         while (true) {
             ensureCoordinatorReady();
@@ -479,11 +495,15 @@ public final class ConsumerCoordinator extends AbstractCoordinator {
             RequestFuture<Map<TopicPartition, OffsetAndMetadata>> future = sendOffsetFetchRequest(partitions);
             client.poll(future);
 
-            if (future.succeeded())
+            //返回从服务端得到的offset
+            if (future.succeeded()) {
                 return future.value();
+            }
 
-            if (!future.isRetriable())
+            //如果是RetriableException异常，那么退避一段时间，重试
+            if (!future.isRetriable()) {
                 throw future.exception();
+            }
 
             time.sleep(retryBackoffMs);
         }
@@ -591,17 +611,22 @@ public final class ConsumerCoordinator extends AbstractCoordinator {
     public boolean commitOffsetsSync(Map<TopicPartition, OffsetAndMetadata> offsets, long timeoutMs) {
         invokeCompletedOffsetCommitCallbacks();
 
-        if (offsets.isEmpty())
+        if (offsets.isEmpty()) {
             return true;
+        }
 
         long now = time.milliseconds();
         long startMs = now;
         long remainingMs = timeoutMs;
         do {
+
+            //coordinator未知
             if (coordinatorUnknown()) {
+
+                //连接失败
                 if (!ensureCoordinatorReady(now, remainingMs))
                     return false;
-
+                //剩余的时间
                 remainingMs = timeoutMs - (time.milliseconds() - startMs);
             }
 
@@ -619,12 +644,17 @@ public final class ConsumerCoordinator extends AbstractCoordinator {
                 return true;
             }
 
-            if (future.failed() && !future.isRetriable())
+            //失败了，并且不能重试那就抛异常
+            if (future.failed() && !future.isRetriable()) {
                 throw future.exception();
+            }
 
+            //休息重试的时间间隔
             time.sleep(retryBackoffMs);
 
             now = time.milliseconds();
+
+            //剩下的时间
             remainingMs = timeoutMs - (now - startMs);
         } while (remainingMs > 0);
 
@@ -632,7 +662,12 @@ public final class ConsumerCoordinator extends AbstractCoordinator {
     }
 
     public void maybeAutoCommitOffsetsAsync(long now) {
+
+        /**
+         * 自动提交，并且时间大于下次时间
+         */
         if (autoCommitEnabled && now >= nextAutoCommitDeadline) {
+            //重新设置下次提交时间
             this.nextAutoCommitDeadline = now + autoCommitIntervalMs;
             doAutoCommitOffsetsAsync();
         }
@@ -642,7 +677,7 @@ public final class ConsumerCoordinator extends AbstractCoordinator {
         Map<TopicPartition, OffsetAndMetadata> allConsumedOffsets = subscriptions.allConsumed();
         log.debug("Sending asynchronous auto-commit of offsets {}", allConsumedOffsets);
 
-        commitOffsetsAsync(allConsumedOffsets, new OffsetCommitCallback() {
+        this.commitOffsetsAsync(allConsumedOffsets, new OffsetCommitCallback() {
             @Override
             public void onComplete(Map<TopicPartition, OffsetAndMetadata> offsets, Exception exception) {
                 if (exception != null) {
@@ -687,12 +722,15 @@ public final class ConsumerCoordinator extends AbstractCoordinator {
      * @return A request future whose value indicates whether the commit was successful or not
      */
     private RequestFuture<Void> sendOffsetCommitRequest(final Map<TopicPartition, OffsetAndMetadata> offsets) {
-        if (offsets.isEmpty())
+        if (offsets.isEmpty()) {
             return RequestFuture.voidSuccess();
+        }
 
+        //group coordinator
         Node coordinator = checkAndGetCoordinator();
-        if (coordinator == null)
+        if (coordinator == null) {
             return RequestFuture.coordinatorNotAvailable();
+        }
 
         // create the offset commit request
         Map<TopicPartition, OffsetCommitRequest.PartitionData> offsetData = new HashMap<>(offsets.size());
@@ -708,13 +746,15 @@ public final class ConsumerCoordinator extends AbstractCoordinator {
         final Generation generation;
         if (subscriptions.partitionsAutoAssigned())
             generation = generation();
+            //用户指定的分配
         else
             generation = Generation.NO_GENERATION;
 
         // if the generation is null, we are not part of an active group (and we expect to be).
         // the only thing we can do is fail the commit and let the user rejoin the group in poll()
-        if (generation == null)
+        if (generation == null) {
             return RequestFuture.failure(new CommitFailedException());
+        }
 
         OffsetCommitRequest.Builder builder = new OffsetCommitRequest.Builder(this.groupId, offsetData).
                 setGenerationId(generation.generationId).
@@ -773,7 +813,11 @@ public final class ConsumerCoordinator extends AbstractCoordinator {
         }
     }
 
+    /**
+     * offset完成
+     */
     private static class OffsetCommitCompletion {
+
         private final OffsetCommitCallback callback;
         private final Map<TopicPartition, OffsetAndMetadata> offsets;
         private final Exception exception;
@@ -785,8 +829,9 @@ public final class ConsumerCoordinator extends AbstractCoordinator {
         }
 
         public void invoke() {
-            if (callback != null)
+            if (callback != null) {
                 callback.onComplete(offsets, exception);
+            }
         }
     }
 

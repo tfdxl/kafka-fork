@@ -50,5 +50,5 @@ public interface Callback {
      *                  TimeoutException
      *                  UnknownTopicOrPartitionException
      */
-    public void onCompletion(RecordMetadata metadata, Exception exception);
+    void onCompletion(RecordMetadata metadata, Exception exception);
 }

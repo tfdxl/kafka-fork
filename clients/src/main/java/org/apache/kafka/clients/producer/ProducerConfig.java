@@ -396,10 +396,6 @@ public class ProducerConfig extends AbstractConfig {
         return CONFIG.names();
     }
 
-    public static void main(String[] args) {
-        System.out.println(CONFIG.toHtmlTable());
-    }
-
     @Override
     protected Map<String, Object> postProcessParsedConfig(final Map<String, Object> parsedValues) {
         return CommonClientConfigs.postProcessReconnectBackoffConfigs(this, parsedValues);
