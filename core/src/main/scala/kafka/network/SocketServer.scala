@@ -676,6 +676,7 @@ private[kafka] class Processor(val id: Int,
       val channelId = curr.request.context.connectionId
       try {
         curr.responseAction match {
+          //没有响应需要发送给客户端
           case RequestChannel.NoOpAction =>
             // There is no response to send to the client, we need to read more pipelined requests
             // that are sitting in the server's socket buffer
@@ -720,7 +721,7 @@ private[kafka] class Processor(val id: Int,
     try selector.poll(300)
     catch {
       //匿名的对象
-      case e@(_: IllegalStateException | _: IOException) =>
+      case (_: IllegalStateException | _: IOException) =>
         // The exception is not re-thrown and any completed sends/receives/connections/disconnections
         // from this poll will be processed.
         error(s"Processor $id poll failed due to illegal state or IO exception")
@@ -827,6 +828,7 @@ private[kafka] class Processor(val id: Int,
       val channel = newConnections.poll()
       try {
         debug(s"Processor $id listening to new connection from ${channel.socket.getRemoteSocketAddress}")
+        //注册读事件
         selector.register(connectionId(channel.socket), channel)
       } catch {
         // We explicitly catch all exceptions and close the socket to avoid a socket leak.

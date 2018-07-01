@@ -266,6 +266,7 @@ public class Selector implements Selectable, AutoCloseable {
 
         //保证没有注册
         ensureNotRegistered(id);
+        //注册读事件
         registerChannel(id, socketChannel, SelectionKey.OP_READ);
     }
 
