@@ -70,11 +70,14 @@ class SocketServer(val config: KafkaConfig, val metrics: Metrics, val time: Time
   private val memoryPoolDepletedPercentMetricName = metrics.metricName("MemoryPoolAvgDepletedPercent", "socket-server-metrics")
   private val memoryPoolDepletedTimeMetricName = metrics.metricName("MemoryPoolDepletedTimeTotal", "socket-server-metrics")
   memoryPoolSensor.add(new Meter(TimeUnit.MILLISECONDS, memoryPoolDepletedPercentMetricName, memoryPoolDepletedTimeMetricName))
+
+  //内存池
   private val memoryPool = if (config.queuedMaxBytes > 0) new SimpleMemoryPool(config.queuedMaxBytes, config.socketRequestMaxBytes, false, memoryPoolSensor) else MemoryPool.NONE
   val requestChannel = new RequestChannel(maxQueuedRequests)
   private val processors = new ConcurrentHashMap[Int, Processor]()
   private var nextProcessorId = 0
 
+  //链接接收器，可以拓展
   private[network] val acceptors = new ConcurrentHashMap[EndPoint, Acceptor]()
   private var connectionQuotas: ConnectionQuotas = _
   private var stoppedProcessingRequests = false
@@ -121,6 +124,7 @@ class SocketServer(val config: KafkaConfig, val metrics: Metrics, val time: Time
 
     val sendBufferSize = config.socketSendBufferBytes
     val recvBufferSize = config.socketReceiveBufferBytes
+
     val brokerId = config.brokerId
 
     endpoints.foreach { endpoint =>
@@ -456,6 +460,7 @@ private[kafka] object Processor {
 }
 
 /**
+  * 线程处理来自一个链接的所有的请求
   * Thread that processes all requests from a single connection. There are N of these running in parallel
   * each of which has its own selector
   */
