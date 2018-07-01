@@ -64,7 +64,7 @@ import scala.collection.mutable.ArrayBuffer
 import scala.util.{Failure, Success, Try}
 
 /**
-  * 统一的kafka server请求处理器
+  * 统一的kafka server请求处理器,将请求进行分发到不同的handle*方法进行处理
   * Logic to handle the various Kafka requests
   */
 class KafkaApis(val requestChannel: RequestChannel,

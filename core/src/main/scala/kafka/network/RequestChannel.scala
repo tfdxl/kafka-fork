@@ -77,6 +77,7 @@ object RequestChannel extends Logging {
                 memoryPool: MemoryPool,
                 @volatile private var buffer: ByteBuffer,
                 metrics: RequestChannel.Metrics) extends BaseRequest {
+    //读在网络线程，写在handler线程
     // These need to be volatile because the readers are in the network thread and the writers are in the request
     // handler threads or the purgatory threads
     @volatile var requestDequeueTimeNanos = -1L
@@ -319,6 +320,7 @@ class RequestChannel(val queueSize: Int) extends KafkaMetricsGroup {
 
   /** Get the next request or block until specified time has elapsed */
   def receiveRequest(timeout: Long): RequestChannel.BaseRequest =
+  //这里的请求都是Processor放进去的
     requestQueue.poll(timeout, TimeUnit.MILLISECONDS)
 
   /** Get the next request or block until there is one */

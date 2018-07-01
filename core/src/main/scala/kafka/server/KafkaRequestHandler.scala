@@ -50,10 +50,14 @@ class KafkaRequestHandler(id: Int,
       // Since meter is calculated as total_recorded_value / time_window and
       // time_window is independent of the number of threads, each recorded idle
       // time should be discounted by # threads.
+      //开始select的时间
       val startSelectTime = time.nanoseconds
 
+      //获取到请求
       val req = requestChannel.receiveRequest(300)
+      //获取到请求的时间
       val endTime = time.nanoseconds
+      //空闲时间
       val idleTime = endTime - startSelectTime
       aggregateIdleMeter.mark(idleTime / totalHandlerThreads.get)
 
@@ -65,8 +69,10 @@ class KafkaRequestHandler(id: Int,
 
         case request: RequestChannel.Request =>
           try {
+            //被Handler拉取到的请求
             request.requestDequeueTimeNanos = endTime
             trace(s"Kafka request handler $id on broker $brokerId handling request $request")
+            //交给请求处理器进行处理
             apis.handle(request)
           } catch {
             case e: FatalExitError =>
@@ -120,6 +126,7 @@ class KafkaRequestHandlerPool(val brokerId: Int,
 
   /**
     * 调整线程池大小，这个方法一定要加锁
+    *
     * @param newSize
     */
   def resizeThreadPool(newSize: Int): Unit = synchronized {
@@ -130,7 +137,7 @@ class KafkaRequestHandlerPool(val brokerId: Int,
       for (i <- currentSize until newSize) {
         createHandler(i)
       }
-        //收缩
+      //收缩
     } else if (newSize < currentSize) {
       for (i <- 1 to (currentSize - newSize)) {
         runnables.remove(currentSize - i).stop()
