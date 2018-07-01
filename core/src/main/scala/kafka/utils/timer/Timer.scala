@@ -1,32 +1,35 @@
 /**
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+  * Licensed to the Apache Software Foundation (ASF) under one or more
+  * contributor license agreements.  See the NOTICE file distributed with
+  * this work for additional information regarding copyright ownership.
+  * The ASF licenses this file to You under the Apache License, Version 2.0
+  * (the "License"); you may not use this file except in compliance with
+  * the License.  You may obtain a copy of the License at
+  *
+  * http://www.apache.org/licenses/LICENSE-2.0
+  *
+  * Unless required by applicable law or agreed to in writing, software
+  * distributed under the License is distributed on an "AS IS" BASIS,
+  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  * See the License for the specific language governing permissions and
+  * limitations under the License.
+  */
 package kafka.utils.timer
 
-import java.util.concurrent.{DelayQueue, Executors, ThreadFactory, TimeUnit}
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.locks.ReentrantReadWriteLock
+import java.util.concurrent.{DelayQueue, Executors, ThreadFactory, TimeUnit}
 
 import kafka.utils.threadsafe
 import org.apache.kafka.common.utils.{KafkaThread, Time}
 
 trait Timer {
+
   /**
+    * 添加一个新的任务到执行器，会在task的延迟到期之后执行
     * Add a new task to this executor. It will be executed after the task's delay
     * (beginning from the time of submission)
+    *
     * @param timerTask the task to add
     */
   def add(timerTask: TimerTask): Unit
@@ -34,6 +37,7 @@ trait Timer {
   /**
     * Advance the internal clock, executing any tasks whose expiration has been
     * reached within the duration of the passed timeout.
+    *
     * @param timeoutMs
     * @return whether or not any tasks were executed
     */
@@ -41,9 +45,10 @@ trait Timer {
 
   /**
     * Get the number of tasks pending execution
+    *
     * @return the number of tasks
     */
-  def size: Int
+  def size(): Int
 
   /**
     * Shutdown the timer service, leaving pending tasks unexecuted
@@ -60,10 +65,13 @@ class SystemTimer(executorName: String,
   // timeout timer
   private[this] val taskExecutor = Executors.newFixedThreadPool(1, new ThreadFactory() {
     def newThread(runnable: Runnable): Thread =
-      KafkaThread.nonDaemon("executor-"+executorName, runnable)
+      KafkaThread.nonDaemon("executor-" + executorName, runnable)
   })
 
+  //延迟队列
   private[this] val delayQueue = new DelayQueue[TimerTaskList]()
+
+  //task的计数器
   private[this] val taskCounter = new AtomicInteger(0)
   private[this] val timingWheel = new TimingWheel(
     tickMs = tickMs,
