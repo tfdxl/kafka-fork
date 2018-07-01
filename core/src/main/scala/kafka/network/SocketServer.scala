@@ -565,6 +565,7 @@ private[kafka] class Processor(val id: Int,
   //保存没有发送的响应，和客户端不会对服务器的响应进行再一次响应，所以inflightResponses在发送之后就删除
   private val inflightResponses = mutable.Map[String, RequestChannel.Response]()
 
+  //响应队列
   private val responseQueue = new LinkedBlockingDeque[RequestChannel.Response]()
 
   private[kafka] val metricTags = mutable.LinkedHashMap(
@@ -874,9 +875,11 @@ private[kafka] class Processor(val id: Int,
     * Close the selector and all open connections
     */
   private def closeAll() {
+    //关闭所有的channel
     selector.channels.asScala.foreach { channel =>
       close(channel.id)
     }
+    //关闭selector
     selector.close()
     removeMetric(IdlePercentMetricName, Map(NetworkProcessorMetricTag -> id.toString))
   }
