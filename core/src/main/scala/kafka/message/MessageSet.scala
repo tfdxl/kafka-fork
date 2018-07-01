@@ -73,6 +73,7 @@ case class MagicAndTimestamp(magic: Byte, timestamp: Long)
 abstract class MessageSet extends Iterable[MessageAndOffset] {
 
   /**
+    * 提供迭代器顺序读取MessageSet消息
     * Provides an iterator over the message/offset pairs in this set
     */
   def iterator: Iterator[MessageAndOffset]
