@@ -519,14 +519,20 @@ import java.util.regex.Pattern;
 public class KafkaConsumer<K, V> implements Consumer<K, V> {
 
     static final long DEFAULT_CLOSE_TIMEOUT_MS = 30 * 1000;
+
     private static final long NO_CURRENT_THREAD = -1L;
 
     //clientId的生成器，如果没有明确指定client的ID，则使用字段生成一个ID
     private static final AtomicInteger CONSUMER_CLIENT_ID_SEQUENCE = new AtomicInteger(1);
+
+    //jxm前缀
     private static final String JMX_PREFIX = "kafka.consumer";
+
+    //客户端的监控数据
     // Visible for testing
     final Metrics metrics;
 
+    //日记录器
     private final Logger log;
 
     //clientId
@@ -546,6 +552,7 @@ public class KafkaConsumer<K, V> implements Consumer<K, V> {
     //ConsumerInterceptor.onConsume方法可以在消息通过poll返回给用户之前对消息做修改
     private final ConsumerInterceptors<K, V> interceptors;
 
+    //时间
     private final Time time;
 
     //负责消费者和Kafka服务端之间的网络通信
@@ -556,7 +563,11 @@ public class KafkaConsumer<K, V> implements Consumer<K, V> {
 
     //记录整个Kafka集群的元信息
     private final Metadata metadata;
+
+    //重试的时间间隔
     private final long retryBackoffMs;
+
+    //请求的超时时间
     private final long requestTimeoutMs;
 
     //KafkaConsumer的线程ID
@@ -566,7 +577,11 @@ public class KafkaConsumer<K, V> implements Consumer<K, V> {
     // refcount is used to allow reentrant access by the thread who has acquired currentThread
     //重入的次数
     private final AtomicInteger refcount = new AtomicInteger(0);
+
+    //客户端是否已将关闭
     private volatile boolean closed = false;
+
+    //客户端的分配器，可以用户指定算法
     private List<PartitionAssignor> assignors;
 
     /**
@@ -711,6 +726,7 @@ public class KafkaConsumer<K, V> implements Consumer<K, V> {
 
             int heartbeatIntervalMs = config.getInt(ConsumerConfig.HEARTBEAT_INTERVAL_MS_CONFIG);
 
+            //更底层的网络客户端
             NetworkClient netClient = new NetworkClient(
                     new Selector(config.getLong(ConsumerConfig.CONNECTIONS_MAX_IDLE_MS_CONFIG), metrics, time, metricGrpPrefix, channelBuilder, logContext),
                     this.metadata,
@@ -726,6 +742,8 @@ public class KafkaConsumer<K, V> implements Consumer<K, V> {
                     new ApiVersions(),
                     throttleTimeSensor,
                     logContext);
+
+            //面向业务的网络客户端
             this.client = new ConsumerNetworkClient(
                     logContext,
                     netClient,
@@ -734,11 +752,15 @@ public class KafkaConsumer<K, V> implements Consumer<K, V> {
                     retryBackoffMs,
                     config.getInt(ConsumerConfig.REQUEST_TIMEOUT_MS_CONFIG),
                     heartbeatIntervalMs); //Will avoid blocking an extended period of time to prevent heartbeat thread starvation
+
             OffsetResetStrategy offsetResetStrategy = OffsetResetStrategy.valueOf(config.getString(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG).toUpperCase(Locale.ROOT));
             this.subscriptions = new SubscriptionState(offsetResetStrategy);
+
             this.assignors = config.getConfiguredInstances(
                     ConsumerConfig.PARTITION_ASSIGNMENT_STRATEGY_CONFIG,
                     PartitionAssignor.class);
+
+            //consumer的协调器，与Group Coordinator通信的门面
             this.coordinator = new ConsumerCoordinator(logContext,
                     this.client,
                     groupId,
@@ -757,6 +779,8 @@ public class KafkaConsumer<K, V> implements Consumer<K, V> {
                     this.interceptors,
                     config.getBoolean(ConsumerConfig.EXCLUDE_INTERNAL_TOPICS_CONFIG),
                     config.getBoolean(ConsumerConfig.LEAVE_GROUP_ON_CLOSE_CONFIG));
+
+            //消息拉取，元数据信息获取，offset提交
             this.fetcher = new Fetcher<>(
                     logContext,
                     this.client,

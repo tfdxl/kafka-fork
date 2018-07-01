@@ -65,9 +65,12 @@ abstract class DelayedOperation(override val delayMs: Long,
    * true, others will still return false
    */
   def forceComplete(): Boolean = {
+    //根据completed字段的值判断延迟操作是否完成
     if (completed.compareAndSet(false, true)) {
       // cancel the timeout timer
+      //调用的是TimerTask的cancel方法，将其从TimerTaskList中删除
       cancel()
+      //延迟操作的真正逻辑，比如DelayProduce就是向客户端返回ProduceResponse响应
       onComplete()
       true
     } else {
