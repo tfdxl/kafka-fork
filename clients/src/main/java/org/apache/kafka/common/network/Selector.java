@@ -263,6 +263,8 @@ public class Selector implements Selectable, AutoCloseable {
      * </p>
      */
     public void register(String id, SocketChannel socketChannel) throws IOException {
+
+        //保证没有注册
         ensureNotRegistered(id);
         registerChannel(id, socketChannel, SelectionKey.OP_READ);
     }
@@ -289,8 +291,9 @@ public class Selector implements Selectable, AutoCloseable {
 
     private KafkaChannel buildAndAttachKafkaChannel(SocketChannel socketChannel, String id, SelectionKey key) throws IOException {
         try {
-            //创建一个Kakfa的channel，关联到key
+            //创建一个Kafka的channel，关联到key
             KafkaChannel channel = channelBuilder.buildChannel(id, key, maxReceiveSize, memoryPool);
+            //attach KafkaChannel
             key.attach(channel);
             return channel;
         } catch (Exception e) {

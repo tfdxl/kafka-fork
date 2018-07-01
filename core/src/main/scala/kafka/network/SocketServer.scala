@@ -273,6 +273,9 @@ private[kafka] abstract class AbstractServerThread(connectionQuotas: ConnectionQ
   //标志当前的线程是否存活
   private val alive = new AtomicBoolean(true)
 
+  /**
+    * 交给子类实现
+    */
   def wakeup(): Unit
 
   /**
@@ -287,6 +290,7 @@ private[kafka] abstract class AbstractServerThread(connectionQuotas: ConnectionQ
   }
 
   /**
+    * 阻塞等待启动操作完成
     * Wait for the thread to completely start up
     */
   def awaitStartup(): Unit = startupLatch.await
@@ -510,7 +514,7 @@ private[kafka] object Processor {
 }
 
 /**
-  * 线程处理来自一个链接的所有的请求
+  * 线程处理来自一个链接的所有的请求:主要用于请求和写回响应的操作
   * Thread that processes all requests from a single connection. There are N of these running in parallel
   * each of which has its own selector
   */
@@ -530,6 +534,7 @@ private[kafka] class Processor(val id: Int,
 
   import Processor._
 
+  //object存储static方法和常量
   private object ConnectionId {
     def fromString(s: String): Option[ConnectionId] = s.split("-") match {
       case Array(local, remote, index) => BrokerEndPoint.parseHostPort(local).flatMap { case (localHost, localPort) =>
@@ -541,14 +546,25 @@ private[kafka] class Processor(val id: Int,
     }
   }
 
+  /**
+    * 连接id
+    *
+    * @param localHost
+    * @param localPort
+    * @param remoteHost
+    * @param remotePort
+    * @param index
+    */
   private[network] case class ConnectionId(localHost: String, localPort: Int, remoteHost: String, remotePort: Int, index: Int) {
     override def toString: String = s"$localHost:$localPort-$remoteHost:$remotePort-$index"
   }
 
-  //新的连接
+  //新的连接，保存了由此Processor处理的新建的SocketChannel
   private val newConnections = new ConcurrentLinkedQueue[SocketChannel]()
-  //发送中的响应
+
+  //保存没有发送的响应，和客户端不会对服务器的响应进行再一次响应，所以inflightResponses在发送之后就删除
   private val inflightResponses = mutable.Map[String, RequestChannel.Response]()
+
   private val responseQueue = new LinkedBlockingDeque[RequestChannel.Response]()
 
   private[kafka] val metricTags = mutable.LinkedHashMap(
@@ -567,6 +583,7 @@ private[kafka] class Processor(val id: Int,
     Map(NetworkProcessorMetricTag -> id.toString)
   )
 
+  //负责管理网络连接
   private val selector = createSelector(
     ChannelBuilders.serverChannelBuilder(listenerName,
       listenerName == config.interBrokerListenerName,
@@ -601,10 +618,15 @@ private[kafka] class Processor(val id: Int,
   private var nextConnectionIndex = 0
 
   override def run() {
+    //标识Processor的初始化完成
     startupComplete()
     try {
       while (isRunning) {
         try {
+
+          /**
+            * 处理新建的SocketChannel
+            */
           // setup any new connections that have been queued up
           configureNewConnections()
           // register any new responses for writing
@@ -789,7 +811,9 @@ private[kafka] class Processor(val id: Int,
     * Queue up a new connection for reading
     */
   def accept(socketChannel: SocketChannel) {
+    //添加到newConnections
     newConnections.add(socketChannel)
+    //唤醒Acceptor线程
     wakeup()
   }
 
@@ -797,6 +821,8 @@ private[kafka] class Processor(val id: Int,
     * Register any new connections that have been queued up
     */
   private def configureNewConnections() {
+
+    //处理新来的连接，知道队列不是空的
     while (!newConnections.isEmpty) {
       val channel = newConnections.poll()
       try {
