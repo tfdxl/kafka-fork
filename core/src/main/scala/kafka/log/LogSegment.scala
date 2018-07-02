@@ -84,6 +84,7 @@ class LogSegment private[log](val log: FileRecords,
     else throw new NoSuchFileException(s"Offset index file ${offsetIndex.file.getAbsolutePath} does not exist")
   }
 
+  //创建的时间
   private var created = time.milliseconds
 
   /* the number of bytes since we last added an entry in the offset index */

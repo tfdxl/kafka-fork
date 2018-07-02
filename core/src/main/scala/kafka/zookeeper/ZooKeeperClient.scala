@@ -52,13 +52,17 @@ class ZooKeeperClient(connectString: String,
                       metricGroup: String,
                       metricType: String) extends Logging with KafkaMetricsGroup {
   this.logIdent = "[ZooKeeperClient] "
+  //初始化锁
   private val initializationLock = new ReentrantReadWriteLock()
   private val isConnectedOrExpiredLock = new ReentrantLock()
   private val isConnectedOrExpiredCondition = isConnectedOrExpiredLock.newCondition()
   private val zNodeChangeHandlers = new ConcurrentHashMap[String, ZNodeChangeHandler]().asScala
   private val zNodeChildChangeHandlers = new ConcurrentHashMap[String, ZNodeChildChangeHandler]().asScala
+
+  //信号量
   private val inFlightRequests = new Semaphore(maxInFlightRequests)
   private val stateChangeHandlers = new ConcurrentHashMap[String, StateChangeHandler]().asScala
+  //过期调度器
   private[zookeeper] val expiryScheduler = new KafkaScheduler(0, "zk-session-expiry-handler")
 
   private val metricNames = Set[String]()
@@ -82,6 +86,7 @@ class ZooKeeperClient(connectString: String,
   }
 
   info(s"Initializing a new session to $connectString.")
+  //快速失败的策略，如果发生错误在构造的过程中
   // Fail-fast if there's an error during construction (so don't call initialize, which retries forever)
   @volatile private var zooKeeper = new ZooKeeper(connectString, sessionTimeoutMs, ZooKeeperClientWatcher)
 

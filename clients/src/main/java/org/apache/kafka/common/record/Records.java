@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.nio.channels.GatheringByteChannel;
 
 /**
+ * 访问包含在log中记录的接口。
  * Interface for accessing the records contained in a log. The log itself is represented as a sequence of record
  * batches (see {@link RecordBatch}).
  * <p>

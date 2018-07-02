@@ -27,7 +27,10 @@ import java.util.NoSuchElementException;
  */
 public abstract class AbstractIterator<T> implements Iterator<T> {
 
+    //迭代器的状态
     private State state = State.NOT_READY;
+
+    //下一条记录
     private T next;
 
     @Override
