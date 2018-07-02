@@ -81,6 +81,7 @@ public class KafkaChannel {
         try {
             if (!transportLayer.ready())
                 transportLayer.handshake();
+            //进行认证
             if (transportLayer.ready() && !authenticator.complete())
                 authenticator.authenticate();
         } catch (AuthenticationException e) {

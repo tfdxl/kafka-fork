@@ -88,8 +88,16 @@ public interface TransportLayer extends ScatteringByteChannel, GatheringByteChan
 
     void addInterestOps(int ops);
 
+    /**
+     * 取消感兴趣的事件
+     * @param ops
+     */
     void removeInterestOps(int ops);
 
+    /**
+     * 是否已经取消读事件
+     * @return
+     */
     boolean isMute();
 
     /**

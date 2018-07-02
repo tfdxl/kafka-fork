@@ -19,6 +19,7 @@ package org.apache.kafka.common.network;
 /*
  * Transport layer for PLAINTEXT communication
  */
+
 import org.apache.kafka.common.security.auth.KafkaPrincipal;
 
 import java.io.IOException;
@@ -33,7 +34,7 @@ public class PlaintextTransportLayer implements TransportLayer {
     private final SocketChannel socketChannel;
     private final Principal principal = KafkaPrincipal.ANONYMOUS;
 
-    public PlaintextTransportLayer(SelectionKey key) throws IOException {
+    public PlaintextTransportLayer(SelectionKey key) {
         this.key = key;
         this.socketChannel = (SocketChannel) key.channel();
     }
@@ -45,9 +46,11 @@ public class PlaintextTransportLayer implements TransportLayer {
 
     @Override
     public boolean finishConnect() throws IOException {
+        //是不是完成了连接
         boolean connected = socketChannel.finishConnect();
-        if (connected)
+        if (connected) {
             key.interestOps(key.interestOps() & ~SelectionKey.OP_CONNECT | SelectionKey.OP_READ);
+        }
         return connected;
     }
 
@@ -88,11 +91,9 @@ public class PlaintextTransportLayer implements TransportLayer {
     /**
      * Performs SSL handshake hence is a no-op for the non-secure
      * implementation
-     *
-     * @throws IOException
      */
     @Override
-    public void handshake() throws IOException {
+    public void handshake() {
     }
 
     /**
@@ -184,7 +185,7 @@ public class PlaintextTransportLayer implements TransportLayer {
      * Returns ANONYMOUS as Principal.
      */
     @Override
-    public Principal peerPrincipal() throws IOException {
+    public Principal peerPrincipal() {
         return principal;
     }
 
@@ -214,6 +215,15 @@ public class PlaintextTransportLayer implements TransportLayer {
         return false;
     }
 
+    /**
+     * 将FileChannel中的数据转移到SocketChannel
+     *
+     * @param fileChannel The source channel
+     * @param position    The position within the file at which the transfer is to begin; must be non-negative
+     * @param count       The maximum number of bytes to be transferred; must be non-negative
+     * @return
+     * @throws IOException
+     */
     @Override
     public long transferFrom(FileChannel fileChannel, long position, long count) throws IOException {
         return fileChannel.transferTo(position, count, socketChannel);
