@@ -21,6 +21,7 @@ import java.nio._
 import kafka.common._
 
 /**
+  * 工具类去解析或者序列化请求和响应
   * Helper functions specific to parsing or serializing requests and responses
   */
 object ApiUtils {
@@ -33,11 +34,14 @@ object ApiUtils {
     * @param buffer The buffer to read from
     */
   def readShortString(buffer: ByteBuffer): String = {
+    //先获取一个size
     val size: Int = buffer.getShort()
     if (size < 0)
       return null
+    //然后获取后面的binary data
     val bytes = new Array[Byte](size)
     buffer.get(bytes)
+    //parse to string
     new String(bytes, ProtocolEncoding)
   }
 
