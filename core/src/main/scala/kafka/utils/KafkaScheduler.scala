@@ -6,7 +6,7 @@
   * (the "License"); you may not use this file except in compliance with
   * the License.  You may obtain a copy of the License at
   *
-  *    http://www.apache.org/licenses/LICENSE-2.0
+  * http://www.apache.org/licenses/LICENSE-2.0
   *
   * Unless required by applicable law or agreed to in writing, software
   * distributed under the License is distributed on an "AS IS" BASIS,
@@ -18,10 +18,12 @@
 package kafka.utils
 
 import java.util.concurrent._
-import atomic._
+import java.util.concurrent.atomic._
+
 import org.apache.kafka.common.utils.KafkaThread
 
 /**
+  * 运行任务的调度器
   * A scheduler for running jobs
   *
   * This interface controls a job scheduler that allows scheduling either repeating background jobs
@@ -30,6 +32,7 @@ import org.apache.kafka.common.utils.KafkaThread
 trait Scheduler {
 
   /**
+    * 初始化调度器，能够开始调度任务
     * Initialize this scheduler so it is ready to accept scheduling of tasks
     */
   def startup()
@@ -47,12 +50,13 @@ trait Scheduler {
 
   /**
     * Schedule a task
-    * @param name The name of this task
-    * @param delay The amount of time to wait before the first execution
+    *
+    * @param name   The name of this task
+    * @param delay  The amount of time to wait before the first execution
     * @param period The period with which to execute the task. If < 0 the task will execute only once.
-    * @param unit The unit for the preceding times.
+    * @param unit   The unit for the preceding times.
     */
-  def schedule(name: String, fun: ()=>Unit, delay: Long = 0, period: Long = -1, unit: TimeUnit = TimeUnit.MILLISECONDS)
+  def schedule(name: String, fun: () => Unit, delay: Long = 0, period: Long = -1, unit: TimeUnit = TimeUnit.MILLISECONDS)
 }
 
 /**
@@ -60,9 +64,9 @@ trait Scheduler {
   *
   * It has a pool of kafka-scheduler- threads that do the actual work.
   *
-  * @param threads The number of threads in the thread pool
+  * @param threads          The number of threads in the thread pool
   * @param threadNamePrefix The name to use for scheduler threads. This prefix will have a number appended to it.
-  * @param daemon If true the scheduler threads will be "daemon" threads and will not block jvm shutdown.
+  * @param daemon           If true the scheduler threads will be "daemon" threads and will not block jvm shutdown.
   */
 @threadsafe
 class KafkaScheduler(val threads: Int,
@@ -74,7 +78,7 @@ class KafkaScheduler(val threads: Int,
   override def startup() {
     debug("Initializing task scheduler.")
     this synchronized {
-      if(isStarted)
+      if (isStarted)
         throw new IllegalStateException("This scheduler has already been started!")
       executor = new ScheduledThreadPoolExecutor(threads)
       executor.setContinueExistingPeriodicTasksAfterShutdownPolicy(false)
@@ -99,22 +103,23 @@ class KafkaScheduler(val threads: Int,
     }
   }
 
-  def schedule(name: String, fun: ()=>Unit, delay: Long, period: Long, unit: TimeUnit) {
+  def schedule(name: String, fun: () => Unit, delay: Long, period: Long, unit: TimeUnit) {
     debug("Scheduling task %s with initial delay %d ms and period %d ms."
       .format(name, TimeUnit.MILLISECONDS.convert(delay, unit), TimeUnit.MILLISECONDS.convert(period, unit)))
     this synchronized {
-      ensureRunning
+      ensureRunning()
+      //把function包装成为Runnable
       val runnable = CoreUtils.runnable {
         try {
           trace("Beginning execution of scheduled task '%s'.".format(name))
           fun()
         } catch {
-          case t: Throwable => error("Uncaught exception in scheduled task '" + name +"'", t)
+          case t: Throwable => error("Uncaught exception in scheduled task '" + name + "'", t)
         } finally {
           trace("Completed execution of scheduled task '%s'.".format(name))
         }
       }
-      if(period >= 0)
+      if (period >= 0)
         executor.scheduleAtFixedRate(runnable, delay, period, unit)
       else
         executor.schedule(runnable, delay, unit)
@@ -131,8 +136,12 @@ class KafkaScheduler(val threads: Int,
     }
   }
 
+  /**
+    * 保证处于运行的状态
+    */
   private def ensureRunning(): Unit = {
-    if (!isStarted)
+    if (!isStarted) {
       throw new IllegalStateException("Kafka scheduler is not running.")
+    }
   }
 }
