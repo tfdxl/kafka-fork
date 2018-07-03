@@ -47,7 +47,7 @@ import scala.collection.mutable.ArrayBuffer
  * A background thread handles log retention by periodically truncating excess log segments.
  */
 @threadsafe
-class LogManager(logDirs: Seq[File],
+class LogManager(logDirs: Seq[File],//日志目录
                  initialOfflineDirs: Seq[File],
                  val topicConfigs: Map[String, LogConfig], // note that this doesn't get updated after creation
                  val initialDefaultConfig: LogConfig,
@@ -58,7 +58,7 @@ class LogManager(logDirs: Seq[File],
                  val flushStartOffsetCheckpointMs: Long,
                  val retentionCheckMs: Long,
                  val maxPidExpirationMs: Int,
-                 scheduler: Scheduler,
+                 scheduler: Scheduler,//调度器
                  val brokerState: BrokerState,
                  brokerTopicStats: BrokerTopicStats,
                  logDirFailureChannel: LogDirFailureChannel,
@@ -291,6 +291,7 @@ class LogManager(logDirs: Seq[File],
   private def loadLogs(): Unit = {
     info("Loading logs.")
     val startMs = time.milliseconds
+    //保存所有的log目录对应的线程池
     val threadPools = ArrayBuffer.empty[ExecutorService]
     val offlineDirs = mutable.Set.empty[(String, IOException)]
     val jobs = mutable.Map.empty[File, Seq[Future[_]]]

@@ -55,10 +55,10 @@ package kafka.server
  *
  * Custom states is also allowed for cases where there are custom kafka states for different scenarios.
  */
-sealed trait BrokerStates { def state: Byte }
-case object NotRunning extends BrokerStates { val state: Byte = 0 }
-case object Starting extends BrokerStates { val state: Byte = 1 }
-case object RecoveringFromUncleanShutdown extends BrokerStates { val state: Byte = 2 }
+sealed trait BrokerStates { def state: Byte }//root
+case object NotRunning extends BrokerStates { val state: Byte = 0 }//没有运行
+case object Starting extends BrokerStates { val state: Byte = 1 }//正在启动
+case object RecoveringFromUncleanShutdown extends BrokerStates { val state: Byte = 2 }//从没有清理完毕的shutdown恢复
 case object RunningAsBroker extends BrokerStates { val state: Byte = 3 }
 case object PendingControlledShutdown extends BrokerStates { val state: Byte = 6 }
 case object BrokerShuttingDown extends BrokerStates { val state: Byte = 7 }
