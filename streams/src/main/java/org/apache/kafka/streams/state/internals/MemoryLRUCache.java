@@ -50,8 +50,11 @@ public class MemoryLRUCache<K, V> implements KeyValueStore<K, V> {
 
         void apply(K key, V value);
     }
+
+    //key的序列化器好反序列化器
     private final Serde<K> keySerde;
 
+    //value的序列化和反序列化
     private final Serde<V> valueSerde;
     private final String name;
     protected final Map<K, V> map;

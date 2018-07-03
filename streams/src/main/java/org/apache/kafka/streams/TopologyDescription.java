@@ -21,6 +21,7 @@ import org.apache.kafka.streams.processor.internals.StreamTask;
 import java.util.Set;
 
 /**
+ * Topology的元数据的描述
  * A meta representation of a {@link Topology topology}.
  * <p>
  * The nodes of a topology are grouped into {@link Subtopology sub-topologies} if they are connected.
@@ -43,12 +44,14 @@ public interface TopologyDescription {
     interface Subtopology {
         /**
          * Internally assigned unique ID.
+         *
          * @return the ID of the sub-topology
          */
         int id();
 
         /**
          * All nodes of this sub-topology.
+         *
          * @return set of all nodes within the sub-topology
          */
         Set<Node> nodes();
@@ -67,12 +70,14 @@ public interface TopologyDescription {
     interface GlobalStore {
         /**
          * The source node reading from a "global" topic.
+         *
          * @return the "global" source node
          */
         Source source();
 
         /**
          * The processor node maintaining the global store.
+         *
          * @return the "global" processor node
          */
         Processor processor();
@@ -86,20 +91,25 @@ public interface TopologyDescription {
     interface Node {
         /**
          * The name of the node. Will never be {@code null}.
+         *
          * @return the name of the node
          */
         String name();
+
         /**
          * The predecessors of this node within a sub-topology.
          * Note, sources do not have any predecessors.
          * Will never be {@code null}.
+         *
          * @return set of all predecessors
          */
         Set<Node> predecessors();
+
         /**
          * The successor of this node within a sub-topology.
          * Note, sinks do not have any successors.
          * Will never be {@code null}.
+         *
          * @return set of all successor
          */
         Set<Node> successors();
@@ -112,6 +122,7 @@ public interface TopologyDescription {
     interface Source extends Node {
         /**
          * The topic names this source node is reading from.
+         *
          * @return comma separated list of topic names or pattern (as String)
          */
         String topics();
@@ -123,6 +134,7 @@ public interface TopologyDescription {
     interface Processor extends Node {
         /**
          * The names of all connected stores.
+         *
          * @return set of store names
          */
         Set<String> stores();
@@ -134,6 +146,7 @@ public interface TopologyDescription {
     interface Sink extends Node {
         /**
          * The topic name this sink node is writing to.
+         *
          * @return a topic name
          */
         String topic();
@@ -141,12 +154,14 @@ public interface TopologyDescription {
 
     /**
      * All sub-topologies of the represented topology.
+     *
      * @return set of all sub-topologies
      */
     Set<Subtopology> subtopologies();
 
     /**
      * All global stores of the represented topology.
+     *
      * @return set of all global stores
      */
     Set<GlobalStore> globalStores();
