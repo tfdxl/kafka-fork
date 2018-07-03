@@ -83,6 +83,7 @@ abstract class ShutdownableThread(val name: String, val isInterruptible: Boolean
   override def run(): Unit = {
     info("Starting")
     try {
+      //一直执行doWork
       while (isRunning)
         doWork()
     } catch {
