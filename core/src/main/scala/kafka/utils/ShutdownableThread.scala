@@ -21,6 +21,11 @@ import java.util.concurrent.{CountDownLatch, TimeUnit}
 
 import org.apache.kafka.common.internals.FatalExitError
 
+/**
+  * 集成了Thread
+  * @param name 名字
+  * @param isInterruptible 是否可以中断
+  */
 abstract class ShutdownableThread(val name: String, val isInterruptible: Boolean = true)
   extends Thread(name) with Logging {
   this.setDaemon(false)

@@ -26,6 +26,10 @@ import java.util.Collections;
 import java.util.Properties;
 
 public class Consumer extends ShutdownableThread {
+
+    /**
+     * kafka消费者
+     */
     private final KafkaConsumer<Integer, String> consumer;
     private final String topic;
 
@@ -46,8 +50,11 @@ public class Consumer extends ShutdownableThread {
 
     @Override
     public void doWork() {
+        //订阅了topic
         consumer.subscribe(Collections.singletonList(this.topic));
+        //拉取消息
         ConsumerRecords<Integer, String> records = consumer.poll(1000);
+        //遍历消息
         for (ConsumerRecord<Integer, String> record : records) {
             System.out.println("Received message: (" + record.key() + ", " + record.value() + ") at offset " + record.offset());
         }

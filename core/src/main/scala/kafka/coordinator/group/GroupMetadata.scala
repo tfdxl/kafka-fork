@@ -28,6 +28,7 @@ import scala.collection.{Seq, immutable, mutable}
 private[group] sealed trait GroupState
 
 /**
+  * Consumer Group当前准备rebalance操作
   * Group is preparing to rebalance
   *
   * action: respond to heartbeats with REBALANCE_IN_PROGRESS
