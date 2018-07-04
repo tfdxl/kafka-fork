@@ -16,53 +16,56 @@
  */
 package org.apache.kafka.tools;
 
-import static net.sourceforge.argparse4j.impl.Arguments.store;
-import static net.sourceforge.argparse4j.impl.Arguments.storeTrue;
+import net.sourceforge.argparse4j.ArgumentParsers;
+import net.sourceforge.argparse4j.inf.ArgumentParser;
+import net.sourceforge.argparse4j.inf.ArgumentParserException;
+import net.sourceforge.argparse4j.inf.MutuallyExclusiveGroup;
+import net.sourceforge.argparse4j.inf.Namespace;
+import org.apache.kafka.clients.producer.*;
+import org.apache.kafka.common.utils.Exit;
+import org.apache.kafka.common.utils.Utils;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
-import java.util.Random;
-import java.util.Arrays;
+import java.util.*;
 
-import net.sourceforge.argparse4j.inf.MutuallyExclusiveGroup;
-import org.apache.kafka.clients.producer.Callback;
-import org.apache.kafka.clients.producer.KafkaProducer;
-import org.apache.kafka.clients.producer.ProducerConfig;
-import org.apache.kafka.clients.producer.ProducerRecord;
-import org.apache.kafka.clients.producer.RecordMetadata;
-
-import net.sourceforge.argparse4j.ArgumentParsers;
-import net.sourceforge.argparse4j.inf.ArgumentParser;
-import net.sourceforge.argparse4j.inf.ArgumentParserException;
-import net.sourceforge.argparse4j.inf.Namespace;
-import org.apache.kafka.common.utils.Exit;
-import org.apache.kafka.common.utils.Utils;
+import static net.sourceforge.argparse4j.impl.Arguments.store;
+import static net.sourceforge.argparse4j.impl.Arguments.storeTrue;
 
 public class ProducerPerformance {
 
     public static void main(String[] args) throws Exception {
+
+        //构造一个参数解析器
         ArgumentParser parser = argParser();
 
         try {
             Namespace res = parser.parseArgs(args);
 
+            //解析参数
             /* parse args */
             String topicName = res.getString("topic");
+
+            //消息的个数
             long numRecords = res.getLong("numRecords");
+
+            //消息的大小
             Integer recordSize = res.getInt("recordSize");
+
+            //吞吐量
             int throughput = res.getInt("throughput");
+
             List<String> producerProps = res.getList("producerConfig");
+
             String producerConfig = res.getString("producerConfigFile");
             String payloadFilePath = res.getString("payloadFile");
+            //事务的id
             String transactionalId = res.getString("transactionalId");
             boolean shouldPrintMetrics = res.getBoolean("printMetrics");
             long transactionDurationMs = res.getLong("transactionDurationMs");
-            boolean transactionsEnabled =  0 < transactionDurationMs;
+            boolean transactionsEnabled = 0 < transactionDurationMs;
 
             // since default value gets printed with the help text, we are escaping \n there and replacing it with correct value here.
             String payloadDelimiter = res.getString("payloadDelimiter").equals("\\n") ? "\n" : res.getString("payloadDelimiter");
@@ -75,8 +78,8 @@ public class ProducerPerformance {
             if (payloadFilePath != null) {
                 Path path = Paths.get(payloadFilePath);
                 System.out.println("Reading payloads from: " + path.toAbsolutePath());
-                if (Files.notExists(path) || Files.size(path) == 0)  {
-                    throw new  IllegalArgumentException("File does not exist or empty file provided.");
+                if (Files.notExists(path) || Files.size(path) == 0) {
+                    throw new IllegalArgumentException("File does not exist or empty file provided.");
                 }
 
                 String[] payloadList = new String(Files.readAllBytes(path), "UTF-8").split(payloadDelimiter);
@@ -88,6 +91,7 @@ public class ProducerPerformance {
                 }
             }
 
+            //加载生产者配置文件
             Properties props = new Properties();
             if (producerConfig != null) {
                 props.putAll(Utils.loadProps(producerConfig));
@@ -102,17 +106,21 @@ public class ProducerPerformance {
 
             props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.ByteArraySerializer");
             props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.ByteArraySerializer");
-            if (transactionsEnabled)
+            if (transactionsEnabled) {
                 props.put(ProducerConfig.TRANSACTIONAL_ID_CONFIG, transactionalId);
+            }
 
             KafkaProducer<byte[], byte[]> producer = new KafkaProducer<>(props);
 
-            if (transactionsEnabled)
+            if (transactionsEnabled) {
                 producer.initTransactions();
+            }
 
             /* setup perf test */
             byte[] payload = null;
             Random random = new Random(0);
+
+            //生成一个payload
             if (recordSize != null) {
                 payload = new byte[recordSize];
                 for (int i = 0; i < payload.length; ++i)
@@ -128,22 +136,33 @@ public class ProducerPerformance {
             long transactionStartTime = 0;
             for (int i = 0; i < numRecords; i++) {
                 if (transactionsEnabled && currentTransactionSize == 0) {
+                    //开启事务
                     producer.beginTransaction();
                     transactionStartTime = System.currentTimeMillis();
                 }
 
 
+                //指定了payload的文件，这个能模拟真实的使用场景
                 if (payloadFilePath != null) {
+                    //生成随机大小的payload
                     payload = payloadByteList.get(random.nextInt(payloadByteList.size()));
                 }
+
+                //构造一条消息
                 record = new ProducerRecord<>(topicName, payload);
 
+                //发送消息开始的时间
                 long sendStartMs = System.currentTimeMillis();
+
+                //构造一个callback
                 Callback cb = stats.nextCompletion(sendStartMs, payload.length, stats);
+
+                //发送消息
                 producer.send(record, cb);
 
                 currentTransactionSize++;
                 if (transactionsEnabled && transactionDurationMs <= (sendStartMs - transactionStartTime)) {
+                    //提交事务
                     producer.commitTransaction();
                     currentTransactionSize = 0;
                 }
@@ -153,8 +172,10 @@ public class ProducerPerformance {
                 }
             }
 
-            if (transactionsEnabled && currentTransactionSize != 0)
+            //提交事务
+            if (transactionsEnabled && currentTransactionSize != 0) {
                 producer.commitTransaction();
+            }
 
             if (!shouldPrintMetrics) {
                 producer.close();
@@ -186,7 +207,9 @@ public class ProducerPerformance {
 
     }
 
-    /** Get the command-line argument parser. */
+    /**
+     * Get the command-line argument parser.
+     */
     private static ArgumentParser argParser() {
         ArgumentParser parser = ArgumentParsers
                 .newArgumentParser("producer-performance")
@@ -250,13 +273,13 @@ public class ProducerPerformance {
                 .help("throttle maximum message throughput to *approximately* THROUGHPUT messages/sec");
 
         parser.addArgument("--producer-props")
-                 .nargs("+")
-                 .required(false)
-                 .metavar("PROP-NAME=PROP-VALUE")
-                 .type(String.class)
-                 .dest("producerConfig")
-                 .help("kafka producer related configuration properties like bootstrap.servers,client.id etc. " +
-                         "These configs take precedence over those passed via --producer.config.");
+                .nargs("+")
+                .required(false)
+                .metavar("PROP-NAME=PROP-VALUE")
+                .type(String.class)
+                .dest("producerConfig")
+                .help("kafka producer related configuration properties like bootstrap.servers,client.id etc. " +
+                        "These configs take precedence over those passed via --producer.config.");
 
         parser.addArgument("--producer.config")
                 .action(store())
@@ -274,22 +297,23 @@ public class ProducerPerformance {
                 .help("print out metrics at the end of the test.");
 
         parser.addArgument("--transactional-id")
-               .action(store())
-               .required(false)
-               .type(String.class)
-               .metavar("TRANSACTIONAL-ID")
-               .dest("transactionalId")
-               .setDefault("performance-producer-default-transactional-id")
-               .help("The transactionalId to use if transaction-duration-ms is > 0. Useful when testing the performance of concurrent transactions.");
+                .action(store())
+                .required(false)
+                .type(String.class)
+                .metavar("TRANSACTIONAL-ID")
+                .dest("transactionalId")
+                //默认的事务id
+                .setDefault("performance-producer-default-transactional-id")
+                .help("The transactionalId to use if transaction-duration-ms is > 0. Useful when testing the performance of concurrent transactions.");
 
         parser.addArgument("--transaction-duration-ms")
-               .action(store())
-               .required(false)
-               .type(Long.class)
-               .metavar("TRANSACTION-DURATION")
-               .dest("transactionDurationMs")
-               .setDefault(0L)
-               .help("The max age of each transaction. The commitTransaction will be called after this time has elapsed. Transactions are only enabled if this value is positive.");
+                .action(store())
+                .required(false)
+                .type(Long.class)
+                .metavar("TRANSACTION-DURATION")
+                .dest("transactionDurationMs")
+                .setDefault(0L)
+                .help("The max age of each transaction. The commitTransaction will be called after this time has elapsed. Transactions are only enabled if this value is positive.");
 
 
         return parser;
@@ -361,11 +385,11 @@ public class ProducerPerformance {
             double recsPerSec = 1000.0 * windowCount / (double) ellapsed;
             double mbPerSec = 1000.0 * this.windowBytes / (double) ellapsed / (1024.0 * 1024.0);
             System.out.printf("%d records sent, %.1f records/sec (%.2f MB/sec), %.1f ms avg latency, %.1f max latency.%n",
-                              windowCount,
-                              recsPerSec,
-                              mbPerSec,
-                              windowTotalLatency / (double) windowCount,
-                              (double) windowMaxLatency);
+                    windowCount,
+                    recsPerSec,
+                    mbPerSec,
+                    windowTotalLatency / (double) windowCount,
+                    (double) windowMaxLatency);
         }
 
         public void newWindow() {
@@ -382,15 +406,15 @@ public class ProducerPerformance {
             double mbPerSec = 1000.0 * this.bytes / (double) elapsed / (1024.0 * 1024.0);
             int[] percs = percentiles(this.latencies, index, 0.5, 0.95, 0.99, 0.999);
             System.out.printf("%d records sent, %f records/sec (%.2f MB/sec), %.2f ms avg latency, %.2f ms max latency, %d ms 50th, %d ms 95th, %d ms 99th, %d ms 99.9th.%n",
-                              count,
-                              recsPerSec,
-                              mbPerSec,
-                              totalLatency / (double) count,
-                              (double) maxLatency,
-                              percs[0],
-                              percs[1],
-                              percs[2],
-                              percs[3]);
+                    count,
+                    recsPerSec,
+                    mbPerSec,
+                    totalLatency / (double) count,
+                    (double) maxLatency,
+                    percs[0],
+                    percs[1],
+                    percs[2],
+                    percs[3]);
         }
 
         private static int[] percentiles(int[] latencies, int count, double... percentiles) {
@@ -411,6 +435,14 @@ public class ProducerPerformance {
         private final int bytes;
         private final Stats stats;
 
+        /**
+         * 构造perf消息发送的callback
+         *
+         * @param iter
+         * @param start
+         * @param bytes
+         * @param stats
+         */
         public PerfCallback(int iter, long start, int bytes, Stats stats) {
             this.start = start;
             this.stats = stats;
@@ -418,7 +450,33 @@ public class ProducerPerformance {
             this.bytes = bytes;
         }
 
+        /**
+         * 完成之后出发的回调
+         *
+         * @param metadata  The metadata for the record that was sent (i.e. the partition and offset). Null if an error
+         *                  occurred.
+         * @param exception The exception thrown during processing of this record. Null if no error occurred.
+         *                  Possible thrown exceptions include:
+         *                  <p>
+         *                  Non-Retriable exceptions (fatal, the message will never be sent):
+         *                  <p>
+         *                  InvalidTopicException
+         *                  OffsetMetadataTooLargeException
+         *                  RecordBatchTooLargeException
+         *                  RecordTooLargeException
+         *                  UnknownServerException
+         *                  <p>
+         *                  Retriable exceptions (transient, may be covered by increasing #.retries):
+         *                  <p>
+         *                  CorruptRecordException
+         *                  InvalidMetadataException
+         *                  NotEnoughReplicasAfterAppendException
+         *                  NotEnoughReplicasException
+         *                  OffsetOutOfRangeException
+         *                  TimeoutException
+         */
         public void onCompletion(RecordMetadata metadata, Exception exception) {
+            //现在的时间
             long now = System.currentTimeMillis();
             int latency = (int) (now - start);
             this.stats.record(iteration, latency, bytes, now);
