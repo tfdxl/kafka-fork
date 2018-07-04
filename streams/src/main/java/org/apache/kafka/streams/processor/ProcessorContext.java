@@ -75,7 +75,7 @@ public interface ProcessorContext {
     /**
      * Registers and possibly restores the specified storage engine.
      *
-     * @param store the storage engine
+     * @param store the storage| engine
      * @param loggingEnabledIsDeprecatedAndIgnored deprecated parameter {@code loggingEnabled} is ignored:
      *                                             if you want to enable logging on a state stores call
      *                                             {@link org.apache.kafka.streams.state.StoreBuilder#withLoggingEnabled(Map)}
