@@ -18,7 +18,8 @@ package org.apache.kafka.connect.util;
 
 public final class SinkUtils {
 
-    private SinkUtils() {}
+    private SinkUtils() {
+    }
 
     public static String consumerGroupId(String connector) {
         return "connect-" + connector;

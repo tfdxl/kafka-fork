@@ -26,11 +26,7 @@ import org.apache.kafka.connect.runtime.rest.resources.ConnectorPluginsResource;
 import org.apache.kafka.connect.runtime.rest.resources.ConnectorsResource;
 import org.apache.kafka.connect.runtime.rest.resources.RootResource;
 import org.apache.kafka.connect.runtime.rest.util.SSLUtils;
-import org.eclipse.jetty.server.Connector;
-import org.eclipse.jetty.server.Handler;
-import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.ServerConnector;
-import org.eclipse.jetty.server.Slf4jRequestLog;
+import org.eclipse.jetty.server.*;
 import org.eclipse.jetty.server.handler.DefaultHandler;
 import org.eclipse.jetty.server.handler.HandlerCollection;
 import org.eclipse.jetty.server.handler.RequestLogHandler;
@@ -48,11 +44,7 @@ import org.slf4j.LoggerFactory;
 import javax.servlet.DispatcherType;
 import javax.ws.rs.core.UriBuilder;
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -81,6 +73,13 @@ public class RestServer {
         jettyServer = new Server();
 
         createConnectors(listeners);
+    }
+
+    public static String urlJoin(String base, String path) {
+        if (base.endsWith("/") && path.startsWith("/"))
+            return base + path.substring(1);
+        else
+            return base + path;
     }
 
     List<String> parseListeners() {
@@ -278,13 +277,6 @@ public class RestServer {
         }
 
         return null;
-    }
-
-    public static String urlJoin(String base, String path) {
-        if (base.endsWith("/") && path.startsWith("/"))
-            return base + path.substring(1);
-        else
-            return base + path;
     }
 
 }

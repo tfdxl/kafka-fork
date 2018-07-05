@@ -19,13 +19,7 @@ package org.apache.kafka.connect.runtime.standalone;
 import org.apache.kafka.connect.errors.AlreadyExistsException;
 import org.apache.kafka.connect.errors.ConnectException;
 import org.apache.kafka.connect.errors.NotFoundException;
-import org.apache.kafka.connect.runtime.AbstractHerder;
-import org.apache.kafka.connect.runtime.ConnectorConfig;
-import org.apache.kafka.connect.runtime.HerderConnectorContext;
-import org.apache.kafka.connect.runtime.SinkConnectorConfig;
-import org.apache.kafka.connect.runtime.SourceConnectorConfig;
-import org.apache.kafka.connect.runtime.TargetState;
-import org.apache.kafka.connect.runtime.Worker;
+import org.apache.kafka.connect.runtime.*;
 import org.apache.kafka.connect.runtime.distributed.ClusterConfigState;
 import org.apache.kafka.connect.runtime.rest.entities.ConnectorInfo;
 import org.apache.kafka.connect.runtime.rest.entities.TaskInfo;
@@ -112,7 +106,7 @@ public class StandaloneHerder extends AbstractHerder {
             return null;
         Map<String, String> config = configState.connectorConfig(connector);
         return new ConnectorInfo(connector, config, configState.tasks(connector),
-            connectorTypeForClass(config.get(ConnectorConfig.CONNECTOR_CLASS_CONFIG)));
+                connectorTypeForClass(config.get(ConnectorConfig.CONNECTOR_CLASS_CONFIG)));
     }
 
     @Override
@@ -257,8 +251,8 @@ public class StandaloneHerder extends AbstractHerder {
         Map<String, String> config = configState.connectorConfig(connName);
 
         ConnectorConfig connConfig = worker.isSinkConnector(connName) ?
-            new SinkConnectorConfig(plugins(), config) :
-            new SourceConnectorConfig(plugins(), config);
+                new SinkConnectorConfig(plugins(), config) :
+                new SourceConnectorConfig(plugins(), config);
 
         return worker.connectorTaskConfigs(connName, connConfig);
     }

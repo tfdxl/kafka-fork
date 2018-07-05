@@ -24,13 +24,7 @@ import org.apache.kafka.common.config.ConfigValue;
 import org.apache.kafka.connect.connector.Connector;
 import org.apache.kafka.connect.errors.NotFoundException;
 import org.apache.kafka.connect.runtime.isolation.Plugins;
-import org.apache.kafka.connect.runtime.rest.entities.ConfigInfo;
-import org.apache.kafka.connect.runtime.rest.entities.ConfigInfos;
-import org.apache.kafka.connect.runtime.rest.entities.ConfigKeyInfo;
-import org.apache.kafka.connect.runtime.rest.entities.ConfigValueInfo;
-import org.apache.kafka.connect.runtime.rest.entities.ConnectorInfo;
-import org.apache.kafka.connect.runtime.rest.entities.ConnectorStateInfo;
-import org.apache.kafka.connect.runtime.rest.entities.ConnectorType;
+import org.apache.kafka.connect.runtime.rest.entities.*;
 import org.apache.kafka.connect.runtime.rest.errors.BadRequestException;
 import org.apache.kafka.connect.source.SourceConnector;
 import org.apache.kafka.connect.storage.ConfigBackingStore;
@@ -42,47 +36,37 @@ import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Abstract Herder implementation which handles connector/task lifecycle tracking. Extensions
  * must invoke the lifecycle hooks appropriately.
- *
+ * <p>
  * This class takes the following approach for sending status updates to the backing store:
- *
+ * <p>
  * 1) When the connector or task is starting, we overwrite the previous state blindly. This ensures that
- *    every rebalance will reset the state of tasks to the proper state. The intuition is that there should
- *    be less chance of write conflicts when the worker has just received its assignment and is starting tasks.
- *    In particular, this prevents us from depending on the generation absolutely. If the group disappears
- *    and the generation is reset, then we'll overwrite the status information with the older (and larger)
- *    generation with the updated one. The danger of this approach is that slow starting tasks may cause the
- *    status to be overwritten after a rebalance has completed.
- *
+ * every rebalance will reset the state of tasks to the proper state. The intuition is that there should
+ * be less chance of write conflicts when the worker has just received its assignment and is starting tasks.
+ * In particular, this prevents us from depending on the generation absolutely. If the group disappears
+ * and the generation is reset, then we'll overwrite the status information with the older (and larger)
+ * generation with the updated one. The danger of this approach is that slow starting tasks may cause the
+ * status to be overwritten after a rebalance has completed.
+ * <p>
  * 2) If the connector or task fails or is shutdown, we use {@link StatusBackingStore#putSafe(ConnectorStatus)},
- *    which provides a little more protection if the worker is no longer in the group (in which case the
- *    task may have already been started on another worker). Obviously this is still racy. If the task has just
- *    started on another worker, we may not have the updated status cached yet. In this case, we'll overwrite
- *    the value which will cause the state to be inconsistent (most likely until the next rebalance). Until
- *    we have proper producer groups with fenced groups, there is not much else we can do.
+ * which provides a little more protection if the worker is no longer in the group (in which case the
+ * task may have already been started on another worker). Obviously this is still racy. If the task has just
+ * started on another worker, we may not have the updated status cached yet. In this case, we'll overwrite
+ * the value which will cause the state to be inconsistent (most likely until the next rebalance). Until
+ * we have proper producer groups with fenced groups, there is not much else we can do.
  */
 public abstract class AbstractHerder implements Herder, TaskStatus.Listener, ConnectorStatus.Listener {
 
-    private final String workerId;
     protected final Worker worker;
-    private final String kafkaClusterId;
     protected final StatusBackingStore statusBackingStore;
     protected final ConfigBackingStore configBackingStore;
-
+    private final String workerId;
+    private final String kafkaClusterId;
     private Map<String, Connector> tempConnectors = new ConcurrentHashMap<>();
 
     public AbstractHerder(Worker worker,
@@ -95,6 +79,75 @@ public abstract class AbstractHerder implements Herder, TaskStatus.Listener, Con
         this.kafkaClusterId = kafkaClusterId;
         this.statusBackingStore = statusBackingStore;
         this.configBackingStore = configBackingStore;
+    }
+
+    // public for testing
+    public static ConfigInfos generateResult(String connType, Map<String, ConfigKey> configKeys, List<ConfigValue> configValues, List<String> groups) {
+        int errorCount = 0;
+        List<ConfigInfo> configInfoList = new LinkedList<>();
+
+        Map<String, ConfigValue> configValueMap = new HashMap<>();
+        for (ConfigValue configValue : configValues) {
+            String configName = configValue.name();
+            configValueMap.put(configName, configValue);
+            if (!configKeys.containsKey(configName)) {
+                configValue.addErrorMessage("Configuration is not defined: " + configName);
+                configInfoList.add(new ConfigInfo(null, convertConfigValue(configValue, null)));
+            }
+        }
+
+        for (Map.Entry<String, ConfigKey> entry : configKeys.entrySet()) {
+            String configName = entry.getKey();
+            ConfigKeyInfo configKeyInfo = convertConfigKey(entry.getValue());
+            Type type = entry.getValue().type;
+            ConfigValueInfo configValueInfo = null;
+            if (configValueMap.containsKey(configName)) {
+                ConfigValue configValue = configValueMap.get(configName);
+                configValueInfo = convertConfigValue(configValue, type);
+                errorCount += configValue.errorMessages().size();
+            }
+            configInfoList.add(new ConfigInfo(configKeyInfo, configValueInfo));
+        }
+        return new ConfigInfos(connType, errorCount, groups, configInfoList);
+    }
+
+    private static ConfigKeyInfo convertConfigKey(ConfigKey configKey) {
+        String name = configKey.name;
+        Type type = configKey.type;
+        String typeName = configKey.type.name();
+
+        boolean required = false;
+        String defaultValue;
+        if (ConfigDef.NO_DEFAULT_VALUE.equals(configKey.defaultValue)) {
+            defaultValue = null;
+            required = true;
+        } else {
+            defaultValue = ConfigDef.convertToString(configKey.defaultValue, type);
+        }
+        String importance = configKey.importance.name();
+        String documentation = configKey.documentation;
+        String group = configKey.group;
+        int orderInGroup = configKey.orderInGroup;
+        String width = configKey.width.name();
+        String displayName = configKey.displayName;
+        List<String> dependents = configKey.dependents;
+        return new ConfigKeyInfo(name, typeName, required, defaultValue, importance, documentation, group, orderInGroup, width, displayName, dependents);
+    }
+
+    private static ConfigValueInfo convertConfigValue(ConfigValue configValue, Type type) {
+        String value = ConfigDef.convertToString(configValue.value(), type);
+        List<String> recommendedValues = new LinkedList<>();
+
+        if (type == Type.LIST) {
+            for (Object object : configValue.recommendedValues()) {
+                recommendedValues.add(ConfigDef.convertToString(object, Type.STRING));
+            }
+        } else {
+            for (Object object : configValue.recommendedValues()) {
+                recommendedValues.add(ConfigDef.convertToString(object, type));
+            }
+        }
+        return new ConfigValueInfo(configValue.name(), value, recommendedValues, configValue.errorMessages(), configValue.visible());
     }
 
     @Override
@@ -207,7 +260,7 @@ public abstract class AbstractHerder implements Herder, TaskStatus.Listener, Con
         ConnectorStatus connector = statusBackingStore.get(connName);
         if (connector == null)
             throw new NotFoundException("No status found for connector " + connName);
-        
+
         Collection<TaskStatus> tasks = statusBackingStore.getAll(connName);
 
         ConnectorStateInfo.ConnectorState connectorState = new ConnectorStateInfo.ConnectorState(
@@ -223,7 +276,7 @@ public abstract class AbstractHerder implements Herder, TaskStatus.Listener, Con
 
         Map<String, String> conf = config(connName);
         return new ConnectorStateInfo(connName, connectorState, taskStates,
-            conf == null ? ConnectorType.UNKNOWN : connectorTypeForClass(conf.get(ConnectorConfig.CONNECTOR_CLASS_CONFIG)));
+                conf == null ? ConnectorType.UNKNOWN : connectorTypeForClass(conf.get(ConnectorConfig.CONNECTOR_CLASS_CONFIG)));
     }
 
     @Override
@@ -285,75 +338,6 @@ public abstract class AbstractHerder implements Herder, TaskStatus.Listener, Con
         }
     }
 
-    // public for testing
-    public static ConfigInfos generateResult(String connType, Map<String, ConfigKey> configKeys, List<ConfigValue> configValues, List<String> groups) {
-        int errorCount = 0;
-        List<ConfigInfo> configInfoList = new LinkedList<>();
-
-        Map<String, ConfigValue> configValueMap = new HashMap<>();
-        for (ConfigValue configValue: configValues) {
-            String configName = configValue.name();
-            configValueMap.put(configName, configValue);
-            if (!configKeys.containsKey(configName)) {
-                configValue.addErrorMessage("Configuration is not defined: " + configName);
-                configInfoList.add(new ConfigInfo(null, convertConfigValue(configValue, null)));
-            }
-        }
-
-        for (Map.Entry<String, ConfigKey> entry : configKeys.entrySet()) {
-            String configName = entry.getKey();
-            ConfigKeyInfo configKeyInfo = convertConfigKey(entry.getValue());
-            Type type = entry.getValue().type;
-            ConfigValueInfo configValueInfo = null;
-            if (configValueMap.containsKey(configName)) {
-                ConfigValue configValue = configValueMap.get(configName);
-                configValueInfo = convertConfigValue(configValue, type);
-                errorCount += configValue.errorMessages().size();
-            }
-            configInfoList.add(new ConfigInfo(configKeyInfo, configValueInfo));
-        }
-        return new ConfigInfos(connType, errorCount, groups, configInfoList);
-    }
-
-    private static ConfigKeyInfo convertConfigKey(ConfigKey configKey) {
-        String name = configKey.name;
-        Type type = configKey.type;
-        String typeName = configKey.type.name();
-
-        boolean required = false;
-        String defaultValue;
-        if (ConfigDef.NO_DEFAULT_VALUE.equals(configKey.defaultValue)) {
-            defaultValue = null;
-            required = true;
-        } else {
-            defaultValue = ConfigDef.convertToString(configKey.defaultValue, type);
-        }
-        String importance = configKey.importance.name();
-        String documentation = configKey.documentation;
-        String group = configKey.group;
-        int orderInGroup = configKey.orderInGroup;
-        String width = configKey.width.name();
-        String displayName = configKey.displayName;
-        List<String> dependents = configKey.dependents;
-        return new ConfigKeyInfo(name, typeName, required, defaultValue, importance, documentation, group, orderInGroup, width, displayName, dependents);
-    }
-
-    private static ConfigValueInfo convertConfigValue(ConfigValue configValue, Type type) {
-        String value = ConfigDef.convertToString(configValue.value(), type);
-        List<String> recommendedValues = new LinkedList<>();
-
-        if (type == Type.LIST) {
-            for (Object object: configValue.recommendedValues()) {
-                recommendedValues.add(ConfigDef.convertToString(object, Type.STRING));
-            }
-        } else {
-            for (Object object : configValue.recommendedValues()) {
-                recommendedValues.add(ConfigDef.convertToString(object, type));
-            }
-        }
-        return new ConfigValueInfo(configValue.name(), value, recommendedValues, configValue.errorMessages(), configValue.visible());
-    }
-
     protected Connector getConnector(String connType) {
         if (tempConnectors.containsKey(connType)) {
             return tempConnectors.get(connType);
@@ -377,30 +361,30 @@ public abstract class AbstractHerder implements Herder, TaskStatus.Listener, Con
      * to the given {@link Callback} if any were found.
      *
      * @param configInfos configInfos to read Errors from
-     * @param callback callback to add config error exception to
+     * @param callback    callback to add config error exception to
      * @return true if errors were found in the config
      */
     protected final boolean maybeAddConfigErrors(
-        ConfigInfos configInfos,
-        Callback<Created<ConnectorInfo>> callback
+            ConfigInfos configInfos,
+            Callback<Created<ConnectorInfo>> callback
     ) {
         int errors = configInfos.errorCount();
         boolean hasErrors = errors > 0;
         if (hasErrors) {
             StringBuilder messages = new StringBuilder();
             messages.append("Connector configuration is invalid and contains the following ")
-                .append(errors).append(" error(s):");
+                    .append(errors).append(" error(s):");
             for (ConfigInfo configInfo : configInfos.values()) {
                 for (String msg : configInfo.configValue().errors()) {
                     messages.append('\n').append(msg);
                 }
             }
             callback.onCompletion(
-                new BadRequestException(
-                    messages.append(
-                        "\nYou can also find the above list of errors at the endpoint `/{connectorType}/config/validate`"
-                    ).toString()
-                ), null
+                    new BadRequestException(
+                            messages.append(
+                                    "\nYou can also find the above list of errors at the endpoint `/{connectorType}/config/validate`"
+                            ).toString()
+                    ), null
             );
         }
         return hasErrors;

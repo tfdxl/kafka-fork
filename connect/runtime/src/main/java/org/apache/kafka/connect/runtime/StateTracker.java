@@ -84,7 +84,7 @@ public class StateTracker {
         }
 
         StateChange(State state, long startTime, long unassignedTotalTimeMs, long runningTotalTimeMs,
-                            long pausedTotalTimeMs, long failedTotalTimeMs, long destroyedTotalTimeMs) {
+                    long pausedTotalTimeMs, long failedTotalTimeMs, long destroyedTotalTimeMs) {
             this.state = state;
             this.startTime = startTime;
             this.unassignedTotalTimeMs = unassignedTotalTimeMs;
@@ -166,7 +166,7 @@ public class StateTracker {
                     break;
             }
             long total = durationCurrent + unassignedTotalTimeMs + runningTotalTimeMs + pausedTotalTimeMs +
-                                 failedTotalTimeMs + destroyedTotalTimeMs;
+                    failedTotalTimeMs + destroyedTotalTimeMs;
             return total == 0.0d ? 0.0d : (double) durationDesired / total;
         }
     }

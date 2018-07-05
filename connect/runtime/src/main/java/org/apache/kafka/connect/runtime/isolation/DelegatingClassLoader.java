@@ -40,19 +40,7 @@ import java.nio.file.Paths;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.sql.Driver;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.ServiceLoader;
-import java.util.Set;
-import java.util.SortedMap;
-import java.util.SortedSet;
-import java.util.TreeMap;
-import java.util.TreeSet;
+import java.util.*;
 
 public class DelegatingClassLoader extends URLClassLoader {
     private static final Logger log = LoggerFactory.getLogger(DelegatingClassLoader.class);
@@ -83,6 +71,21 @@ public class DelegatingClassLoader extends URLClassLoader {
         this(pluginPaths, ClassLoader.getSystemClassLoader());
     }
 
+    private static PluginClassLoader newPluginClassLoader(
+            final URL pluginLocation,
+            final URL[] urls,
+            final ClassLoader parent
+    ) {
+        return (PluginClassLoader) AccessController.doPrivileged(
+                new PrivilegedAction() {
+                    @Override
+                    public Object run() {
+                        return new PluginClassLoader(pluginLocation, urls, parent);
+                    }
+                }
+        );
+    }
+
     public Set<PluginDesc<Connector>> connectors() {
         return connectors;
     }
@@ -106,8 +109,8 @@ public class DelegatingClassLoader extends URLClassLoader {
     public ClassLoader connectorLoader(String connectorClassOrAlias) {
         log.debug("Getting plugin class loader for connector: '{}'", connectorClassOrAlias);
         String fullName = aliases.containsKey(connectorClassOrAlias)
-                          ? aliases.get(connectorClassOrAlias)
-                          : connectorClassOrAlias;
+                ? aliases.get(connectorClassOrAlias)
+                : connectorClassOrAlias;
         SortedMap<PluginDesc<?>, ClassLoader> inner = pluginLoaders.get(fullName);
         if (inner == null) {
             log.error(
@@ -118,21 +121,6 @@ public class DelegatingClassLoader extends URLClassLoader {
             return this;
         }
         return inner.get(inner.lastKey());
-    }
-
-    private static PluginClassLoader newPluginClassLoader(
-            final URL pluginLocation,
-            final URL[] urls,
-            final ClassLoader parent
-    ) {
-        return (PluginClassLoader) AccessController.doPrivileged(
-                new PrivilegedAction() {
-                    @Override
-                    public Object run() {
-                        return new PluginClassLoader(pluginLocation, urls, parent);
-                    }
-                }
-        );
     }
 
     private <T> void addPlugins(Collection<PluginDesc<T>> plugins, ClassLoader loader) {
@@ -324,8 +312,8 @@ public class DelegatingClassLoader extends URLClassLoader {
             ClassLoader pluginLoader = inner.get(inner.lastKey());
             log.trace("Retrieving loaded class '{}' from '{}'", fullName, pluginLoader);
             return pluginLoader instanceof PluginClassLoader
-                   ? ((PluginClassLoader) pluginLoader).loadClass(fullName, resolve)
-                   : super.loadClass(fullName, resolve);
+                    ? ((PluginClassLoader) pluginLoader).loadClass(fullName, resolve)
+                    : super.loadClass(fullName, resolve);
         }
 
         return super.loadClass(fullName, resolve);

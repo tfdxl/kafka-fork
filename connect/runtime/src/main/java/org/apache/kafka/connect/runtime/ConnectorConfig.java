@@ -28,16 +28,10 @@ import org.apache.kafka.connect.runtime.isolation.PluginDesc;
 import org.apache.kafka.connect.runtime.isolation.Plugins;
 import org.apache.kafka.connect.transforms.Transformation;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
-import static org.apache.kafka.common.config.ConfigDef.Range.atLeast;
 import static org.apache.kafka.common.config.ConfigDef.NonEmptyStringWithoutControlChars.nonEmptyStringWithoutControlChars;
+import static org.apache.kafka.common.config.ConfigDef.Range.atLeast;
 
 /**
  * <p>
@@ -51,53 +45,52 @@ import static org.apache.kafka.common.config.ConfigDef.NonEmptyStringWithoutCont
  * </p>
  */
 public class ConnectorConfig extends AbstractConfig {
+    public static final String NAME_CONFIG = "name";
+    public static final String CONNECTOR_CLASS_CONFIG = "connector.class";
+    public static final String KEY_CONVERTER_CLASS_CONFIG = WorkerConfig.KEY_CONVERTER_CLASS_CONFIG;
+    public static final String KEY_CONVERTER_CLASS_DOC = WorkerConfig.KEY_CONVERTER_CLASS_DOC;
+    public static final String KEY_CONVERTER_CLASS_DISPLAY = "Key converter class";
+    public static final String VALUE_CONVERTER_CLASS_CONFIG = WorkerConfig.VALUE_CONVERTER_CLASS_CONFIG;
+    public static final String VALUE_CONVERTER_CLASS_DOC = WorkerConfig.VALUE_CONVERTER_CLASS_DOC;
+    public static final String VALUE_CONVERTER_CLASS_DISPLAY = "Value converter class";
+    public static final String HEADER_CONVERTER_CLASS_CONFIG = WorkerConfig.HEADER_CONVERTER_CLASS_CONFIG;
+    public static final String HEADER_CONVERTER_CLASS_DOC = WorkerConfig.HEADER_CONVERTER_CLASS_DOC;
+    public static final String HEADER_CONVERTER_CLASS_DISPLAY = "Header converter class";
+    public static final String HEADER_CONVERTER_CLASS_DEFAULT = WorkerConfig.HEADER_CONVERTER_CLASS_DEFAULT;
+    public static final String TASKS_MAX_CONFIG = "tasks.max";
+    public static final int TASKS_MAX_DEFAULT = 1;
+    public static final String TRANSFORMS_CONFIG = "transforms";
     protected static final String COMMON_GROUP = "Common";
     protected static final String TRANSFORMS_GROUP = "Transforms";
-
-    public static final String NAME_CONFIG = "name";
     private static final String NAME_DOC = "Globally unique name to use for this connector.";
     private static final String NAME_DISPLAY = "Connector name";
-
-    public static final String CONNECTOR_CLASS_CONFIG = "connector.class";
     private static final String CONNECTOR_CLASS_DOC =
             "Name or alias of the class for this connector. Must be a subclass of org.apache.kafka.connect.connector.Connector. " +
                     "If the connector is org.apache.kafka.connect.file.FileStreamSinkConnector, you can either specify this full name, " +
                     " or use \"FileStreamSink\" or \"FileStreamSinkConnector\" to make the configuration a bit shorter";
     private static final String CONNECTOR_CLASS_DISPLAY = "Connector class";
-
-    public static final String KEY_CONVERTER_CLASS_CONFIG = WorkerConfig.KEY_CONVERTER_CLASS_CONFIG;
-    public static final String KEY_CONVERTER_CLASS_DOC = WorkerConfig.KEY_CONVERTER_CLASS_DOC;
-    public static final String KEY_CONVERTER_CLASS_DISPLAY = "Key converter class";
-
-    public static final String VALUE_CONVERTER_CLASS_CONFIG = WorkerConfig.VALUE_CONVERTER_CLASS_CONFIG;
-    public static final String VALUE_CONVERTER_CLASS_DOC = WorkerConfig.VALUE_CONVERTER_CLASS_DOC;
-    public static final String VALUE_CONVERTER_CLASS_DISPLAY = "Value converter class";
-
-    public static final String HEADER_CONVERTER_CLASS_CONFIG = WorkerConfig.HEADER_CONVERTER_CLASS_CONFIG;
-    public static final String HEADER_CONVERTER_CLASS_DOC = WorkerConfig.HEADER_CONVERTER_CLASS_DOC;
-    public static final String HEADER_CONVERTER_CLASS_DISPLAY = "Header converter class";
-    public static final String HEADER_CONVERTER_CLASS_DEFAULT = WorkerConfig.HEADER_CONVERTER_CLASS_DEFAULT;
-
-    public static final String TASKS_MAX_CONFIG = "tasks.max";
     private static final String TASKS_MAX_DOC = "Maximum number of tasks to use for this connector.";
-    public static final int TASKS_MAX_DEFAULT = 1;
     private static final int TASKS_MIN_CONFIG = 1;
-
     private static final String TASK_MAX_DISPLAY = "Tasks max";
-
-    public static final String TRANSFORMS_CONFIG = "transforms";
     private static final String TRANSFORMS_DOC = "Aliases for the transformations to be applied to records.";
     private static final String TRANSFORMS_DISPLAY = "Transforms";
 
     private final EnrichedConnectorConfig enrichedConfig;
-    private static class EnrichedConnectorConfig extends AbstractConfig {
-        EnrichedConnectorConfig(ConfigDef configDef, Map<String, String> props) {
-            super(configDef, props);
-        }
 
-        public Object get(String key) {
-            return super.get(key);
-        }
+    public ConnectorConfig(Plugins plugins) {
+        this(plugins, new HashMap<String, String>());
+    }
+
+    public ConnectorConfig(Plugins plugins, Map<String, String> props) {
+        this(plugins, configDef(), props);
+    }
+
+    public ConnectorConfig(Plugins plugins, ConfigDef configDef, Map<String, String> props) {
+        super(configDef, props);
+        enrichedConfig = new EnrichedConnectorConfig(
+                enrich(plugins, configDef, props, true),
+                props
+        );
     }
 
     public static ConfigDef configDef() {
@@ -118,49 +111,6 @@ public class ConnectorConfig extends AbstractConfig {
                         }
                     }
                 }), Importance.LOW, TRANSFORMS_DOC, TRANSFORMS_GROUP, ++orderInGroup, Width.LONG, TRANSFORMS_DISPLAY);
-    }
-
-    public ConnectorConfig(Plugins plugins) {
-        this(plugins, new HashMap<String, String>());
-    }
-
-    public ConnectorConfig(Plugins plugins, Map<String, String> props) {
-        this(plugins, configDef(), props);
-    }
-
-    public ConnectorConfig(Plugins plugins, ConfigDef configDef, Map<String, String> props) {
-        super(configDef, props);
-        enrichedConfig = new EnrichedConnectorConfig(
-                enrich(plugins, configDef, props, true),
-                props
-        );
-    }
-
-    @Override
-    public Object get(String key) {
-        return enrichedConfig.get(key);
-    }
-
-    /**
-     * Returns the initialized list of {@link Transformation} which are specified in {@link #TRANSFORMS_CONFIG}.
-     */
-    public <R extends ConnectRecord<R>> List<Transformation<R>> transformations() {
-        final List<String> transformAliases = getList(TRANSFORMS_CONFIG);
-
-        final List<Transformation<R>> transformations = new ArrayList<>(transformAliases.size());
-        for (String alias : transformAliases) {
-            final String prefix = TRANSFORMS_CONFIG + "." + alias + ".";
-            final Transformation<R> transformation;
-            try {
-                transformation = getClass(prefix + "type").asSubclass(Transformation.class).newInstance();
-            } catch (Exception e) {
-                throw new ConnectException(e);
-            }
-            transformation.configure(originalsWithPrefix(prefix));
-            transformations.add(transformation);
-        }
-
-        return transformations;
     }
 
     /**
@@ -228,6 +178,43 @@ public class ConnectorConfig extends AbstractConfig {
             return (transformationCls.asSubclass(Transformation.class).newInstance()).config();
         } catch (Exception e) {
             throw new ConfigException(key, String.valueOf(transformationCls), "Error getting config definition from Transformation: " + e.getMessage());
+        }
+    }
+
+    @Override
+    public Object get(String key) {
+        return enrichedConfig.get(key);
+    }
+
+    /**
+     * Returns the initialized list of {@link Transformation} which are specified in {@link #TRANSFORMS_CONFIG}.
+     */
+    public <R extends ConnectRecord<R>> List<Transformation<R>> transformations() {
+        final List<String> transformAliases = getList(TRANSFORMS_CONFIG);
+
+        final List<Transformation<R>> transformations = new ArrayList<>(transformAliases.size());
+        for (String alias : transformAliases) {
+            final String prefix = TRANSFORMS_CONFIG + "." + alias + ".";
+            final Transformation<R> transformation;
+            try {
+                transformation = getClass(prefix + "type").asSubclass(Transformation.class).newInstance();
+            } catch (Exception e) {
+                throw new ConnectException(e);
+            }
+            transformation.configure(originalsWithPrefix(prefix));
+            transformations.add(transformation);
+        }
+
+        return transformations;
+    }
+
+    private static class EnrichedConnectorConfig extends AbstractConfig {
+        EnrichedConnectorConfig(ConfigDef configDef, Map<String, String> props) {
+            super(configDef, props);
+        }
+
+        public Object get(String key) {
+            return super.get(key);
         }
     }
 

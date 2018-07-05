@@ -44,14 +44,7 @@ import org.apache.kafka.connect.util.TopicAdmin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
+import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -149,32 +142,10 @@ import java.util.concurrent.TimeoutException;
  * </p>
  */
 public class KafkaConfigBackingStore implements ConfigBackingStore {
-    private static final Logger log = LoggerFactory.getLogger(KafkaConfigBackingStore.class);
-
     public static final String TARGET_STATE_PREFIX = "target-state-";
-
-    public static String TARGET_STATE_KEY(String connectorName) {
-        return TARGET_STATE_PREFIX + connectorName;
-    }
-
     public static final String CONNECTOR_PREFIX = "connector-";
-
-    public static String CONNECTOR_KEY(String connectorName) {
-        return CONNECTOR_PREFIX + connectorName;
-    }
-
     public static final String TASK_PREFIX = "task-";
-
-    public static String TASK_KEY(ConnectorTaskId taskId) {
-        return TASK_PREFIX + taskId.connector() + "-" + taskId.task();
-    }
-
     public static final String COMMIT_TASKS_PREFIX = "commit-";
-
-    public static String COMMIT_TASKS_KEY(String connectorName) {
-        return COMMIT_TASKS_PREFIX + connectorName;
-    }
-
     // Note that while using real serialization for values as we have here, but ad hoc string serialization for keys,
     // isn't ideal, we use this approach because it avoids any potential problems with schema evolution or
     // converter/serializer changes causing keys to change. We need to absolutely ensure that the keys remain precisely
@@ -189,16 +160,10 @@ public class KafkaConfigBackingStore implements ConfigBackingStore {
     public static final Schema TARGET_STATE_V0 = SchemaBuilder.struct()
             .field("state", Schema.STRING_SCHEMA)
             .build();
-
+    private static final Logger log = LoggerFactory.getLogger(KafkaConfigBackingStore.class);
     private static final long READ_TO_END_TIMEOUT_MS = 30000;
-
     private final Object lock;
     private final Converter converter;
-    private volatile boolean started;
-    // Although updateListener is not final, it's guaranteed to be visible to any thread after its
-    // initialization as long as we always read the volatile variable "started" before we access the listener.
-    private UpdateListener updateListener;
-
     private final String topic;
     // Data is passed to the log already serialized. We use a converter to handle translating to/from generic Connect
     // format to serialized form
@@ -208,18 +173,19 @@ public class KafkaConfigBackingStore implements ConfigBackingStore {
     // Connector and task configs: name or id -> config map
     private final Map<String, Map<String, String>> connectorConfigs = new HashMap<>();
     private final Map<ConnectorTaskId, Map<String, String>> taskConfigs = new HashMap<>();
-
     // Set of connectors where we saw a task commit with an incomplete set of task config updates, indicating the data
     // is in an inconsistent state and we cannot safely use them until they have been refreshed.
     private final Set<String> inconsistent = new HashSet<>();
+    // Connector -> Map[ConnectorTaskId -> Configs]
+    private final Map<String, Map<ConnectorTaskId, Map<String, String>>> deferredTaskUpdates = new HashMap<>();
+    private final Map<String, TargetState> connectorTargetStates = new HashMap<>();
+    private volatile boolean started;
+    // Although updateListener is not final, it's guaranteed to be visible to any thread after its
+    // initialization as long as we always read the volatile variable "started" before we access the listener.
+    private UpdateListener updateListener;
     // The most recently read offset. This does not take into account deferred task updates/commits, so we may have
     // outstanding data to be applied.
     private volatile long offset;
-
-    // Connector -> Map[ConnectorTaskId -> Configs]
-    private final Map<String, Map<ConnectorTaskId, Map<String, String>>> deferredTaskUpdates = new HashMap<>();
-
-    private final Map<String, TargetState> connectorTargetStates = new HashMap<>();
 
     public KafkaConfigBackingStore(Converter converter, WorkerConfig config) {
         this.lock = new Object();
@@ -232,6 +198,33 @@ public class KafkaConfigBackingStore implements ConfigBackingStore {
             throw new ConfigException("Must specify topic for connector configuration.");
 
         configLog = setupAndCreateKafkaBasedLog(this.topic, config);
+    }
+
+    public static String TARGET_STATE_KEY(String connectorName) {
+        return TARGET_STATE_PREFIX + connectorName;
+    }
+
+    public static String CONNECTOR_KEY(String connectorName) {
+        return CONNECTOR_PREFIX + connectorName;
+    }
+
+    public static String TASK_KEY(ConnectorTaskId taskId) {
+        return TASK_PREFIX + taskId.connector() + "-" + taskId.task();
+    }
+
+    public static String COMMIT_TASKS_KEY(String connectorName) {
+        return COMMIT_TASKS_PREFIX + connectorName;
+    }
+
+    // Convert an integer value extracted from a schemaless struct to an int. This handles potentially different
+    // encodings by different Converters.
+    private static int intValue(Object value) {
+        if (value instanceof Integer)
+            return (int) value;
+        else if (value instanceof Long)
+            return (int) (long) value;
+        else
+            throw new ConnectException("Expected integer value to be either Integer or Long");
     }
 
     @Override
@@ -300,6 +293,7 @@ public class KafkaConfigBackingStore implements ConfigBackingStore {
 
     /**
      * Remove configuration for a given connector.
+     *
      * @param connector name of the connector to remove
      */
     @Override
@@ -335,7 +329,7 @@ public class KafkaConfigBackingStore implements ConfigBackingStore {
      * that we would be leaving one of the referenced connectors with an inconsistent state.
      *
      * @param connector the connector to write task configuration
-     * @param configs list of task configurations for the connector
+     * @param configs   list of task configurations for the connector
      * @throws ConnectException if the task configurations do not resolve inconsistencies found in the existing root
      *                          and task configurations.
      */
@@ -354,7 +348,7 @@ public class KafkaConfigBackingStore implements ConfigBackingStore {
 
         // Start sending all the individual updates
         int index = 0;
-        for (Map<String, String> taskConfig: configs) {
+        for (Map<String, String> taskConfig : configs) {
             Struct connectConfig = new Struct(TASK_CONFIGURATION_V0);
             connectConfig.put("properties", taskConfig);
             byte[] serializedConfig = converter.fromConnectData(topic, TASK_CONFIGURATION_V0, connectConfig);
@@ -443,6 +437,66 @@ public class KafkaConfigBackingStore implements ConfigBackingStore {
         return new KafkaBasedLog<>(topic, producerProps, consumerProps, consumedCallback, Time.SYSTEM, createTopics);
     }
 
+    private ConnectorTaskId parseTaskId(String key) {
+        String[] parts = key.split("-");
+        if (parts.length < 3) return null;
+
+        try {
+            int taskNum = Integer.parseInt(parts[parts.length - 1]);
+            String connectorName = Utils.join(Arrays.copyOfRange(parts, 1, parts.length - 1), "-");
+            return new ConnectorTaskId(connectorName, taskNum);
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    /**
+     * Given task configurations, get a set of integer task IDs for the connector.
+     */
+    private Set<Integer> taskIds(String connector, Map<ConnectorTaskId, Map<String, String>> configs) {
+        Set<Integer> tasks = new TreeSet<>();
+        if (configs == null) {
+            return tasks;
+        }
+        for (ConnectorTaskId taskId : configs.keySet()) {
+            assert taskId.connector().equals(connector);
+            tasks.add(taskId.task());
+        }
+        return tasks;
+    }
+
+    private boolean completeTaskIdSet(Set<Integer> idSet, int expectedSize) {
+        // Note that we do *not* check for the exact set. This is an important implication of compaction. If we start out
+        // with 2 tasks, then reduce to 1, we'll end up with log entries like:
+        //
+        // 1. Connector "foo" config
+        // 2. Connector "foo", task 1 config
+        // 3. Connector "foo", task 2 config
+        // 4. Connector "foo", commit 2 tasks
+        // 5. Connector "foo", task 1 config
+        // 6. Connector "foo", commit 1 tasks
+        //
+        // However, due to compaction we could end up with a log that looks like this:
+        //
+        // 1. Connector "foo" config
+        // 3. Connector "foo", task 2 config
+        // 5. Connector "foo", task 1 config
+        // 6. Connector "foo", commit 1 tasks
+        //
+        // which isn't incorrect, but would appear in this code to have an extra task configuration. Instead, we just
+        // validate that all the configs specified by the commit message are present. This should be fine because the
+        // logic for writing configs ensures all the task configs are written (and reads them back) before writing the
+        // commit message.
+
+        if (idSet.size() < expectedSize)
+            return false;
+
+        for (int i = 0; i < expectedSize; i++)
+            if (!idSet.contains(i))
+                return false;
+        return true;
+    }
+
     @SuppressWarnings("unchecked")
     private class ConsumeCallback implements Callback<ConsumerRecord<String, byte[]>> {
         @Override
@@ -479,7 +533,7 @@ public class KafkaConfigBackingStore implements ConfigBackingStore {
                             connectorTargetStates.put(connectorName, TargetState.STARTED);
                     } else {
                         if (!(value.value() instanceof Map)) {
-                            log.error("Found target state ({}) in wrong format: {}",  record.key(), value.value().getClass());
+                            log.error("Found target state ({}) in wrong format: {}", record.key(), value.value().getClass());
                             return;
                         }
                         Object targetState = ((Map<String, Object>) value.value()).get("state");
@@ -633,77 +687,6 @@ public class KafkaConfigBackingStore implements ConfigBackingStore {
             }
         }
 
-    }
-
-    private ConnectorTaskId parseTaskId(String key) {
-        String[] parts = key.split("-");
-        if (parts.length < 3) return null;
-
-        try {
-            int taskNum = Integer.parseInt(parts[parts.length - 1]);
-            String connectorName = Utils.join(Arrays.copyOfRange(parts, 1, parts.length - 1), "-");
-            return new ConnectorTaskId(connectorName, taskNum);
-        } catch (NumberFormatException e) {
-            return null;
-        }
-    }
-
-    /**
-     * Given task configurations, get a set of integer task IDs for the connector.
-     */
-    private Set<Integer> taskIds(String connector, Map<ConnectorTaskId, Map<String, String>> configs) {
-        Set<Integer> tasks = new TreeSet<>();
-        if (configs == null) {
-            return tasks;
-        }
-        for (ConnectorTaskId taskId : configs.keySet()) {
-            assert taskId.connector().equals(connector);
-            tasks.add(taskId.task());
-        }
-        return tasks;
-    }
-
-    private boolean completeTaskIdSet(Set<Integer> idSet, int expectedSize) {
-        // Note that we do *not* check for the exact set. This is an important implication of compaction. If we start out
-        // with 2 tasks, then reduce to 1, we'll end up with log entries like:
-        //
-        // 1. Connector "foo" config
-        // 2. Connector "foo", task 1 config
-        // 3. Connector "foo", task 2 config
-        // 4. Connector "foo", commit 2 tasks
-        // 5. Connector "foo", task 1 config
-        // 6. Connector "foo", commit 1 tasks
-        //
-        // However, due to compaction we could end up with a log that looks like this:
-        //
-        // 1. Connector "foo" config
-        // 3. Connector "foo", task 2 config
-        // 5. Connector "foo", task 1 config
-        // 6. Connector "foo", commit 1 tasks
-        //
-        // which isn't incorrect, but would appear in this code to have an extra task configuration. Instead, we just
-        // validate that all the configs specified by the commit message are present. This should be fine because the
-        // logic for writing configs ensures all the task configs are written (and reads them back) before writing the
-        // commit message.
-
-        if (idSet.size() < expectedSize)
-            return false;
-
-        for (int i = 0; i < expectedSize; i++)
-            if (!idSet.contains(i))
-                return false;
-        return true;
-    }
-
-    // Convert an integer value extracted from a schemaless struct to an int. This handles potentially different
-    // encodings by different Converters.
-    private static int intValue(Object value) {
-        if (value instanceof Integer)
-            return (int) value;
-        else if (value instanceof Long)
-            return (int) (long) value;
-        else
-            throw new ConnectException("Expected integer value to be either Integer or Long");
     }
 }
 

@@ -24,11 +24,7 @@ import org.apache.kafka.common.KafkaException;
 import org.apache.kafka.common.errors.RetriableException;
 import org.apache.kafka.common.header.internals.RecordHeaders;
 import org.apache.kafka.common.metrics.Sensor;
-import org.apache.kafka.common.metrics.stats.Avg;
-import org.apache.kafka.common.metrics.stats.Max;
-import org.apache.kafka.common.metrics.stats.Rate;
-import org.apache.kafka.common.metrics.stats.Total;
-import org.apache.kafka.common.metrics.stats.Value;
+import org.apache.kafka.common.metrics.stats.*;
 import org.apache.kafka.common.utils.Time;
 import org.apache.kafka.connect.errors.ConnectException;
 import org.apache.kafka.connect.header.Header;
@@ -48,11 +44,7 @@ import org.slf4j.LoggerFactory;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.concurrent.*;
 
 /**
  * WorkerTask that uses a SourceTask to ingest data into Kafka.
@@ -68,12 +60,11 @@ class WorkerSourceTask extends WorkerTask {
     private final Converter valueConverter;
     private final HeaderConverter headerConverter;
     private final TransformationChain<SourceRecord> transformationChain;
-    private KafkaProducer<byte[], byte[]> producer;
     private final OffsetStorageReader offsetReader;
     private final OffsetStorageWriter offsetWriter;
     private final Time time;
     private final SourceTaskMetricsGroup sourceTaskMetricsGroup;
-
+    private KafkaProducer<byte[], byte[]> producer;
     private List<SourceRecord> toSend;
     private boolean lastSendFailed; // Whether the last send failed *synchronously*, i.e. never made it into the producer's RecordAccumulator
     // Use IdentityHashMap to ensure correctness with duplicate records. This is a HashMap because
@@ -208,6 +199,7 @@ class WorkerSourceTask extends WorkerTask {
     /**
      * Try to send a batch of records. If a send fails and is retriable, this saves the remainder of the batch so it can
      * be retried after backing off. If a send fails and is not retriable, this will throw a ConnectException.
+     *
      * @return true if all messages were sent, false if some need to be retried
      */
     private boolean sendRecords() {
@@ -475,6 +467,7 @@ class WorkerSourceTask extends WorkerTask {
         private final int batchSize;
         private boolean completed = false;
         private int counter;
+
         public SourceRecordWriteCounter(int batchSize, SourceTaskMetricsGroup metricsGroup) {
             assert batchSize > 0;
             assert metricsGroup != null;
@@ -482,19 +475,23 @@ class WorkerSourceTask extends WorkerTask {
             counter = batchSize;
             this.metricsGroup = metricsGroup;
         }
+
         public void skipRecord() {
             if (counter > 0 && --counter == 0) {
                 finishedAllWrites();
             }
         }
+
         public void completeRecord() {
             if (counter > 0 && --counter == 0) {
                 finishedAllWrites();
             }
         }
+
         public void retryRemaining() {
             finishedAllWrites();
         }
+
         private void finishedAllWrites() {
             if (!completed) {
                 metricsGroup.recordWrite(batchSize - counter);

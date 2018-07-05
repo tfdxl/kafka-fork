@@ -73,9 +73,9 @@ public class ConfigInfos {
         if (o == null || getClass() != o.getClass()) return false;
         ConfigInfos that = (ConfigInfos) o;
         return Objects.equals(name, that.name) &&
-               Objects.equals(errorCount, that.errorCount) &&
-               Objects.equals(groups, that.groups) &&
-               Objects.equals(configs, that.configs);
+                Objects.equals(errorCount, that.errorCount) &&
+                Objects.equals(groups, that.groups) &&
+                Objects.equals(configs, that.configs);
     }
 
     @Override
@@ -87,14 +87,14 @@ public class ConfigInfos {
     public String toString() {
         StringBuffer sb = new StringBuffer();
         sb.append("[")
-            .append(name)
-            .append(",")
-            .append(errorCount)
-            .append(",")
-            .append(groups)
-            .append(",")
-            .append(configs)
-            .append("]");
+                .append(name)
+                .append(",")
+                .append(errorCount)
+                .append(",")
+                .append(groups)
+                .append(",")
+                .append(configs)
+                .append("]");
         return sb.toString();
     }
 

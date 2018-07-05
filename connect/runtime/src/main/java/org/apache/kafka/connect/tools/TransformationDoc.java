@@ -17,36 +17,13 @@
 package org.apache.kafka.connect.tools;
 
 import org.apache.kafka.common.config.ConfigDef;
-import org.apache.kafka.connect.transforms.Cast;
-import org.apache.kafka.connect.transforms.ExtractField;
-import org.apache.kafka.connect.transforms.Flatten;
-import org.apache.kafka.connect.transforms.HoistField;
-import org.apache.kafka.connect.transforms.InsertField;
-import org.apache.kafka.connect.transforms.MaskField;
-import org.apache.kafka.connect.transforms.RegexRouter;
-import org.apache.kafka.connect.transforms.ReplaceField;
-import org.apache.kafka.connect.transforms.SetSchemaMetadata;
-import org.apache.kafka.connect.transforms.TimestampConverter;
-import org.apache.kafka.connect.transforms.TimestampRouter;
-import org.apache.kafka.connect.transforms.ValueToKey;
+import org.apache.kafka.connect.transforms.*;
 
 import java.io.PrintStream;
 import java.util.Arrays;
 import java.util.List;
 
 public class TransformationDoc {
-
-    private static final class DocInfo {
-        final String transformationName;
-        final String overview;
-        final ConfigDef configDef;
-
-        private DocInfo(String transformationName, String overview, ConfigDef configDef) {
-            this.transformationName = transformationName;
-            this.overview = overview;
-            this.configDef = configDef;
-        }
-    }
 
     private static final List<DocInfo> TRANSFORMATIONS = Arrays.asList(
             new DocInfo(InsertField.class.getName(), InsertField.OVERVIEW_DOC, InsertField.CONFIG_DEF),
@@ -87,6 +64,18 @@ public class TransformationDoc {
 
     public static void main(String... args) throws Exception {
         printHtml(System.out);
+    }
+
+    private static final class DocInfo {
+        final String transformationName;
+        final String overview;
+        final ConfigDef configDef;
+
+        private DocInfo(String transformationName, String overview, ConfigDef configDef) {
+            this.transformationName = transformationName;
+            this.overview = overview;
+            this.configDef = configDef;
+        }
     }
 
 }

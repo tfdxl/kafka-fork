@@ -34,22 +34,12 @@ import org.slf4j.LoggerFactory;
 
 import java.security.AccessController;
 import java.security.PrivilegedAction;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class Plugins {
 
-    public enum ClassLoaderUsage {
-        CURRENT_CLASSLOADER,
-        PLUGINS
-    }
-
     private static final Logger log = LoggerFactory.getLogger(Plugins.class);
     private final DelegatingClassLoader delegatingLoader;
-
     public Plugins(Map<String, String> props) {
         List<String> pluginLocations = WorkerConfig.pluginLocations(props);
         delegatingLoader = newDelegatingClassLoader(pluginLocations);
@@ -188,9 +178,9 @@ public class Plugins {
     /**
      * If the given configuration defines a {@link Converter} using the named configuration property, return a new configured instance.
      *
-     * @param config             the configuration containing the {@link Converter}'s configuration; may not be null
-     * @param classPropertyName  the name of the property that contains the name of the {@link Converter} class; may not be null
-     * @param classLoaderUsage   which classloader should be used
+     * @param config            the configuration containing the {@link Converter}'s configuration; may not be null
+     * @param classPropertyName the name of the property that contains the name of the {@link Converter} class; may not be null
+     * @param classLoaderUsage  which classloader should be used
      * @return the instantiated and configured {@link Converter}; null if the configuration did not define the specified property
      * @throws ConnectException if the {@link Converter} implementation class could not be found
      */
@@ -216,8 +206,8 @@ public class Plugins {
                 } catch (ClassNotFoundException e) {
                     throw new ConnectException(
                             "Failed to find any class that implements Converter and which name matches "
-                            + converterClassOrAlias + ", available converters are: "
-                            + pluginNames(delegatingLoader.converters())
+                                    + converterClassOrAlias + ", available converters are: "
+                                    + pluginNames(delegatingLoader.converters())
                     );
                 }
                 plugin = newPlugin(klass);
@@ -229,7 +219,7 @@ public class Plugins {
 
         // Determine whether this is a key or value converter based upon the supplied property name ...
         final boolean isKeyConverter = WorkerConfig.KEY_CONVERTER_CLASS_CONFIG.equals(classPropertyName)
-                                     || WorkerConfig.INTERNAL_KEY_CONVERTER_CLASS_CONFIG.equals(classPropertyName);
+                || WorkerConfig.INTERNAL_KEY_CONVERTER_CLASS_CONFIG.equals(classPropertyName);
 
         // Configure the Converter using only the old configuration mechanism ...
         String configPrefix = classPropertyName + ".";
@@ -242,9 +232,9 @@ public class Plugins {
      * If the given configuration defines a {@link HeaderConverter} using the named configuration property, return a new configured
      * instance.
      *
-     * @param config             the configuration containing the {@link Converter}'s configuration; may not be null
-     * @param classPropertyName  the name of the property that contains the name of the {@link Converter} class; may not be null
-     * @param classLoaderUsage   which classloader should be used
+     * @param config            the configuration containing the {@link Converter}'s configuration; may not be null
+     * @param classPropertyName the name of the property that contains the name of the {@link Converter} class; may not be null
+     * @param classLoaderUsage  which classloader should be used
      * @return the instantiated and configured {@link HeaderConverter}; null if the configuration did not define the specified property
      * @throws ConnectException if the {@link HeaderConverter} implementation class could not be found
      */
@@ -296,7 +286,7 @@ public class Plugins {
      * Get an instance of the give class specified by the given configuration key.
      *
      * @param key The configuration key for the class
-     * @param t The interface the class should implement
+     * @param t   The interface the class should implement
      * @return A instance of the class
      */
     private <T> T getInstance(AbstractConfig config, String key, Class<T> t) {
@@ -316,6 +306,11 @@ public class Plugins {
             String transformationClassOrAlias
     ) {
         return null;
+    }
+
+    public enum ClassLoaderUsage {
+        CURRENT_CLASSLOADER,
+        PLUGINS
     }
 
 }

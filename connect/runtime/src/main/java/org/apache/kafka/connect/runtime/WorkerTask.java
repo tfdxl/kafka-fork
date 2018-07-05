@@ -41,7 +41,7 @@ import java.util.concurrent.TimeUnit;
  * Handles processing for an individual task. This interface only provides the basic methods
  * used by {@link Worker} to manage the tasks. Implementations combine a user-specified Task with
  * Kafka to create a data flow.
- *
+ * <p>
  * Note on locking: since the task runs in its own thread, special care must be taken to ensure
  * that state transitions are reported correctly, in particular since some state transitions are
  * asynchronous (e.g. pause/resume). For example, changing the state to paused could cause a race
@@ -52,8 +52,8 @@ abstract class WorkerTask implements Runnable {
     private static final Logger log = LoggerFactory.getLogger(WorkerTask.class);
 
     protected final ConnectorTaskId id;
-    private final TaskStatus.Listener statusListener;
     protected final ClassLoader loader;
+    private final TaskStatus.Listener statusListener;
     private final CountDownLatch shutdownLatch = new CountDownLatch(1);
     private final TaskMetricsGroup taskMetricsGroup;
     private volatile TargetState targetState;
@@ -277,7 +277,7 @@ abstract class WorkerTask implements Runnable {
      * Record that offsets have been committed.
      *
      * @param duration the length of time in milliseconds for the commit attempt to complete
-     * @param error the unexpected error that occurred; may be null in the case of timeouts or interruptions
+     * @param error    the unexpected error that occurred; may be null in the case of timeouts or interruptions
      */
     protected void recordCommitFailure(long duration, Throwable error) {
         taskMetricsGroup.recordCommit(duration, false, error);

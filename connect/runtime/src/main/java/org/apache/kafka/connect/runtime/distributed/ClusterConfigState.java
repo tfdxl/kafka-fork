@@ -19,13 +19,7 @@ package org.apache.kafka.connect.runtime.distributed;
 import org.apache.kafka.connect.runtime.TargetState;
 import org.apache.kafka.connect.util.ConnectorTaskId;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
+import java.util.*;
 
 /**
  * An immutable snapshot of the configuration state of connectors and tasks in a Kafka Connect cluster.
@@ -64,6 +58,7 @@ public class ClusterConfigState {
     /**
      * Get the last offset read to generate this config state. This offset is not guaranteed to be perfectly consistent
      * with the recorded state because some partial updates to task configs may have been read.
+     *
      * @return the latest config offset
      */
     public long offset() {
@@ -72,6 +67,7 @@ public class ClusterConfigState {
 
     /**
      * Check whether this snapshot contains configuration for a connector.
+     *
      * @param connector name of the connector
      * @return true if this state contains configuration for the connector, false otherwise
      */
@@ -88,6 +84,7 @@ public class ClusterConfigState {
 
     /**
      * Get the configuration for a connector.
+     *
      * @param connector name of the connector
      * @return a map containing configuration parameters
      */
@@ -97,6 +94,7 @@ public class ClusterConfigState {
 
     /**
      * Get the target state of the connector
+     *
      * @param connector name of the connector
      * @return the target state
      */
@@ -106,6 +104,7 @@ public class ClusterConfigState {
 
     /**
      * Get the configuration for a task.
+     *
      * @param task id of the task
      * @return a map containing configuration parameters
      */
@@ -115,6 +114,7 @@ public class ClusterConfigState {
 
     /**
      * Get all task configs for a connector.
+     *
      * @param connector name of the connector
      * @return a list of task configurations
      */
@@ -129,6 +129,7 @@ public class ClusterConfigState {
 
     /**
      * Get the number of tasks assigned for the given connector.
+     *
      * @param connectorName name of the connector to look up tasks for
      * @return the number of tasks
      */
@@ -139,6 +140,7 @@ public class ClusterConfigState {
 
     /**
      * Get the current set of task IDs for the specified connector.
+     *
      * @param connectorName the name of the connector to look up task configs for
      * @return the current set of connector task IDs
      */
@@ -161,10 +163,10 @@ public class ClusterConfigState {
     /**
      * Get the set of connectors which have inconsistent data in this snapshot. These inconsistencies can occur due to
      * partially completed writes combined with log compaction.
-     *
+     * <p>
      * Connectors in this set will appear in the output of {@link #connectors()} since their connector configuration is
      * available, but not in the output of {@link #taskConfig(ConnectorTaskId)} since the task configs are incomplete.
-     *
+     * <p>
      * When a worker detects a connector in this state, it should request that the connector regenerate its task
      * configurations.
      *

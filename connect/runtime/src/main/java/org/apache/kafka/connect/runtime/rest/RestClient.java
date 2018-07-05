@@ -118,6 +118,7 @@ public class RestClient {
 
     /**
      * Convert response parameters from Jetty format (HttpFields)
+     *
      * @param httpFields
      * @return
      */

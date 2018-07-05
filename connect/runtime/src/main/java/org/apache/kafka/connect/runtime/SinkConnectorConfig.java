@@ -31,31 +31,31 @@ import java.util.Map;
 public class SinkConnectorConfig extends ConnectorConfig {
 
     public static final String TOPICS_CONFIG = SinkTask.TOPICS_CONFIG;
-    private static final String TOPICS_DOC = "List of topics to consume, separated by commas";
     public static final String TOPICS_DEFAULT = "";
-    private static final String TOPICS_DISPLAY = "Topics";
-
     public static final String TOPICS_REGEX_CONFIG = SinkTask.TOPICS_REGEX_CONFIG;
-    private static final String TOPICS_REGEX_DOC = "Regular expression giving topics to consume. " +
-        "Under the hood, the regex is compiled to a <code>java.util.regex.Pattern</code>. " +
-        "Only one of " + TOPICS_CONFIG + " or " + TOPICS_REGEX_CONFIG + " should be specified.";
     public static final String TOPICS_REGEX_DEFAULT = "";
+    private static final String TOPICS_DOC = "List of topics to consume, separated by commas";
+    private static final String TOPICS_DISPLAY = "Topics";
+    private static final String TOPICS_REGEX_DOC = "Regular expression giving topics to consume. " +
+            "Under the hood, the regex is compiled to a <code>java.util.regex.Pattern</code>. " +
+            "Only one of " + TOPICS_CONFIG + " or " + TOPICS_REGEX_CONFIG + " should be specified.";
     private static final String TOPICS_REGEX_DISPLAY = "Topics regex";
 
     static ConfigDef config = ConnectorConfig.configDef()
-        .define(TOPICS_CONFIG, ConfigDef.Type.LIST, TOPICS_DEFAULT, ConfigDef.Importance.HIGH, TOPICS_DOC, COMMON_GROUP, 4, ConfigDef.Width.LONG, TOPICS_DISPLAY)
-        .define(TOPICS_REGEX_CONFIG, ConfigDef.Type.STRING, TOPICS_REGEX_DEFAULT, new RegexValidator(), ConfigDef.Importance.HIGH, TOPICS_REGEX_DOC, COMMON_GROUP, 4, ConfigDef.Width.LONG, TOPICS_REGEX_DISPLAY);
-
-    public static ConfigDef configDef() {
-        return config;
-    }
+            .define(TOPICS_CONFIG, ConfigDef.Type.LIST, TOPICS_DEFAULT, ConfigDef.Importance.HIGH, TOPICS_DOC, COMMON_GROUP, 4, ConfigDef.Width.LONG, TOPICS_DISPLAY)
+            .define(TOPICS_REGEX_CONFIG, ConfigDef.Type.STRING, TOPICS_REGEX_DEFAULT, new RegexValidator(), ConfigDef.Importance.HIGH, TOPICS_REGEX_DOC, COMMON_GROUP, 4, ConfigDef.Width.LONG, TOPICS_REGEX_DISPLAY);
 
     public SinkConnectorConfig(Plugins plugins, Map<String, String> props) {
         super(plugins, config, props);
     }
 
+    public static ConfigDef configDef() {
+        return config;
+    }
+
     /**
      * Throw an exception if the passed-in properties do not constitute a valid sink.
+     *
      * @param props sink configuration properties
      */
     public static void validate(Map<String, String> props) {
@@ -64,12 +64,12 @@ public class SinkConnectorConfig extends ConnectorConfig {
 
         if (hasTopicsConfig && hasTopicsRegexConfig) {
             throw new ConfigException(SinkTask.TOPICS_CONFIG + " and " + SinkTask.TOPICS_REGEX_CONFIG +
-                " are mutually exclusive options, but both are set.");
+                    " are mutually exclusive options, but both are set.");
         }
 
         if (!hasTopicsConfig && !hasTopicsRegexConfig) {
             throw new ConfigException("Must configure one of " +
-                SinkTask.TOPICS_CONFIG + " or " + SinkTask.TOPICS_REGEX_CONFIG);
+                    SinkTask.TOPICS_CONFIG + " or " + SinkTask.TOPICS_REGEX_CONFIG);
         }
     }
 

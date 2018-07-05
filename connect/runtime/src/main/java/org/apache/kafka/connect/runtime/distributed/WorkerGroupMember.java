@@ -16,11 +16,7 @@
  */
 package org.apache.kafka.connect.runtime.distributed;
 
-import org.apache.kafka.clients.ApiVersions;
-import org.apache.kafka.clients.ClientUtils;
-import org.apache.kafka.clients.CommonClientConfigs;
-import org.apache.kafka.clients.Metadata;
-import org.apache.kafka.clients.NetworkClient;
+import org.apache.kafka.clients.*;
 import org.apache.kafka.clients.consumer.internals.ConsumerNetworkClient;
 import org.apache.kafka.common.Cluster;
 import org.apache.kafka.common.KafkaException;
@@ -169,7 +165,7 @@ public class WorkerGroupMember {
 
     /**
      * Get the member ID of this worker in the group of workers.
-     *
+     * <p>
      * This ID is the unique member ID automatically generated.
      *
      * @return the member ID

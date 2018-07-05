@@ -38,28 +38,18 @@ import java.util.Objects;
  * failures, whether in initialization or after startup, are treated as fatal, which means that we will not attempt
  * to restart this connector instance after failure. What this means from a user perspective is that you must
  * use the /restart REST API to restart a failed task. This behavior is consistent with task failures.
- *
+ * <p>
  * Note that this class is NOT thread-safe.
  */
 public class WorkerConnector {
     private static final Logger log = LoggerFactory.getLogger(WorkerConnector.class);
-
-    private enum State {
-        INIT,    // initial state before startup
-        STOPPED, // the connector has been stopped/paused.
-        STARTED, // the connector has been started/resumed.
-        FAILED,  // the connector has failed (no further transitions are possible after this state)
-    }
-
     private final String connName;
     private final ConnectorStatus.Listener statusListener;
     private final ConnectorContext ctx;
     private final Connector connector;
     private final ConnectorMetricsGroup metrics;
-
     private Map<String, String> config;
     private State state;
-
     public WorkerConnector(String connName,
                            Connector connector,
                            ConnectorContext ctx,
@@ -227,18 +217,25 @@ public class WorkerConnector {
     @Override
     public String toString() {
         return "WorkerConnector{" +
-                       "id=" + connName +
-                       '}';
+                "id=" + connName +
+                '}';
+    }
+
+    private enum State {
+        INIT,    // initial state before startup
+        STOPPED, // the connector has been stopped/paused.
+        STARTED, // the connector has been started/resumed.
+        FAILED,  // the connector has failed (no further transitions are possible after this state)
     }
 
     class ConnectorMetricsGroup implements ConnectorStatus.Listener {
+        private final MetricGroup metricGroup;
+        private final ConnectorStatus.Listener delegate;
         /**
          * Use {@link AbstractStatus.State} since it has all of the states we want,
          * unlike {@link WorkerConnector.State}.
          */
         private volatile AbstractStatus.State state;
-        private final MetricGroup metricGroup;
-        private final ConnectorStatus.Listener delegate;
 
         public ConnectorMetricsGroup(ConnectMetrics connectMetrics, AbstractStatus.State initialState, ConnectorStatus.Listener delegate) {
             Objects.requireNonNull(connectMetrics);

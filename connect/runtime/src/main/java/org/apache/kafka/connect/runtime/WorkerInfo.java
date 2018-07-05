@@ -51,6 +51,10 @@ public class WorkerInfo {
         addSystemInfo();
     }
 
+    private static Object format(Object value) {
+        return value == null ? "NA" : value;
+    }
+
     /**
      * Log the values of this object at level INFO.
      */
@@ -69,10 +73,6 @@ public class WorkerInfo {
             b.append(Utils.NL);
         }
         log.info(b.toString());
-    }
-
-    private static Object format(Object value) {
-        return value == null ? "NA" : value;
     }
 
     /**

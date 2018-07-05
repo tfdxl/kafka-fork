@@ -23,21 +23,16 @@ import org.apache.kafka.connect.sink.SinkTaskContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class WorkerSinkTaskContext implements SinkTaskContext {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
+    private final WorkerSinkTask sinkTask;
+    private final Set<TopicPartition> pausedPartitions;
     private Map<TopicPartition, Long> offsets;
     private long timeoutMs;
     private KafkaConsumer<byte[], byte[]> consumer;
-    private final WorkerSinkTask sinkTask;
-    private final Set<TopicPartition> pausedPartitions;
     private boolean commitRequested;
 
     public WorkerSinkTaskContext(KafkaConsumer<byte[], byte[]> consumer, WorkerSinkTask sinkTask) {
@@ -66,6 +61,7 @@ public class WorkerSinkTaskContext implements SinkTaskContext {
 
     /**
      * Get offsets that the SinkTask has submitted to be reset. Used by the Kafka Connect framework.
+     *
      * @return the map of offsets
      */
     public Map<TopicPartition, Long> offsets() {
@@ -80,6 +76,7 @@ public class WorkerSinkTaskContext implements SinkTaskContext {
 
     /**
      * Get the timeout in milliseconds set by SinkTasks. Used by the Kafka Connect framework.
+     *
      * @return the backoff timeout in milliseconds.
      */
     public long timeout() {
@@ -151,7 +148,7 @@ public class WorkerSinkTaskContext implements SinkTaskContext {
     @Override
     public String toString() {
         return "WorkerSinkTaskContext{" +
-               "id=" + sinkTask.id +
-               '}';
+                "id=" + sinkTask.id +
+                '}';
     }
 }

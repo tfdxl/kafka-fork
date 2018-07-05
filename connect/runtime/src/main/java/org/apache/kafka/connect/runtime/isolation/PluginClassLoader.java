@@ -34,20 +34,21 @@ import java.net.URLClassLoader;
  */
 public class PluginClassLoader extends URLClassLoader {
     private static final Logger log = LoggerFactory.getLogger(PluginClassLoader.class);
-    private final URL pluginLocation;
 
     static {
         ClassLoader.registerAsParallelCapable();
     }
 
+    private final URL pluginLocation;
+
     /**
      * Constructor that accepts a specific classloader as parent.
      *
      * @param pluginLocation the top-level location of the plugin to be loaded in isolation by this
-     * classloader.
-     * @param urls the list of urls from which to load classes and resources for this plugin.
-     * @param parent the parent classloader to be used for delegation for classes that were
-     * not found or should not be loaded in isolation by this classloader.
+     *                       classloader.
+     * @param urls           the list of urls from which to load classes and resources for this plugin.
+     * @param parent         the parent classloader to be used for delegation for classes that were
+     *                       not found or should not be loaded in isolation by this classloader.
      */
     public PluginClassLoader(URL pluginLocation, URL[] urls, ClassLoader parent) {
         super(urls, parent);
@@ -58,8 +59,8 @@ public class PluginClassLoader extends URLClassLoader {
      * Constructor that defines the system classloader as parent of this plugin classloader.
      *
      * @param pluginLocation the top-level location of the plugin to be loaded in isolation by this
-     * classloader.
-     * @param urls the list of urls from which to load classes and resources for this plugin.
+     *                       classloader.
+     * @param urls           the list of urls from which to load classes and resources for this plugin.
      */
     public PluginClassLoader(URL pluginLocation, URL[] urls) {
         super(urls);

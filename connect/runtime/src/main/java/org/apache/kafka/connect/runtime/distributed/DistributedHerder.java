@@ -31,17 +31,9 @@ import org.apache.kafka.connect.connector.ConnectorContext;
 import org.apache.kafka.connect.errors.AlreadyExistsException;
 import org.apache.kafka.connect.errors.ConnectException;
 import org.apache.kafka.connect.errors.NotFoundException;
-import org.apache.kafka.connect.runtime.AbstractHerder;
-import org.apache.kafka.connect.runtime.ConnectMetrics;
+import org.apache.kafka.connect.runtime.*;
 import org.apache.kafka.connect.runtime.ConnectMetrics.LiteralSupplier;
 import org.apache.kafka.connect.runtime.ConnectMetrics.MetricGroup;
-import org.apache.kafka.connect.runtime.ConnectMetricsRegistry;
-import org.apache.kafka.connect.runtime.ConnectorConfig;
-import org.apache.kafka.connect.runtime.HerderConnectorContext;
-import org.apache.kafka.connect.runtime.SinkConnectorConfig;
-import org.apache.kafka.connect.runtime.SourceConnectorConfig;
-import org.apache.kafka.connect.runtime.TargetState;
-import org.apache.kafka.connect.runtime.Worker;
 import org.apache.kafka.connect.runtime.rest.RestClient;
 import org.apache.kafka.connect.runtime.rest.RestServer;
 import org.apache.kafka.connect.runtime.rest.entities.ConnectorInfo;
@@ -55,55 +47,38 @@ import org.apache.kafka.connect.util.SinkUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.NavigableSet;
-import java.util.NoSuchElementException;
-import java.util.Objects;
-import java.util.Set;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ConcurrentSkipListSet;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingDeque;
-import java.util.concurrent.ThreadFactory;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
+import java.util.*;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * <p>
- *     Distributed "herder" that coordinates with other workers to spread work across multiple processes.
+ * Distributed "herder" that coordinates with other workers to spread work across multiple processes.
  * </p>
  * <p>
- *     Under the hood, this is implemented as a group managed by Kafka's group membership facilities (i.e. the generalized
- *     group/consumer coordinator). Each instance of DistributedHerder joins the group and indicates what it's current
- *     configuration state is (where it is in the configuration log). The group coordinator selects one member to take
- *     this information and assign each instance a subset of the active connectors & tasks to execute. This assignment
- *     is currently performed in a simple round-robin fashion, but this is not guaranteed -- the herder may also choose
- *     to, e.g., use a sticky assignment to avoid the usual start/stop costs associated with connectors and tasks. Once
- *     an assignment is received, the DistributedHerder simply runs its assigned connectors and tasks in a Worker.
+ * Under the hood, this is implemented as a group managed by Kafka's group membership facilities (i.e. the generalized
+ * group/consumer coordinator). Each instance of DistributedHerder joins the group and indicates what it's current
+ * configuration state is (where it is in the configuration log). The group coordinator selects one member to take
+ * this information and assign each instance a subset of the active connectors & tasks to execute. This assignment
+ * is currently performed in a simple round-robin fashion, but this is not guaranteed -- the herder may also choose
+ * to, e.g., use a sticky assignment to avoid the usual start/stop costs associated with connectors and tasks. Once
+ * an assignment is received, the DistributedHerder simply runs its assigned connectors and tasks in a Worker.
  * </p>
  * <p>
- *     In addition to distributing work, the DistributedHerder uses the leader determined during the work assignment
- *     to select a leader for this generation of the group who is responsible for other tasks that can only be performed
- *     by a single node at a time. Most importantly, this includes writing updated configurations for connectors and tasks,
- *     (and therefore, also for creating, destroy, and scaling up/down connectors).
+ * In addition to distributing work, the DistributedHerder uses the leader determined during the work assignment
+ * to select a leader for this generation of the group who is responsible for other tasks that can only be performed
+ * by a single node at a time. Most importantly, this includes writing updated configurations for connectors and tasks,
+ * (and therefore, also for creating, destroy, and scaling up/down connectors).
  * </p>
  * <p>
- *     The DistributedHerder uses a single thread for most of its processing. This includes processing
- *     config changes, handling task rebalances and serving requests from the HTTP layer. The latter are pushed
- *     into a queue until the thread has time to handle them. A consequence of this is that requests can get blocked
- *     behind a worker rebalance. When the herder knows that a rebalance is expected, it typically returns an error
- *     immediately to the request, but this is not always possible (in particular when another worker has requested
- *     the rebalance). Similar to handling HTTP requests, config changes which are observed asynchronously by polling
- *     the config log are batched for handling in the work thread.
+ * The DistributedHerder uses a single thread for most of its processing. This includes processing
+ * config changes, handling task rebalances and serving requests from the HTTP layer. The latter are pushed
+ * into a queue until the thread has time to handle them. A consequence of this is that requests can get blocked
+ * behind a worker rebalance. When the herder knows that a rebalance is expected, it typically returns an error
+ * immediately to the request, but this is not always possible (in particular when another worker has requested
+ * the rebalance). Similar to handling HTTP requests, config changes which are observed asynchronously by polling
+ * the config log are batched for handling in the work thread.
  * </p>
  */
 public class DistributedHerder extends AbstractHerder implements Runnable {
@@ -111,33 +86,28 @@ public class DistributedHerder extends AbstractHerder implements Runnable {
 
     private static final long RECONFIGURE_CONNECTOR_TASKS_BACKOFF_MS = 250;
     private static final int START_STOP_THREAD_POOL_SIZE = 8;
-
+    // To handle most external requests, like creating or destroying a connector, we can use a generic request where
+    // the caller specifies all the code that should be executed.
+    final NavigableSet<HerderRequest> requests = new ConcurrentSkipListSet<>();
     private final AtomicLong requestSeqNum = new AtomicLong();
-
     private final Time time;
     private final HerderMetrics herderMetrics;
-
     private final String workerGroupId;
     private final int workerSyncTimeoutMs;
     private final long workerTasksShutdownTimeoutMs;
     private final int workerUnsyncBackoffMs;
-
     private final ExecutorService herderExecutor;
     private final ExecutorService forwardRequestExecutor;
     private final ExecutorService startAndStopExecutor;
     private final WorkerGroupMember member;
     private final AtomicBoolean stopping;
-
+    private final DistributedConfig config;
     // Track enough information about the current membership state to be able to determine which requests via the API
     // and the from other nodes are safe to process
     private boolean rebalanceResolved;
     private ConnectProtocol.Assignment assignment;
     private boolean canReadConfigs;
     private ClusterConfigState configState;
-
-    // To handle most external requests, like creating or destroying a connector, we can use a generic request where
-    // the caller specifies all the code that should be executed.
-    final NavigableSet<HerderRequest> requests = new ConcurrentSkipListSet<>();
     // Config updates can be collected and applied together when possible. Also, we need to take care to rebalance when
     // needed (e.g. task reconfiguration, which requires everyone to coordinate offset commits).
     private Set<String> connectorConfigUpdates = new HashSet<>();
@@ -146,8 +116,6 @@ public class DistributedHerder extends AbstractHerder implements Runnable {
     private Set<String> connectorTargetStateChanges = new HashSet<>();
     private boolean needsReconfigRebalance;
     private volatile int generation;
-
-    private final DistributedConfig config;
 
     public DistributedHerder(DistributedConfig config,
                              Time time,
@@ -196,6 +164,16 @@ public class DistributedHerder extends AbstractHerder implements Runnable {
         rebalanceResolved = true; // If we still need to follow up after a rebalance occurred, starting up tasks
         needsReconfigRebalance = false;
         canReadConfigs = true; // We didn't try yet, but Configs are readable until proven otherwise
+    }
+
+    private static final Callback<Void> forwardErrorCallback(final Callback<?> callback) {
+        return new Callback<Void>() {
+            @Override
+            public void onCompletion(Throwable error, Void result) {
+                if (error != null)
+                    callback.onCompletion(error, null);
+            }
+        };
     }
 
     @Override
@@ -450,8 +428,8 @@ public class DistributedHerder extends AbstractHerder implements Runnable {
                         } else {
                             Map<String, String> config = configState.connectorConfig(connName);
                             callback.onCompletion(null, new ConnectorInfo(connName, config,
-                                configState.tasks(connName),
-                                connectorTypeForClass(config.get(ConnectorConfig.CONNECTOR_CLASS_CONFIG))));
+                                    configState.tasks(connName),
+                                    connectorTypeForClass(config.get(ConnectorConfig.CONNECTOR_CLASS_CONFIG))));
                         }
                         return null;
                     }
@@ -522,7 +500,6 @@ public class DistributedHerder extends AbstractHerder implements Runnable {
         return validatedConfig;
     }
 
-
     @Override
     public void putConnectorConfig(final String connName, final Map<String, String> config, final boolean allowReplace,
                                    final Callback<Created<ConnectorInfo>> callback) {
@@ -554,7 +531,7 @@ public class DistributedHerder extends AbstractHerder implements Runnable {
                         // snapshot yet. The existing task info should still be accurate.
                         Map<String, String> map = configState.connectorConfig(connName);
                         ConnectorInfo info = new ConnectorInfo(connName, config, configState.tasks(connName),
-                            map == null ? null : connectorTypeForClass(map.get(ConnectorConfig.CONNECTOR_CLASS_CONFIG)));
+                                map == null ? null : connectorTypeForClass(map.get(ConnectorConfig.CONNECTOR_CLASS_CONFIG)));
                         callback.onCompletion(null, new Created<>(!exists, info));
                         return null;
                     }
@@ -805,6 +782,7 @@ public class DistributedHerder extends AbstractHerder implements Runnable {
 
     /**
      * Try to read to the end of the config log within the given timeout
+     *
      * @param timeoutMs maximum time to wait to sync to the end of the log
      * @return true if successful, false if timed out
      */
@@ -1061,6 +1039,63 @@ public class DistributedHerder extends AbstractHerder implements Runnable {
         return null;
     }
 
+    private void updateDeletedConnectorStatus() {
+        ClusterConfigState snapshot = configBackingStore.snapshot();
+        Set<String> connectors = snapshot.connectors();
+        for (String connector : statusBackingStore.connectors()) {
+            if (!connectors.contains(connector)) {
+                log.debug("Cleaning status information for connector {}", connector);
+                onDeletion(connector);
+            }
+        }
+    }
+
+    protected HerderMetrics herderMetrics() {
+        return herderMetrics;
+    }
+
+    static class HerderRequest implements Comparable<HerderRequest> {
+        private final long at;
+        private final long seq;
+        private final Callable<Void> action;
+        private final Callback<Void> callback;
+
+        public HerderRequest(long at, long seq, Callable<Void> action, Callback<Void> callback) {
+            this.at = at;
+            this.seq = seq;
+            this.action = action;
+            this.callback = callback;
+        }
+
+        public Callable<Void> action() {
+            return action;
+        }
+
+        public Callback<Void> callback() {
+            return callback;
+        }
+
+        @Override
+        public int compareTo(HerderRequest o) {
+            final int cmp = Long.compare(at, o.at);
+            return cmp == 0 ? Long.compare(seq, o.seq) : cmp;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (!(o instanceof HerderRequest))
+                return false;
+            HerderRequest other = (HerderRequest) o;
+            return compareTo(other) == 0;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(at, seq);
+        }
+    }
+
     public class ConfigUpdateListener implements ConfigBackingStore.UpdateListener {
         @Override
         public void onConnectorConfigRemove(String connector) {
@@ -1113,73 +1148,6 @@ public class DistributedHerder extends AbstractHerder implements Runnable {
             }
             member.wakeup();
         }
-    }
-
-    static class HerderRequest implements Comparable<HerderRequest> {
-        private final long at;
-        private final long seq;
-        private final Callable<Void> action;
-        private final Callback<Void> callback;
-
-        public HerderRequest(long at, long seq, Callable<Void> action, Callback<Void> callback) {
-            this.at = at;
-            this.seq = seq;
-            this.action = action;
-            this.callback = callback;
-        }
-
-        public Callable<Void> action() {
-            return action;
-        }
-
-        public Callback<Void> callback() {
-            return callback;
-        }
-
-        @Override
-        public int compareTo(HerderRequest o) {
-            final int cmp = Long.compare(at, o.at);
-            return cmp == 0 ? Long.compare(seq, o.seq) : cmp;
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (!(o instanceof HerderRequest))
-                return false;
-            HerderRequest other = (HerderRequest) o;
-            return compareTo(other) == 0;
-        }
-
-        @Override
-        public int hashCode() {
-            return Objects.hash(at, seq);
-        }
-    }
-
-    private static final Callback<Void> forwardErrorCallback(final Callback<?> callback) {
-        return new Callback<Void>() {
-            @Override
-            public void onCompletion(Throwable error, Void result) {
-                if (error != null)
-                    callback.onCompletion(error, null);
-            }
-        };
-    }
-
-    private void updateDeletedConnectorStatus() {
-        ClusterConfigState snapshot = configBackingStore.snapshot();
-        Set<String> connectors = snapshot.connectors();
-        for (String connector : statusBackingStore.connectors()) {
-            if (!connectors.contains(connector)) {
-                log.debug("Cleaning status information for connector {}", connector);
-                onDeletion(connector);
-            }
-        }
-    }
-
-    protected HerderMetrics herderMetrics() {
-        return herderMetrics;
     }
 
     // Rebalances are triggered internally from the group member, so these are always executed in the work thread.

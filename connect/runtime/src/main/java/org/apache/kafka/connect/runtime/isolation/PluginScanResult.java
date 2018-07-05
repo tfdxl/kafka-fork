@@ -59,8 +59,8 @@ public class PluginScanResult {
 
     public boolean isEmpty() {
         return connectors().isEmpty()
-               && converters().isEmpty()
-               && headerConverters().isEmpty()
-               && transformations().isEmpty();
+                && converters().isEmpty()
+                && headerConverters().isEmpty()
+                && transformations().isEmpty();
     }
 }

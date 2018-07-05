@@ -34,16 +34,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.servlet.ServletContext;
-import javax.ws.rs.BadRequestException;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
@@ -101,7 +92,8 @@ public class ConnectorsResource {
         FutureCallback<Herder.Created<ConnectorInfo>> cb = new FutureCallback<>();
         herder.putConnectorConfig(name, configs, false, cb);
         Herder.Created<ConnectorInfo> info = completeOrForwardRequest(cb, "/connectors", "POST", createRequest,
-                new TypeReference<ConnectorInfo>() { }, new CreatedConnectorInfoTranslator(), forward);
+                new TypeReference<ConnectorInfo>() {
+                }, new CreatedConnectorInfoTranslator(), forward);
 
         URI location = UriBuilder.fromUri("/connectors").path(name).build();
         return Response.created(location).entity(info.result()).build();
@@ -141,7 +133,8 @@ public class ConnectorsResource {
 
         herder.putConnectorConfig(connector, connectorConfig, true, cb);
         Herder.Created<ConnectorInfo> createdInfo = completeOrForwardRequest(cb, "/connectors/" + connector + "/config",
-                "PUT", connectorConfig, new TypeReference<ConnectorInfo>() { }, new CreatedConnectorInfoTranslator(), forward);
+                "PUT", connectorConfig, new TypeReference<ConnectorInfo>() {
+                }, new CreatedConnectorInfoTranslator(), forward);
         Response.ResponseBuilder response;
         if (createdInfo.created()) {
             URI location = UriBuilder.fromUri("/connectors").path(connector).build();

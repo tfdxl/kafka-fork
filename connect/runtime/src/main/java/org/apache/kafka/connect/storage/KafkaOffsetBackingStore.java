@@ -45,12 +45,12 @@ import java.util.concurrent.TimeoutException;
 
 /**
  * <p>
- *     Implementation of OffsetBackingStore that uses a Kafka topic to store offset data.
+ * Implementation of OffsetBackingStore that uses a Kafka topic to store offset data.
  * </p>
  * <p>
- *     Internally, this implementation both produces to and consumes from a Kafka topic which stores the offsets.
- *     It accepts producer and consumer overrides via its configuration but forces some settings to specific values
- *     to ensure correct behavior (e.g. acks, auto.offset.reset).
+ * Internally, this implementation both produces to and consumes from a Kafka topic which stores the offsets.
+ * It accepts producer and consumer overrides via its configuration but forces some settings to specific values
+ * to ensure correct behavior (e.g. acks, auto.offset.reset).
  * </p>
  */
 public class KafkaOffsetBackingStore implements OffsetBackingStore {
@@ -58,6 +58,14 @@ public class KafkaOffsetBackingStore implements OffsetBackingStore {
 
     private KafkaBasedLog<byte[], byte[]> offsetLog;
     private HashMap<ByteBuffer, ByteBuffer> data;
+    private final Callback<ConsumerRecord<byte[], byte[]>> consumedCallback = new Callback<ConsumerRecord<byte[], byte[]>>() {
+        @Override
+        public void onCompletion(Throwable error, ConsumerRecord<byte[], byte[]> record) {
+            ByteBuffer key = record.key() != null ? ByteBuffer.wrap(record.key()) : null;
+            ByteBuffer value = record.value() != null ? ByteBuffer.wrap(record.value()) : null;
+            data.put(key, value);
+        }
+    };
 
     @Override
     public void configure(final WorkerConfig config) {
@@ -151,20 +159,11 @@ public class KafkaOffsetBackingStore implements OffsetBackingStore {
         return producerCallback;
     }
 
-    private final Callback<ConsumerRecord<byte[], byte[]>> consumedCallback = new Callback<ConsumerRecord<byte[], byte[]>>() {
-        @Override
-        public void onCompletion(Throwable error, ConsumerRecord<byte[], byte[]> record) {
-            ByteBuffer key = record.key() != null ? ByteBuffer.wrap(record.key()) : null;
-            ByteBuffer value = record.value() != null ? ByteBuffer.wrap(record.value()) : null;
-            data.put(key, value);
-        }
-    };
-
     private static class SetCallbackFuture implements org.apache.kafka.clients.producer.Callback, Future<Void> {
+        private final Callback<Void> callback;
         private int numLeft;
         private boolean completed = false;
         private Throwable exception = null;
-        private final Callback<Void> callback;
 
         public SetCallbackFuture(int numRecords, Callback<Void> callback) {
             numLeft = numRecords;
