@@ -19,19 +19,12 @@ package org.apache.kafka.connect.data;
 import org.apache.kafka.connect.data.Schema.Type;
 import org.apache.kafka.connect.errors.SchemaProjectorException;
 
-import java.util.AbstractMap;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 /**
  * <p>
- *     SchemaProjector is utility to project a value between compatible schemas and throw exceptions
- *     when non compatible schemas are provided.
+ * SchemaProjector is utility to project a value between compatible schemas and throw exceptions
+ * when non compatible schemas are provided.
  * </p>
  */
 
@@ -50,6 +43,7 @@ public class SchemaProjector {
 
     /**
      * This method project a value between compatible schemas and throw exceptions when non compatible schemas are provided
+     *
      * @param source the schema used to construct the record
      * @param record the value to project from source schema to target schema
      * @param target the schema to project the record to
@@ -117,7 +111,7 @@ public class SchemaProjector {
             } else if (targetField.schema().defaultValue() != null) {
                 targetStruct.put(fieldName, targetField.schema().defaultValue());
             } else {
-                throw new SchemaProjectorException("Required field `" +  fieldName + "` is missing from source schema: " + source);
+                throw new SchemaProjectorException("Required field `" + fieldName + "` is missing from source schema: " + source);
             }
         }
         return targetStruct;

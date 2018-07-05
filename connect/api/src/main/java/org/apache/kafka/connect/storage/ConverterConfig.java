@@ -33,6 +33,10 @@ public abstract class ConverterConfig extends AbstractConfig {
     public static final String TYPE_CONFIG = "converter.type";
     private static final String TYPE_DOC = "How this converter will be used.";
 
+    protected ConverterConfig(ConfigDef configDef, Map<String, ?> props) {
+        super(configDef, props, true);
+    }
+
     /**
      * Create a new {@link ConfigDef} instance containing the configurations defined by ConverterConfig. This can be called by subclasses.
      *
@@ -40,16 +44,13 @@ public abstract class ConverterConfig extends AbstractConfig {
      */
     public static ConfigDef newConfigDef() {
         return new ConfigDef().define(TYPE_CONFIG, Type.STRING, ConfigDef.NO_DEFAULT_VALUE,
-                                      in(ConverterType.KEY.getName(), ConverterType.VALUE.getName(), ConverterType.HEADER.getName()),
-                                      Importance.LOW, TYPE_DOC);
-    }
-
-    protected ConverterConfig(ConfigDef configDef, Map<String, ?> props) {
-        super(configDef, props, true);
+                in(ConverterType.KEY.getName(), ConverterType.VALUE.getName(), ConverterType.HEADER.getName()),
+                Importance.LOW, TYPE_DOC);
     }
 
     /**
      * Get the type of converter as defined by the {@link #TYPE_CONFIG} configuration.
+     *
      * @return the converter type; never null
      */
     public ConverterType type() {

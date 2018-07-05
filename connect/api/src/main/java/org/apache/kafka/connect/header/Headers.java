@@ -269,6 +269,7 @@ public interface Headers extends Iterable<Header> {
 
     /**
      * Create a copy of this {@link Headers} object. The new copy will contain all of the same {@link Header} objects as this object.
+     *
      * @return the copy; never null
      */
     Headers duplicate();

@@ -20,13 +20,7 @@ import org.apache.kafka.connect.errors.DataException;
 
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.EnumMap;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 public class ConnectSchema implements Schema {
     /**
@@ -138,6 +132,97 @@ public class ConnectSchema implements Schema {
         this(type, false, null, null, null, null);
     }
 
+    /**
+     * Validate that the value can be used with the schema, i.e. that its type matches the schema type and nullability
+     * requirements. Throws a DataException if the value is invalid.
+     *
+     * @param schema Schema to test
+     * @param value  value to test
+     */
+    public static void validateValue(Schema schema, Object value) {
+        validateValue(null, schema, value);
+    }
+
+    public static void validateValue(String name, Schema schema, Object value) {
+        if (value == null) {
+            if (!schema.isOptional())
+                throw new DataException("Invalid value: null used for required field: \"" + name
+                        + "\", schema type: " + schema.type());
+            else
+                return;
+        }
+
+        List<Class> expectedClasses = LOGICAL_TYPE_CLASSES.get(schema.name());
+
+        if (expectedClasses == null)
+            expectedClasses = SCHEMA_TYPE_CLASSES.get(schema.type());
+
+        if (expectedClasses == null)
+            throw new DataException("Invalid Java object for schema type " + schema.type()
+                    + ": " + value.getClass()
+                    + " for field: \"" + name + "\"");
+
+        boolean foundMatch = false;
+        for (Class<?> expectedClass : expectedClasses) {
+            if (expectedClass.isInstance(value)) {
+                foundMatch = true;
+                break;
+            }
+        }
+        if (!foundMatch)
+            throw new DataException("Invalid Java object for schema type " + schema.type()
+                    + ": " + value.getClass()
+                    + " for field: \"" + name + "\"");
+
+        switch (schema.type()) {
+            case STRUCT:
+                Struct struct = (Struct) value;
+                if (!struct.schema().equals(schema))
+                    throw new DataException("Struct schemas do not match.");
+                struct.validate();
+                break;
+            case ARRAY:
+                List<?> array = (List<?>) value;
+                for (Object entry : array)
+                    validateValue(schema.valueSchema(), entry);
+                break;
+            case MAP:
+                Map<?, ?> map = (Map<?, ?>) value;
+                for (Map.Entry<?, ?> entry : map.entrySet()) {
+                    validateValue(schema.keySchema(), entry.getKey());
+                    validateValue(schema.valueSchema(), entry.getValue());
+                }
+                break;
+        }
+    }
+
+    /**
+     * Get the {@link Schema.Type} associated with the given class.
+     *
+     * @param klass the Class to
+     * @return the corresponding type, or null if there is no matching type
+     */
+    public static Type schemaType(Class<?> klass) {
+        synchronized (JAVA_CLASS_SCHEMA_TYPES) {
+            Type schemaType = JAVA_CLASS_SCHEMA_TYPES.get(klass);
+            if (schemaType != null)
+                return schemaType;
+
+            // Since the lookup only checks the class, we need to also try
+            for (Map.Entry<Class<?>, Type> entry : JAVA_CLASS_SCHEMA_TYPES.entrySet()) {
+                try {
+                    klass.asSubclass(entry.getKey());
+                    // Cache this for subsequent lookups
+                    JAVA_CLASS_SCHEMA_TYPES.put(klass, entry.getValue());
+                    return entry.getValue();
+                } catch (ClassCastException e) {
+                    // Expected, ignore
+                }
+            }
+        }
+        return null;
+    }
+
     @Override
     public Type type() {
         return type;
@@ -200,74 +285,10 @@ public class ConnectSchema implements Schema {
         return valueSchema;
     }
 
-
-
-    /**
-     * Validate that the value can be used with the schema, i.e. that its type matches the schema type and nullability
-     * requirements. Throws a DataException if the value is invalid.
-     * @param schema Schema to test
-     * @param value value to test
-     */
-    public static void validateValue(Schema schema, Object value) {
-        validateValue(null, schema, value);
-    }
-
-    public static void validateValue(String name, Schema schema, Object value) {
-        if (value == null) {
-            if (!schema.isOptional())
-                throw new DataException("Invalid value: null used for required field: \"" + name
-                        + "\", schema type: " + schema.type());
-            else
-                return;
-        }
-
-        List<Class> expectedClasses = LOGICAL_TYPE_CLASSES.get(schema.name());
-
-        if (expectedClasses == null)
-                expectedClasses = SCHEMA_TYPE_CLASSES.get(schema.type());
-
-        if (expectedClasses == null)
-            throw new DataException("Invalid Java object for schema type " + schema.type()
-                    + ": " + value.getClass()
-                    + " for field: \"" + name + "\"");
-
-        boolean foundMatch = false;
-        for (Class<?> expectedClass : expectedClasses) {
-            if (expectedClass.isInstance(value)) {
-                foundMatch = true;
-                break;
-            }
-        }
-        if (!foundMatch)
-            throw new DataException("Invalid Java object for schema type " + schema.type()
-                    + ": " + value.getClass()
-                    + " for field: \"" + name + "\"");
-
-        switch (schema.type()) {
-            case STRUCT:
-                Struct struct = (Struct) value;
-                if (!struct.schema().equals(schema))
-                    throw new DataException("Struct schemas do not match.");
-                struct.validate();
-                break;
-            case ARRAY:
-                List<?> array = (List<?>) value;
-                for (Object entry : array)
-                    validateValue(schema.valueSchema(), entry);
-                break;
-            case MAP:
-                Map<?, ?> map = (Map<?, ?>) value;
-                for (Map.Entry<?, ?> entry : map.entrySet()) {
-                    validateValue(schema.keySchema(), entry.getKey());
-                    validateValue(schema.valueSchema(), entry.getValue());
-                }
-                break;
-        }
-    }
-
     /**
      * Validate that the value can be used for this schema, i.e. that its type matches the schema type and optional
      * requirements. Throws a DataException if the value is invalid.
+     *
      * @param value the value to validate
      */
     public void validateValue(Object value) {
@@ -278,7 +299,6 @@ public class ConnectSchema implements Schema {
     public ConnectSchema schema() {
         return this;
     }
-
 
     @Override
     public boolean equals(Object o) {
@@ -301,7 +321,7 @@ public class ConnectSchema implements Schema {
     public int hashCode() {
         if (this.hash == null) {
             this.hash = Objects.hash(type, optional, defaultValue, fields, keySchema, valueSchema, name, version, doc,
-                parameters);
+                    parameters);
         }
         return this.hash;
     }
@@ -312,33 +332,5 @@ public class ConnectSchema implements Schema {
             return "Schema{" + name + ":" + type + "}";
         else
             return "Schema{" + type + "}";
-    }
-
-
-    /**
-     * Get the {@link Schema.Type} associated with the given class.
-     *
-     * @param klass the Class to
-     * @return the corresponding type, or null if there is no matching type
-     */
-    public static Type schemaType(Class<?> klass) {
-        synchronized (JAVA_CLASS_SCHEMA_TYPES) {
-            Type schemaType = JAVA_CLASS_SCHEMA_TYPES.get(klass);
-            if (schemaType != null)
-                return schemaType;
-
-            // Since the lookup only checks the class, we need to also try
-            for (Map.Entry<Class<?>, Type> entry : JAVA_CLASS_SCHEMA_TYPES.entrySet()) {
-                try {
-                    klass.asSubclass(entry.getKey());
-                    // Cache this for subsequent lookups
-                    JAVA_CLASS_SCHEMA_TYPES.put(klass, entry.getValue());
-                    return entry.getValue();
-                } catch (ClassCastException e) {
-                    // Expected, ignore
-                }
-            }
-        }
-        return null;
     }
 }

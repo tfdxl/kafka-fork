@@ -40,8 +40,15 @@ public enum ConverterType {
         NAME_TO_TYPE = Collections.unmodifiableMap(nameToType);
     }
 
+    private String name;
+
+    ConverterType() {
+        this.name = this.name().toLowerCase(Locale.ROOT);
+    }
+
     /**
      * Find the ConverterType with the given name, using a case-insensitive match.
+     *
      * @param name the name of the converter type; may be null
      * @return the matching converter type, or null if the supplied name is null or does not match the name of the known types
      */
@@ -50,12 +57,6 @@ public enum ConverterType {
             return null;
         }
         return NAME_TO_TYPE.get(name.toLowerCase(Locale.getDefault()));
-    }
-
-    private String name;
-
-    ConverterType() {
-        this.name = this.name().toLowerCase(Locale.ROOT);
     }
 
     public String getName() {

@@ -33,7 +33,7 @@ public class ConnectorUtils {
      * partitioning if elements are sorted according to some criteria that affects performance
      * (e.g. topic partitions with the same leader).
      *
-     * @param elements list of elements to partition
+     * @param elements  list of elements to partition
      * @param numGroups the number of output groups to generate.
      */
     public static <T> List<List<T>> groupPartitions(List<T> elements, int numGroups) {

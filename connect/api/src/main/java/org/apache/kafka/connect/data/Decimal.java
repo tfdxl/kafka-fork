@@ -23,18 +23,18 @@ import java.math.BigInteger;
 
 /**
  * <p>
- *     An arbitrary-precision signed decimal number. The value is unscaled * 10 ^ -scale where:
- *     <ul>
- *         <li>unscaled is an integer </li>
- *         <li>scale is an integer representing how many digits the decimal point should be shifted on the unscaled value</li>
- *     </ul>
+ * An arbitrary-precision signed decimal number. The value is unscaled * 10 ^ -scale where:
+ * <ul>
+ * <li>unscaled is an integer </li>
+ * <li>scale is an integer representing how many digits the decimal point should be shifted on the unscaled value</li>
+ * </ul>
  * </p>
  * <p>
- *     Decimal does not provide a fixed schema because it is parameterized by the scale, which is fixed on the schema
- *     rather than being part of the value.
+ * Decimal does not provide a fixed schema because it is parameterized by the scale, which is fixed on the schema
+ * rather than being part of the value.
  * </p>
  * <p>
- *     The underlying representation of this type is bytes containing a two's complement integer
+ * The underlying representation of this type is bytes containing a two's complement integer
  * </p>
  */
 public class Decimal {
@@ -44,6 +44,7 @@ public class Decimal {
     /**
      * Returns a SchemaBuilder for a Decimal with the given scale factor. By returning a SchemaBuilder you can override
      * additional schema settings such as required/optional, default value, and documentation.
+     *
      * @param scale the scale factor to apply to unscaled values
      * @return a SchemaBuilder
      */
@@ -60,6 +61,7 @@ public class Decimal {
 
     /**
      * Convert a value from its logical format (BigDecimal) to it's encoded format.
+     *
      * @param value the logical value
      * @return the encoded value
      */
