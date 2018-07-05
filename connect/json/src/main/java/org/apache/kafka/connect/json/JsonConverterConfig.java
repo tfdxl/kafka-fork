@@ -31,11 +31,10 @@ public class JsonConverterConfig extends ConverterConfig {
 
     public static final String SCHEMAS_ENABLE_CONFIG = "schemas.enable";
     public static final boolean SCHEMAS_ENABLE_DEFAULT = true;
-    private static final String SCHEMAS_ENABLE_DOC = "Include schemas within each of the serialized values and keys.";
-    private static final String SCHEMAS_ENABLE_DISPLAY = "Enable Schemas";
-
     public static final String SCHEMAS_CACHE_SIZE_CONFIG = "schemas.cache.size";
     public static final int SCHEMAS_CACHE_SIZE_DEFAULT = 1000;
+    private static final String SCHEMAS_ENABLE_DOC = "Include schemas within each of the serialized values and keys.";
+    private static final String SCHEMAS_ENABLE_DISPLAY = "Enable Schemas";
     private static final String SCHEMAS_CACHE_SIZE_DOC = "The maximum number of schemas that can be cached in this converter instance.";
     private static final String SCHEMAS_CACHE_SIZE_DISPLAY = "Schema Cache Size";
 
@@ -46,17 +45,17 @@ public class JsonConverterConfig extends ConverterConfig {
         int orderInGroup = 0;
         CONFIG = ConverterConfig.newConfigDef();
         CONFIG.define(SCHEMAS_ENABLE_CONFIG, Type.BOOLEAN, SCHEMAS_ENABLE_DEFAULT, Importance.HIGH, SCHEMAS_ENABLE_DOC, group,
-                      orderInGroup++, Width.MEDIUM, SCHEMAS_ENABLE_DISPLAY);
+                orderInGroup++, Width.MEDIUM, SCHEMAS_ENABLE_DISPLAY);
         CONFIG.define(SCHEMAS_CACHE_SIZE_CONFIG, Type.INT, SCHEMAS_CACHE_SIZE_DEFAULT, Importance.HIGH, SCHEMAS_CACHE_SIZE_DOC, group,
-                      orderInGroup++, Width.MEDIUM, SCHEMAS_CACHE_SIZE_DISPLAY);
-    }
-
-    public static ConfigDef configDef() {
-        return CONFIG;
+                orderInGroup++, Width.MEDIUM, SCHEMAS_CACHE_SIZE_DISPLAY);
     }
 
     public JsonConverterConfig(Map<String, ?> props) {
         super(CONFIG, props);
+    }
+
+    public static ConfigDef configDef() {
+        return CONFIG;
     }
 
     /**
