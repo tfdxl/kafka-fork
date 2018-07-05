@@ -1,47 +1,46 @@
 /**
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+  * Licensed to the Apache Software Foundation (ASF) under one or more
+  * contributor license agreements.  See the NOTICE file distributed with
+  * this work for additional information regarding copyright ownership.
+  * The ASF licenses this file to You under the Apache License, Version 2.0
+  * (the "License"); you may not use this file except in compliance with
+  * the License.  You may obtain a copy of the License at
+  *
+  * http://www.apache.org/licenses/LICENSE-2.0
+  *
+  * Unless required by applicable law or agreed to in writing, software
+  * distributed under the License is distributed on an "AS IS" BASIS,
+  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  * See the License for the specific language governing permissions and
+  * limitations under the License.
+  */
 
 package kafka.server
 
-import java.util.concurrent.locks.ReentrantLock
-
-import kafka.cluster.BrokerEndPoint
-import kafka.utils.{DelayedItem, Pool, ShutdownableThread}
-import org.apache.kafka.common.errors.{CorruptRecordException, KafkaStorageException}
-import kafka.common.{ClientIdAndBroker, KafkaException}
-import kafka.metrics.KafkaMetricsGroup
-import kafka.utils.CoreUtils.inLock
-import org.apache.kafka.common.protocol.Errors
-import AbstractFetcherThread._
-
-import scala.collection.{Map, Set, mutable}
-import scala.collection.JavaConverters._
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicLong
+import java.util.concurrent.locks.ReentrantLock
 
 import com.yammer.metrics.core.Gauge
+import kafka.cluster.BrokerEndPoint
+import kafka.common.{ClientIdAndBroker, KafkaException}
+import kafka.metrics.KafkaMetricsGroup
+import kafka.server.AbstractFetcherThread._
+import kafka.utils.CoreUtils.inLock
+import kafka.utils.{DelayedItem, Pool, ShutdownableThread}
 import org.apache.kafka.common.TopicPartition
+import org.apache.kafka.common.errors.{CorruptRecordException, KafkaStorageException}
 import org.apache.kafka.common.internals.{FatalExitError, PartitionStates}
+import org.apache.kafka.common.protocol.Errors
 import org.apache.kafka.common.record.MemoryRecords
 import org.apache.kafka.common.requests.EpochEndOffset
 
+import scala.collection.JavaConverters._
+import scala.collection.{Map, Set, mutable}
+
 /**
- *  Abstract class for fetching data from multiple partitions from the same broker.
- */
+  * Abstract class for fetching data from multiple partitions from the same broker.
+  */
 abstract class AbstractFetcherThread(name: String,
                                      clientId: String,
                                      val sourceBroker: BrokerEndPoint,
@@ -114,14 +113,16 @@ abstract class AbstractFetcherThread(name: String,
   /**
     * - Build a leader epoch fetch based on partitions that are in the Truncating phase
     * - Issue LeaderEpochRequeust, retrieving the latest offset for each partition's
-    *   leader epoch. This is the offset the follower should truncate to ensure
-    *   accurate log replication.
+    * leader epoch. This is the offset the follower should truncate to ensure
+    * accurate log replication.
     * - Finally truncate the logs for partitions in the truncating phase and mark them
-    *   truncation complete. Do this within a lock to ensure no leadership changes can
-    *   occur during truncation.
+    * truncation complete. Do this within a lock to ensure no leadership changes can
+    * occur during truncation.
     */
   def maybeTruncate(): Unit = {
-    val ResultWithPartitions(epochRequests, partitionsWithError) = inLock(partitionMapLock) { buildLeaderEpochRequest(states) }
+    val ResultWithPartitions(epochRequests, partitionsWithError) = inLock(partitionMapLock) {
+      buildLeaderEpochRequest(states)
+    }
     handlePartitionsWithErrors(partitionsWithError)
 
     if (epochRequests.nonEmpty) {
@@ -170,7 +171,7 @@ abstract class AbstractFetcherThread(name: String,
             // It's possible that a partition is removed and re-added or truncated when there is a pending fetch request.
             // In this case, we only want to process the fetch response if the partition state is ready for fetch and the current offset is the same as the offset requested.
             if (fetchRequest.offset(topicPartition) == currentPartitionFetchState.fetchOffset &&
-                currentPartitionFetchState.isReadyForFetch) {
+              currentPartitionFetchState.isReadyForFetch) {
               partitionData.error match {
                 case Errors.NONE =>
                   try {
@@ -292,7 +293,7 @@ abstract class AbstractFetcherThread(name: String,
     partitionMapLock.lockInterruptibly()
     try {
       for (partition <- partitions) {
-        Option(partitionStates.stateValue(partition)).foreach (currentPartitionFetchState =>
+        Option(partitionStates.stateValue(partition)).foreach(currentPartitionFetchState =>
           if (!currentPartitionFetchState.isDelayed)
             partitionStates.updateAndMoveToEnd(partition, PartitionFetchState(currentPartitionFetchState.fetchOffset, new DelayedItem(delay), currentPartitionFetchState.truncatingLog))
         )
@@ -331,13 +332,18 @@ object AbstractFetcherThread {
 
   trait FetchRequest {
     def isEmpty: Boolean
+
+    //get offset of a topic and partition
     def offset(topicPartition: TopicPartition): Long
   }
 
   trait PartitionData {
     def error: Errors
+
     def exception: Option[Throwable]
+
     def toRecords: MemoryRecords
+
     def highWatermark: Long
   }
 
