@@ -16,6 +16,9 @@
  */
 package org.apache.kafka.common.header;
 
+/**
+ * key --> value
+ */
 public interface Header {
 
     String key();
