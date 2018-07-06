@@ -86,8 +86,9 @@ public class OffsetStorageWriter {
 
     /**
      * Set an offset for a partition using Connect data values
+     *
      * @param partition the partition to store an offset for
-     * @param offset the offset
+     * @param offset    the offset
      */
     public synchronized void offset(Map<String, ?> partition, Map<String, ?> offset) {
         data.put((Map<String, Object>) partition, (Map<String, Object>) offset);

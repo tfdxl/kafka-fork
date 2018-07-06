@@ -35,12 +35,14 @@ public interface ConfigBackingStore {
     /**
      * Get a snapshot of the current configuration state including all connector and task
      * configurations.
+     *
      * @return the cluster config state
      */
     ClusterConfigState snapshot();
 
     /**
      * Check if the store has configuration for a connector.
+     *
      * @param connector name of the connector
      * @return true if the backing store contains configuration for the connector
      */
@@ -48,26 +50,30 @@ public interface ConfigBackingStore {
 
     /**
      * Update the configuration for a connector.
-     * @param connector name of the connector
+     *
+     * @param connector  name of the connector
      * @param properties the connector configuration
      */
     void putConnectorConfig(String connector, Map<String, String> properties);
 
     /**
      * Remove configuration for a connector
+     *
      * @param connector name of the connector
      */
     void removeConnectorConfig(String connector);
 
     /**
      * Update the task configurations for a connector.
+     *
      * @param connector name of the connector
-     * @param configs the new task configs for the connector
+     * @param configs   the new task configs for the connector
      */
     void putTaskConfigs(String connector, List<Map<String, String>> configs);
 
     /**
      * Remove the task configs associated with a connector.
+     *
      * @param connector name of the connector
      */
     void removeTaskConfigs(String connector);
@@ -75,22 +81,25 @@ public interface ConfigBackingStore {
     /**
      * Refresh the backing store. This forces the store to ensure that it has the latest
      * configs that have been written.
+     *
      * @param timeout max time to wait for the refresh to complete
-     * @param unit unit of timeout
+     * @param unit    unit of timeout
      * @throws TimeoutException if the timeout expires before the refresh has completed
      */
     void refresh(long timeout, TimeUnit unit) throws TimeoutException;
 
     /**
      * Transition a connector to a new target state (e.g. paused).
+     *
      * @param connector name of the connector
-     * @param state the state to transition to
+     * @param state     the state to transition to
      */
     void putTargetState(String connector, TargetState state);
 
     /**
      * Set an update listener to get notifications when there are config/target state
      * changes.
+     *
      * @param listener non-null listener
      */
     void setUpdateListener(UpdateListener listener);
@@ -98,24 +107,28 @@ public interface ConfigBackingStore {
     interface UpdateListener {
         /**
          * Invoked when a connector configuration has been removed
+         *
          * @param connector name of the connector
          */
         void onConnectorConfigRemove(String connector);
 
         /**
          * Invoked when a connector configuration has been updated.
+         *
          * @param connector name of the connector
          */
         void onConnectorConfigUpdate(String connector);
 
         /**
          * Invoked when task configs are updated.
+         *
          * @param tasks all the tasks whose configs have been updated
          */
         void onTaskConfigUpdate(Collection<ConnectorTaskId> tasks);
 
         /**
          * Invoked when the user has set a new target state (e.g. paused)
+         *
          * @param connector name of the connector
          */
         void onConnectorTargetStateChange(String connector);

@@ -38,56 +38,41 @@ import org.apache.kafka.connect.runtime.ConnectorStatus;
 import org.apache.kafka.connect.runtime.TaskStatus;
 import org.apache.kafka.connect.runtime.WorkerConfig;
 import org.apache.kafka.connect.runtime.distributed.DistributedConfig;
-import org.apache.kafka.connect.util.Callback;
-import org.apache.kafka.connect.util.ConnectorTaskId;
-import org.apache.kafka.connect.util.KafkaBasedLog;
-import org.apache.kafka.connect.util.Table;
-import org.apache.kafka.connect.util.TopicAdmin;
+import org.apache.kafka.connect.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * StatusBackingStore implementation which uses a compacted topic for storage
  * of connector and task status information. When a state change is observed,
  * the new state is written to the compacted topic. The new state will not be
  * visible until it has been read back from the topic.
- *
+ * <p>
  * In spite of their names, the putSafe() methods cannot guarantee the safety
  * of the write (since Kafka itself cannot provide such guarantees currently),
  * but it can avoid specific unsafe conditions. In particular, we putSafe()
  * allows writes in the following conditions:
- *
+ * <p>
  * 1) It is (probably) safe to overwrite the state if there is no previous
- *    value.
+ * value.
  * 2) It is (probably) safe to overwrite the state if the previous value was
- *    set by a worker with the same workerId.
+ * set by a worker with the same workerId.
  * 3) It is (probably) safe to overwrite the previous state if the current
- *    generation is higher than the previous .
- *
+ * generation is higher than the previous .
+ * <p>
  * Basically all these conditions do is reduce the window for conflicts. They
  * obviously cannot take into account in-flight requests.
- *
  */
 public class KafkaStatusBackingStore implements StatusBackingStore {
-    private static final Logger log = LoggerFactory.getLogger(KafkaStatusBackingStore.class);
-
-    private static final String TASK_STATUS_PREFIX = "status-task-";
-    private static final String CONNECTOR_STATUS_PREFIX = "status-connector-";
-
     public static final String STATE_KEY_NAME = "state";
     public static final String TRACE_KEY_NAME = "trace";
     public static final String WORKER_ID_KEY_NAME = "worker_id";
     public static final String GENERATION_KEY_NAME = "generation";
-
+    private static final Logger log = LoggerFactory.getLogger(KafkaStatusBackingStore.class);
+    private static final String TASK_STATUS_PREFIX = "status-task-";
+    private static final String CONNECTOR_STATUS_PREFIX = "status-connector-";
     private static final Schema STATUS_SCHEMA_V0 = SchemaBuilder.struct()
             .field(STATE_KEY_NAME, Schema.STRING_SCHEMA)
             .field(TRACE_KEY_NAME, SchemaBuilder.string().optional().build())
@@ -206,7 +191,7 @@ public class KafkaStatusBackingStore implements StatusBackingStore {
     }
 
     private void sendConnectorStatus(final ConnectorStatus status, boolean safeWrite) {
-        String connector  = status.id();
+        String connector = status.id();
         CacheEntry<ConnectorStatus> entry = getOrAdd(connector);
         String key = CONNECTOR_STATUS_PREFIX + connector;
         send(key, status, entry, safeWrite);

@@ -16,22 +16,12 @@
  */
 package org.apache.kafka.connect.runtime;
 
-import org.apache.kafka.clients.consumer.ConsumerConfig;
-import org.apache.kafka.clients.consumer.ConsumerRebalanceListener;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.kafka.clients.consumer.ConsumerRecords;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
-import org.apache.kafka.clients.consumer.OffsetAndMetadata;
-import org.apache.kafka.clients.consumer.OffsetCommitCallback;
+import org.apache.kafka.clients.consumer.*;
 import org.apache.kafka.common.KafkaException;
 import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.errors.WakeupException;
 import org.apache.kafka.common.metrics.Sensor;
-import org.apache.kafka.common.metrics.stats.Avg;
-import org.apache.kafka.common.metrics.stats.Max;
-import org.apache.kafka.common.metrics.stats.Rate;
-import org.apache.kafka.common.metrics.stats.Total;
-import org.apache.kafka.common.metrics.stats.Value;
+import org.apache.kafka.common.metrics.stats.*;
 import org.apache.kafka.common.utils.Time;
 import org.apache.kafka.common.utils.Utils;
 import org.apache.kafka.connect.data.SchemaAndValue;
@@ -50,12 +40,7 @@ import org.apache.kafka.connect.util.SinkUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Pattern;
 
 import static java.util.Collections.singleton;
@@ -68,19 +53,19 @@ class WorkerSinkTask extends WorkerTask {
 
     private final WorkerConfig workerConfig;
     private final SinkTask task;
-    private Map<String, String> taskConfig;
     private final Time time;
     private final Converter keyConverter;
     private final Converter valueConverter;
     private final HeaderConverter headerConverter;
     private final TransformationChain<SinkRecord> transformationChain;
     private final SinkTaskMetricsGroup sinkTaskMetricsGroup;
+    private final List<SinkRecord> messageBatch;
+    private final Map<TopicPartition, OffsetAndMetadata> origOffsets;
+    private Map<String, String> taskConfig;
     private KafkaConsumer<byte[], byte[]> consumer;
     private WorkerSinkTaskContext context;
-    private final List<SinkRecord> messageBatch;
     private Map<TopicPartition, OffsetAndMetadata> lastCommittedOffsets;
     private Map<TopicPartition, OffsetAndMetadata> currentOffsets;
-    private final Map<TopicPartition, OffsetAndMetadata> origOffsets;
     private RuntimeException rebalanceException;
     private long nextCommit;
     private int commitSeqno;
@@ -552,7 +537,7 @@ class WorkerSinkTask extends WorkerTask {
         if (offsets.isEmpty()) {
             return;
         }
-        for (Map.Entry<TopicPartition, Long> entry: offsets.entrySet()) {
+        for (Map.Entry<TopicPartition, Long> entry : offsets.entrySet()) {
             TopicPartition tp = entry.getKey();
             Long offset = entry.getValue();
             if (offset != null) {
@@ -598,65 +583,6 @@ class WorkerSinkTask extends WorkerTask {
         return sinkTaskMetricsGroup;
     }
 
-    private class HandleRebalance implements ConsumerRebalanceListener {
-        @Override
-        public void onPartitionsAssigned(Collection<TopicPartition> partitions) {
-            log.debug("{} Partitions assigned {}", WorkerSinkTask.this, partitions);
-            lastCommittedOffsets = new HashMap<>();
-            currentOffsets = new HashMap<>();
-            for (TopicPartition tp : partitions) {
-                long pos = consumer.position(tp);
-                lastCommittedOffsets.put(tp, new OffsetAndMetadata(pos));
-                currentOffsets.put(tp, new OffsetAndMetadata(pos));
-                log.debug("{} Assigned topic partition {} with offset {}", this, tp, pos);
-            }
-            sinkTaskMetricsGroup.assignedOffsets(currentOffsets);
-
-            // If we paused everything for redelivery (which is no longer relevant since we discarded the data), make
-            // sure anything we paused that the task didn't request to be paused *and* which we still own is resumed.
-            // Also make sure our tracking of paused partitions is updated to remove any partitions we no longer own.
-            pausedForRedelivery = false;
-
-            // Ensure that the paused partitions contains only assigned partitions and repause as necessary
-            context.pausedPartitions().retainAll(partitions);
-            if (shouldPause())
-                pauseAll();
-            else if (!context.pausedPartitions().isEmpty())
-                consumer.pause(context.pausedPartitions());
-
-            // Instead of invoking the assignment callback on initialization, we guarantee the consumer is ready upon
-            // task start. Since this callback gets invoked during that initial setup before we've started the task, we
-            // need to guard against invoking the user's callback method during that period.
-            if (rebalanceException == null || rebalanceException instanceof WakeupException) {
-                try {
-                    openPartitions(partitions);
-                    // Rewind should be applied only if openPartitions succeeds.
-                    rewind();
-                } catch (RuntimeException e) {
-                    // The consumer swallows exceptions raised in the rebalance listener, so we need to store
-                    // exceptions and rethrow when poll() returns.
-                    rebalanceException = e;
-                }
-            }
-        }
-
-        @Override
-        public void onPartitionsRevoked(Collection<TopicPartition> partitions) {
-            log.debug("{} Partitions revoked", WorkerSinkTask.this);
-            try {
-                closePartitions();
-                sinkTaskMetricsGroup.clearOffsets();
-            } catch (RuntimeException e) {
-                // The consumer swallows exceptions raised in the rebalance listener, so we need to store
-                // exceptions and rethrow when poll() returns.
-                rebalanceException = e;
-            }
-
-            // Make sure we don't have any leftover data since offsets will be reset to committed positions
-            messageBatch.clear();
-        }
-    }
-
     static class SinkTaskMetricsGroup {
         private final ConnectorTaskId id;
         private final ConnectMetrics metrics;
@@ -679,8 +605,8 @@ class WorkerSinkTask extends WorkerTask {
 
             ConnectMetricsRegistry registry = connectMetrics.registry();
             metricGroup = connectMetrics
-                                  .group(registry.sinkTaskGroupName(), registry.connectorTagName(), id.connector(), registry.taskTagName(),
-                                         Integer.toString(id.task()));
+                    .group(registry.sinkTaskGroupName(), registry.connectorTagName(), id.connector(), registry.taskTagName(),
+                            Integer.toString(id.task()));
             // prevent collisions by removing any previously created metrics in this group.
             metricGroup.close();
 
@@ -791,6 +717,65 @@ class WorkerSinkTask extends WorkerTask {
 
         protected MetricGroup metricGroup() {
             return metricGroup;
+        }
+    }
+
+    private class HandleRebalance implements ConsumerRebalanceListener {
+        @Override
+        public void onPartitionsAssigned(Collection<TopicPartition> partitions) {
+            log.debug("{} Partitions assigned {}", WorkerSinkTask.this, partitions);
+            lastCommittedOffsets = new HashMap<>();
+            currentOffsets = new HashMap<>();
+            for (TopicPartition tp : partitions) {
+                long pos = consumer.position(tp);
+                lastCommittedOffsets.put(tp, new OffsetAndMetadata(pos));
+                currentOffsets.put(tp, new OffsetAndMetadata(pos));
+                log.debug("{} Assigned topic partition {} with offset {}", this, tp, pos);
+            }
+            sinkTaskMetricsGroup.assignedOffsets(currentOffsets);
+
+            // If we paused everything for redelivery (which is no longer relevant since we discarded the data), make
+            // sure anything we paused that the task didn't request to be paused *and* which we still own is resumed.
+            // Also make sure our tracking of paused partitions is updated to remove any partitions we no longer own.
+            pausedForRedelivery = false;
+
+            // Ensure that the paused partitions contains only assigned partitions and repause as necessary
+            context.pausedPartitions().retainAll(partitions);
+            if (shouldPause())
+                pauseAll();
+            else if (!context.pausedPartitions().isEmpty())
+                consumer.pause(context.pausedPartitions());
+
+            // Instead of invoking the assignment callback on initialization, we guarantee the consumer is ready upon
+            // task start. Since this callback gets invoked during that initial setup before we've started the task, we
+            // need to guard against invoking the user's callback method during that period.
+            if (rebalanceException == null || rebalanceException instanceof WakeupException) {
+                try {
+                    openPartitions(partitions);
+                    // Rewind should be applied only if openPartitions succeeds.
+                    rewind();
+                } catch (RuntimeException e) {
+                    // The consumer swallows exceptions raised in the rebalance listener, so we need to store
+                    // exceptions and rethrow when poll() returns.
+                    rebalanceException = e;
+                }
+            }
+        }
+
+        @Override
+        public void onPartitionsRevoked(Collection<TopicPartition> partitions) {
+            log.debug("{} Partitions revoked", WorkerSinkTask.this);
+            try {
+                closePartitions();
+                sinkTaskMetricsGroup.clearOffsets();
+            } catch (RuntimeException e) {
+                // The consumer swallows exceptions raised in the rebalance listener, so we need to store
+                // exceptions and rethrow when poll() returns.
+                rebalanceException = e;
+            }
+
+            // Make sure we don't have any leftover data since offsets will be reset to committed positions
+            messageBatch.clear();
         }
     }
 }

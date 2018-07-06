@@ -18,7 +18,6 @@ package org.apache.kafka.connect.runtime.rest.entities;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
-
 import org.apache.kafka.connect.connector.Connector;
 import org.apache.kafka.connect.sink.SinkConnector;
 import org.apache.kafka.connect.source.SourceConnector;
@@ -39,14 +38,14 @@ public enum ConnectorType {
         return UNKNOWN;
     }
 
+    @JsonCreator
+    public static ConnectorType forValue(String value) {
+        return ConnectorType.valueOf(value.toUpperCase(Locale.ROOT));
+    }
+
     @Override
     @JsonValue
     public String toString() {
         return super.toString().toLowerCase(Locale.ROOT);
-    }
-
-    @JsonCreator
-    public static ConnectorType forValue(String value) {
-        return ConnectorType.valueOf(value.toUpperCase(Locale.ROOT));
     }
 }

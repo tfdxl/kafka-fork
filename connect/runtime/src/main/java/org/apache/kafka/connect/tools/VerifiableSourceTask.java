@@ -18,11 +18,11 @@ package org.apache.kafka.connect.tools;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.kafka.tools.ThroughputThrottler;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.errors.ConnectException;
 import org.apache.kafka.connect.source.SourceRecord;
 import org.apache.kafka.connect.source.SourceTask;
+import org.apache.kafka.tools.ThroughputThrottler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,17 +37,15 @@ import java.util.Map;
  * messages have been sent. Each message is also assigned a unique, increasing seqno that is passed to Kafka Connect; when
  * tasks are started on new nodes, this seqno is used to resume where the task previously left off, allowing for
  * testing of distributed Kafka Connect.
- *
+ * <p>
  * If logging is left enabled, log output on stdout can be easily ignored by checking whether a given line is valid JSON.
  */
 public class VerifiableSourceTask extends SourceTask {
-    private static final Logger log = LoggerFactory.getLogger(VerifiableSourceTask.class);
-
     public static final String NAME_CONFIG = "name";
     public static final String ID_CONFIG = "id";
     public static final String TOPIC_CONFIG = "topic";
     public static final String THROUGHPUT_CONFIG = "throughput";
-
+    private static final Logger log = LoggerFactory.getLogger(VerifiableSourceTask.class);
     private static final String ID_FIELD = "id";
     private static final String SEQNO_FIELD = "seqno";
 

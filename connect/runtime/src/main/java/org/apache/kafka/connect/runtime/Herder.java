@@ -60,12 +60,12 @@ public interface Herder {
      * Get a list of connectors currently running in this cluster. This is a full list of connectors in the cluster gathered
      * from the current configuration. However, note
      *
-     * @returns A list of connector names
      * @throws org.apache.kafka.connect.runtime.distributed.RequestTargetException if this node can not resolve the request
-     *         (e.g., because it has not joined the cluster or does not have configs in sync with the group) and it is
-     *         not the leader or the task owner (e.g., task restart must be handled by the worker which owns the task)
-     * @throws org.apache.kafka.connect.errors.ConnectException if this node is the leader, but still cannot resolve the
-     *         request (e.g., it is not in sync with other worker's config state)
+     *                                                                             (e.g., because it has not joined the cluster or does not have configs in sync with the group) and it is
+     *                                                                             not the leader or the task owner (e.g., task restart must be handled by the worker which owns the task)
+     * @throws org.apache.kafka.connect.errors.ConnectException                    if this node is the leader, but still cannot resolve the
+     *                                                                             request (e.g., it is not in sync with other worker's config state)
+     * @returns A list of connector names
      */
     void connectors(Callback<Collection<String>> callback);
 
@@ -76,6 +76,7 @@ public interface Herder {
 
     /**
      * Get the configuration for a connector.
+     *
      * @param connName name of the connector
      * @param callback callback to invoke with the configuration
      */
@@ -83,16 +84,18 @@ public interface Herder {
 
     /**
      * Set the configuration for a connector. This supports creation and updating.
-     * @param connName name of the connector
-     * @param config the connectors configuration, or null if deleting the connector
+     *
+     * @param connName     name of the connector
+     * @param config       the connectors configuration, or null if deleting the connector
      * @param allowReplace if true, allow overwriting previous configs; if false, throw AlreadyExistsException if a connector
      *                     with the same name already exists
-     * @param callback callback to invoke when the configuration has been written
+     * @param callback     callback to invoke when the configuration has been written
      */
     void putConnectorConfig(String connName, Map<String, String> config, boolean allowReplace, Callback<Created<ConnectorInfo>> callback);
 
     /**
      * Delete a connector and its configuration.
+     *
      * @param connName name of the connector
      * @param callback callback to invoke when the configuration has been written
      */
@@ -108,6 +111,7 @@ public interface Herder {
 
     /**
      * Get the configurations for the current set of tasks of a connector.
+     *
      * @param connName connector to update
      * @param callback callback to invoke upon completion
      */
@@ -117,32 +121,37 @@ public interface Herder {
      * Set the configurations for the tasks of a connector. This should always include all tasks in the connector; if
      * there are existing configurations and fewer are provided, this will reduce the number of tasks, and if more are
      * provided it will increase the number of tasks.
+     *
      * @param connName connector to update
-     * @param configs list of configurations
+     * @param configs  list of configurations
      * @param callback callback to invoke upon completion
      */
     void putTaskConfigs(String connName, List<Map<String, String>> configs, Callback<Void> callback);
 
     /**
      * Lookup the current status of a connector.
+     *
      * @param connName name of the connector
      */
     ConnectorStateInfo connectorStatus(String connName);
 
     /**
      * Lookup the status of the a task.
+     *
      * @param id id of the task
      */
     ConnectorStateInfo.TaskState taskStatus(ConnectorTaskId id);
 
     /**
      * Validate the provided connector config values against the configuration definition.
+     *
      * @param connectorConfig the provided connector config values
      */
     ConfigInfos validateConnectorConfig(Map<String, String> connectorConfig);
 
     /**
      * Restart the task with the given id.
+     *
      * @param id id of the task
      * @param cb callback to invoke upon completion
      */
@@ -150,14 +159,16 @@ public interface Herder {
 
     /**
      * Restart the connector.
+     *
      * @param connName name of the connector
-     * @param cb callback to invoke upon completion
+     * @param cb       callback to invoke upon completion
      */
     void restartConnector(String connName, Callback<Void> cb);
 
     /**
      * Pause the connector. This call will asynchronously suspend processing by the connector and all
      * of its tasks.
+     *
      * @param connector name of the connector
      */
     void pauseConnector(String connector);
@@ -165,6 +176,7 @@ public interface Herder {
     /**
      * Resume the connector. This call will asynchronously start the connector and its tasks (if
      * not started already).
+     *
      * @param connector name of the connector
      */
     void resumeConnector(String connector);
@@ -179,6 +191,7 @@ public interface Herder {
 
     /**
      * Get the cluster ID of the Kafka cluster backing this Connect cluster.
+     *
      * @return the cluster ID of the Kafka cluster backing this connect cluster
      */
     String kafkaClusterId();

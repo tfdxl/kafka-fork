@@ -30,9 +30,9 @@ public class ConnectorPluginInfo {
 
     @JsonCreator
     public ConnectorPluginInfo(
-        @JsonProperty("class") String className,
-        @JsonProperty("type") ConnectorType type,
-        @JsonProperty("version") String version
+            @JsonProperty("class") String className,
+            @JsonProperty("type") ConnectorType type,
+            @JsonProperty("version") String version
     ) {
         this.className = className;
         this.type = type;
@@ -68,8 +68,8 @@ public class ConnectorPluginInfo {
         }
         ConnectorPluginInfo that = (ConnectorPluginInfo) o;
         return Objects.equals(className, that.className) &&
-               type == that.type &&
-               Objects.equals(version, that.version);
+                type == that.type &&
+                Objects.equals(version, that.version);
     }
 
     @Override

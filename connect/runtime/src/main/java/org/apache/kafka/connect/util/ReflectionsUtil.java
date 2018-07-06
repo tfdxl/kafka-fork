@@ -52,24 +52,6 @@ public class ReflectionsUtil {
             this.endings = endings;
         }
 
-        public boolean matches(URL url) {
-            final String protocol = url.getProtocol();
-            final String externalForm = url.toExternalForm();
-            if (!protocol.equals(FILE_PROTOCOL)) {
-                return false;
-            }
-            for (String ending : endings) {
-                if (externalForm.endsWith(ending)) {
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        public Dir createDir(final URL url) throws Exception {
-            return emptyVfsDir(url);
-        }
-
         private static Dir emptyVfsDir(final URL url) {
             return new Dir() {
                 @Override
@@ -87,6 +69,24 @@ public class ReflectionsUtil {
 
                 }
             };
+        }
+
+        public boolean matches(URL url) {
+            final String protocol = url.getProtocol();
+            final String externalForm = url.toExternalForm();
+            if (!protocol.equals(FILE_PROTOCOL)) {
+                return false;
+            }
+            for (String ending : endings) {
+                if (externalForm.endsWith(ending)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public Dir createDir(final URL url) throws Exception {
+            return emptyVfsDir(url);
         }
     }
 }

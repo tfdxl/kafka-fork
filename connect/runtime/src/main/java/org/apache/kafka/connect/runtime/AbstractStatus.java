@@ -18,20 +18,11 @@ package org.apache.kafka.connect.runtime;
 
 public abstract class AbstractStatus<T> {
 
-    public enum State {
-        UNASSIGNED,
-        RUNNING,
-        PAUSED,
-        FAILED,
-        DESTROYED,
-    }
-
     private final T id;
     private final State state;
     private final String trace;
     private final String workerId;
     private final int generation;
-
     public AbstractStatus(T id,
                           State state,
                           String workerId,
@@ -97,5 +88,13 @@ public abstract class AbstractStatus<T> {
         result = 31 * result + (workerId != null ? workerId.hashCode() : 0);
         result = 31 * result + generation;
         return result;
+    }
+
+    public enum State {
+        UNASSIGNED,
+        RUNNING,
+        PAUSED,
+        FAILED,
+        DESTROYED,
     }
 }

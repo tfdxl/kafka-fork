@@ -38,6 +38,7 @@ public interface StatusBackingStore {
 
     /**
      * Set the state of the connector to the given value.
+     *
      * @param status the status of the connector
      */
     void put(ConnectorStatus status);
@@ -47,12 +48,14 @@ public interface StatusBackingStore {
      * considered "safe" depends on the implementation, but basically it
      * means that the store can provide higher assurance that another worker
      * hasn't concurrently written any conflicting data.
+     *
      * @param status the status of the connector
      */
     void putSafe(ConnectorStatus status);
 
     /**
      * Set the state of the connector to the given value.
+     *
      * @param status the status of the task
      */
     void put(TaskStatus status);
@@ -62,12 +65,14 @@ public interface StatusBackingStore {
      * considered "safe" depends on the implementation, but basically it
      * means that the store can provide higher assurance that another worker
      * hasn't concurrently written any conflicting data.
+     *
      * @param status the status of the task
      */
     void putSafe(TaskStatus status);
 
     /**
      * Get the current state of the task.
+     *
      * @param id the id of the task
      * @return the state or null if there is none
      */
@@ -75,6 +80,7 @@ public interface StatusBackingStore {
 
     /**
      * Get the current state of the connector.
+     *
      * @param connector the connector name
      * @return the state or null if there is none
      */
@@ -82,6 +88,7 @@ public interface StatusBackingStore {
 
     /**
      * Get the states of all tasks for the given connector.
+     *
      * @param connector the connector name
      * @return a map from task ids to their respective status
      */
@@ -89,6 +96,7 @@ public interface StatusBackingStore {
 
     /**
      * Get all cached connectors.
+     *
      * @return the set of connector names
      */
     Set<String> connectors();
@@ -100,6 +108,7 @@ public interface StatusBackingStore {
 
     /**
      * Configure class with the given key-value pairs
+     *
      * @param config config for StatusBackingStore
      */
     void configure(WorkerConfig config);

@@ -32,12 +32,7 @@ import org.slf4j.Logger;
 
 import java.io.Closeable;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * This class manages the coordination process with the Kafka group coordinator on the broker for managing assignments
@@ -50,9 +45,9 @@ public final class WorkerCoordinator extends AbstractCoordinator implements Clos
     private final Logger log;
     private final String restUrl;
     private final ConfigBackingStore configStorage;
+    private final WorkerRebalanceListener listener;
     private ConnectProtocol.Assignment assignmentSnapshot;
     private ClusterConfigState configSnapshot;
-    private final WorkerRebalanceListener listener;
     private LeaderState leaderState;
 
     private boolean rejoinRequested;
@@ -74,16 +69,16 @@ public final class WorkerCoordinator extends AbstractCoordinator implements Clos
                              ConfigBackingStore configStorage,
                              WorkerRebalanceListener listener) {
         super(logContext,
-              client,
-              groupId,
-              rebalanceTimeoutMs,
-              sessionTimeoutMs,
-              heartbeatIntervalMs,
-              metrics,
-              metricGrpPrefix,
-              time,
-              retryBackoffMs,
-              true);
+                client,
+                groupId,
+                rebalanceTimeoutMs,
+                sessionTimeoutMs,
+                heartbeatIntervalMs,
+                metrics,
+                metricGrpPrefix,
+                time,
+                retryBackoffMs,
+                true);
         this.log = logContext.logger(WorkerCoordinator.class);
         this.restUrl = restUrl;
         this.configStorage = configStorage;
@@ -91,6 +86,22 @@ public final class WorkerCoordinator extends AbstractCoordinator implements Clos
         new WorkerCoordinatorMetrics(metrics, metricGrpPrefix);
         this.listener = listener;
         this.rejoinRequested = false;
+    }
+
+    private static <T extends Comparable<T>> List<T> sorted(Collection<T> members) {
+        List<T> res = new ArrayList<>(members);
+        Collections.sort(res);
+        return res;
+    }
+
+    private static <K, V> Map<V, K> invertAssignment(Map<K, List<V>> assignment) {
+        Map<V, K> inverted = new HashMap<>();
+        for (Map.Entry<K, List<V>> assignmentEntry : assignment.entrySet()) {
+            K key = assignmentEntry.getKey();
+            for (V value : assignmentEntry.getValue())
+                inverted.put(value, key);
+        }
+        return inverted;
     }
 
     public void requestRejoin() {
@@ -308,49 +319,6 @@ public final class WorkerCoordinator extends AbstractCoordinator implements Clos
         return leaderState.ownerUrl(task);
     }
 
-    private class WorkerCoordinatorMetrics {
-        public final String metricGrpName;
-
-        public WorkerCoordinatorMetrics(Metrics metrics, String metricGrpPrefix) {
-            this.metricGrpName = metricGrpPrefix + "-coordinator-metrics";
-
-            Measurable numConnectors = new Measurable() {
-                public double measure(MetricConfig config, long now) {
-                    return assignmentSnapshot.connectors().size();
-                }
-            };
-
-            Measurable numTasks = new Measurable() {
-                public double measure(MetricConfig config, long now) {
-                    return assignmentSnapshot.tasks().size();
-                }
-            };
-
-            metrics.addMetric(metrics.metricName("assigned-connectors",
-                              this.metricGrpName,
-                              "The number of connector instances currently assigned to this consumer"), numConnectors);
-            metrics.addMetric(metrics.metricName("assigned-tasks",
-                              this.metricGrpName,
-                              "The number of tasks currently assigned to this consumer"), numTasks);
-        }
-    }
-
-    private static <T extends Comparable<T>> List<T> sorted(Collection<T> members) {
-        List<T> res = new ArrayList<>(members);
-        Collections.sort(res);
-        return res;
-    }
-
-    private static <K, V> Map<V, K> invertAssignment(Map<K, List<V>> assignment) {
-        Map<V, K> inverted = new HashMap<>();
-        for (Map.Entry<K, List<V>> assignmentEntry : assignment.entrySet()) {
-            K key = assignmentEntry.getKey();
-            for (V value : assignmentEntry.getValue())
-                inverted.put(value, key);
-        }
-        return inverted;
-    }
-
     private static class LeaderState {
         private final Map<String, ConnectProtocol.WorkerState> allMembers;
         private final Map<String, String> connectorOwners;
@@ -378,6 +346,33 @@ public final class WorkerCoordinator extends AbstractCoordinator implements Clos
             return allMembers.get(ownerId).url();
         }
 
+    }
+
+    private class WorkerCoordinatorMetrics {
+        public final String metricGrpName;
+
+        public WorkerCoordinatorMetrics(Metrics metrics, String metricGrpPrefix) {
+            this.metricGrpName = metricGrpPrefix + "-coordinator-metrics";
+
+            Measurable numConnectors = new Measurable() {
+                public double measure(MetricConfig config, long now) {
+                    return assignmentSnapshot.connectors().size();
+                }
+            };
+
+            Measurable numTasks = new Measurable() {
+                public double measure(MetricConfig config, long now) {
+                    return assignmentSnapshot.tasks().size();
+                }
+            };
+
+            metrics.addMetric(metrics.metricName("assigned-connectors",
+                    this.metricGrpName,
+                    "The number of connector instances currently assigned to this consumer"), numConnectors);
+            metrics.addMetric(metrics.metricName("assigned-tasks",
+                    this.metricGrpName,
+                    "The number of tasks currently assigned to this consumer"), numTasks);
+        }
     }
 
 }

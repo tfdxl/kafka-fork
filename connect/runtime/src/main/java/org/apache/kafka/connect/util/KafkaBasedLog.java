@@ -16,11 +16,7 @@
  */
 package org.apache.kafka.connect.util;
 
-import org.apache.kafka.clients.consumer.Consumer;
-import org.apache.kafka.clients.consumer.ConsumerConfig;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.kafka.clients.consumer.ConsumerRecords;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.clients.consumer.*;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerConfig;
@@ -35,46 +31,39 @@ import org.apache.kafka.connect.errors.ConnectException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Queue;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.Future;
 
 
 /**
  * <p>
- *     KafkaBasedLog provides a generic implementation of a shared, compacted log of records stored in Kafka that all
- *     clients need to consume and, at times, agree on their offset / that they have read to the end of the log.
+ * KafkaBasedLog provides a generic implementation of a shared, compacted log of records stored in Kafka that all
+ * clients need to consume and, at times, agree on their offset / that they have read to the end of the log.
  * </p>
  * <p>
- *     This functionality is useful for storing different types of data that all clients may need to agree on --
- *     offsets or config for example. This class runs a consumer in a background thread to continuously tail the target
- *     topic, accepts write requests which it writes to the topic using an internal producer, and provides some helpful
- *     utilities like checking the current log end offset and waiting until the current end of the log is reached.
+ * This functionality is useful for storing different types of data that all clients may need to agree on --
+ * offsets or config for example. This class runs a consumer in a background thread to continuously tail the target
+ * topic, accepts write requests which it writes to the topic using an internal producer, and provides some helpful
+ * utilities like checking the current log end offset and waiting until the current end of the log is reached.
  * </p>
  * <p>
- *     To support different use cases, this class works with either single- or multi-partition topics.
+ * To support different use cases, this class works with either single- or multi-partition topics.
  * </p>
  * <p>
- *     Since this class is generic, it delegates the details of data storage via a callback that is invoked for each
- *     record that is consumed from the topic. The invocation of callbacks is guaranteed to be serialized -- if the
- *     calling class keeps track of state based on the log and only writes to it when consume callbacks are invoked
- *     and only reads it in {@link #readToEnd(Callback)} callbacks then no additional synchronization will be required.
+ * Since this class is generic, it delegates the details of data storage via a callback that is invoked for each
+ * record that is consumed from the topic. The invocation of callbacks is guaranteed to be serialized -- if the
+ * calling class keeps track of state based on the log and only writes to it when consume callbacks are invoked
+ * and only reads it in {@link #readToEnd(Callback)} callbacks then no additional synchronization will be required.
  * </p>
  */
 public class KafkaBasedLog<K, V> {
     private static final Logger log = LoggerFactory.getLogger(KafkaBasedLog.class);
     private static final long CREATE_TOPIC_TIMEOUT_MS = 30000;
-
-    private Time time;
     private final String topic;
     private final Map<String, Object> producerConfigs;
     private final Map<String, Object> consumerConfigs;
     private final Callback<ConsumerRecord<K, V>> consumedCallback;
+    private Time time;
     private Consumer<K, V> consumer;
     private Producer<K, V> producer;
 
@@ -87,18 +76,18 @@ public class KafkaBasedLog<K, V> {
      * Create a new KafkaBasedLog object. This does not start reading the log and writing is not permitted until
      * {@link #start()} is invoked.
      *
-     * @param topic the topic to treat as a log
-     * @param producerConfigs configuration options to use when creating the internal producer. At a minimum this must
-     *                        contain compatible serializer settings for the generic types used on this class. Some
-     *                        setting, such as the number of acks, will be overridden to ensure correct behavior of this
-     *                        class.
-     * @param consumerConfigs configuration options to use when creating the internal consumer. At a minimum this must
-     *                        contain compatible serializer settings for the generic types used on this class. Some
-     *                        setting, such as the auto offset reset policy, will be overridden to ensure correct
-     *                        behavior of this class.
+     * @param topic            the topic to treat as a log
+     * @param producerConfigs  configuration options to use when creating the internal producer. At a minimum this must
+     *                         contain compatible serializer settings for the generic types used on this class. Some
+     *                         setting, such as the number of acks, will be overridden to ensure correct behavior of this
+     *                         class.
+     * @param consumerConfigs  configuration options to use when creating the internal consumer. At a minimum this must
+     *                         contain compatible serializer settings for the generic types used on this class. Some
+     *                         setting, such as the auto offset reset policy, will be overridden to ensure correct
+     *                         behavior of this class.
      * @param consumedCallback callback to invoke for each {@link ConsumerRecord} consumed when tailing the log
-     * @param time Time interface
-     * @param initializer the component that should be run when this log is {@link #start() started}; may be null
+     * @param time             Time interface
+     * @param initializer      the component that should be run when this log is {@link #start() started}; may be null
      */
     public KafkaBasedLog(String topic,
                          Map<String, Object> producerConfigs,
@@ -190,9 +179,9 @@ public class KafkaBasedLog<K, V> {
      * Note that this checks the current, offsets, reads to them, and invokes the callback regardless of whether
      * additional records have been written to the log. If the caller needs to ensure they have truly reached the end
      * of the log, they must ensure there are no other writers during this period.
-     *
+     * <p>
      * This waits until the end of all partitions has been reached.
-     *
+     * <p>
      * This method is asynchronous. If you need a synchronous version, pass an instance of
      * {@link org.apache.kafka.connect.util.FutureCallback} as the {@param callback} parameter and wait on it to block.
      *
@@ -216,6 +205,7 @@ public class KafkaBasedLog<K, V> {
 
     /**
      * Same as {@link #readToEnd(Callback)} but provides a {@link Future} instead of using a callback.
+     *
      * @return the future associated with the operation
      */
     public Future<Void> readToEnd() {

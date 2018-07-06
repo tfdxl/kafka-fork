@@ -41,13 +41,9 @@ public class ConnectProtocol {
     public static final short CONNECT_PROTOCOL_V0 = 0;
     public static final Schema CONNECT_PROTOCOL_HEADER_SCHEMA = new Schema(
             new Field(VERSION_KEY_NAME, Type.INT16));
-    private static final Struct CONNECT_PROTOCOL_HEADER_V0 = new Struct(CONNECT_PROTOCOL_HEADER_SCHEMA)
-            .set(VERSION_KEY_NAME, CONNECT_PROTOCOL_V0);
-
     public static final Schema CONFIG_STATE_V0 = new Schema(
             new Field(URL_KEY_NAME, Type.STRING),
             new Field(CONFIG_OFFSET_KEY_NAME, Type.INT64));
-
     // Assignments for each worker are a set of connectors and tasks. These are categorized by connector ID. A sentinel
     // task ID (CONNECTOR_TASK) is used to indicate the connector itself (i.e. that the assignment includes
     // responsibility for running the Connector instance in addition to any tasks it generates).
@@ -60,6 +56,8 @@ public class ConnectProtocol {
             new Field(LEADER_URL_KEY_NAME, Type.STRING),
             new Field(CONFIG_OFFSET_KEY_NAME, Type.INT64),
             new Field(ASSIGNMENT_KEY_NAME, new ArrayOf(CONNECTOR_ASSIGNMENT_V0)));
+    private static final Struct CONNECT_PROTOCOL_HEADER_V0 = new Struct(CONNECT_PROTOCOL_HEADER_SCHEMA)
+            .set(VERSION_KEY_NAME, CONNECT_PROTOCOL_V0);
 
     public static ByteBuffer serializeMetadata(WorkerState workerState) {
         Struct struct = new Struct(CONFIG_STATE_V0);
@@ -128,6 +126,14 @@ public class ConnectProtocol {
             }
         }
         return new Assignment(error, leader, leaderUrl, offset, connectorIds, taskIds);
+    }
+
+    private static void checkVersionCompatibility(short version) {
+        // check for invalid versions
+        if (version < CONNECT_PROTOCOL_V0)
+            throw new SchemaException("Unsupported subscription version: " + version);
+
+        // otherwise, assume versions can be parsed as V0
     }
 
     public static class WorkerState {
@@ -247,14 +253,6 @@ public class ConnectProtocol {
             }
             return taskMap;
         }
-    }
-
-    private static void checkVersionCompatibility(short version) {
-        // check for invalid versions
-        if (version < CONNECT_PROTOCOL_V0)
-            throw new SchemaException("Unsupported subscription version: " + version);
-
-        // otherwise, assume versions can be parsed as V0
     }
 
 }

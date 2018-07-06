@@ -28,8 +28,8 @@ public class ConfigInfo {
 
     @JsonCreator
     public ConfigInfo(
-        @JsonProperty("definition") ConfigKeyInfo configKey,
-        @JsonProperty("value") ConfigValueInfo configValue) {
+            @JsonProperty("definition") ConfigKeyInfo configKey,
+            @JsonProperty("value") ConfigValueInfo configValue) {
         this.configKey = configKey;
         this.configValue = configValue;
     }
@@ -50,7 +50,7 @@ public class ConfigInfo {
         if (o == null || getClass() != o.getClass()) return false;
         ConfigInfo that = (ConfigInfo) o;
         return Objects.equals(configKey, that.configKey) &&
-               Objects.equals(configValue, that.configValue);
+                Objects.equals(configValue, that.configValue);
     }
 
     @Override

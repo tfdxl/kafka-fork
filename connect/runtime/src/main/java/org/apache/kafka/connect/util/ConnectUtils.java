@@ -62,7 +62,7 @@ public final class ConnectUtils {
             throw new ConnectException("Unexpectedly interrupted when looking up Kafka cluster info", e);
         } catch (ExecutionException e) {
             throw new ConnectException("Failed to connect to and describe Kafka cluster. "
-                                       + "Check worker's broker connection and security properties.", e);
+                    + "Check worker's broker connection and security properties.", e);
         }
     }
 }

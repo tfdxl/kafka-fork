@@ -36,23 +36,12 @@ import org.apache.kafka.connect.sink.SinkRecord;
 import org.apache.kafka.connect.sink.SinkTask;
 import org.apache.kafka.connect.source.SourceRecord;
 import org.apache.kafka.connect.source.SourceTask;
-import org.apache.kafka.connect.storage.Converter;
-import org.apache.kafka.connect.storage.HeaderConverter;
-import org.apache.kafka.connect.storage.OffsetBackingStore;
-import org.apache.kafka.connect.storage.OffsetStorageReader;
-import org.apache.kafka.connect.storage.OffsetStorageReaderImpl;
-import org.apache.kafka.connect.storage.OffsetStorageWriter;
+import org.apache.kafka.connect.storage.*;
 import org.apache.kafka.connect.util.ConnectorTaskId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutorService;
@@ -177,11 +166,11 @@ public class Worker {
     /**
      * Start a connector managed by this worker.
      *
-     * @param connName the connector name.
-     * @param connProps the properties of the connector.
-     * @param ctx the connector runtime context.
+     * @param connName       the connector name.
+     * @param connProps      the properties of the connector.
+     * @param ctx            the connector runtime context.
      * @param statusListener a listener for the runtime status transitions of the connector.
-     * @param initialState the initial state of the connector.
+     * @param initialState   the initial state of the connector.
      * @return true if the connector started successfully.
      */
     public boolean startConnector(
@@ -201,7 +190,7 @@ public class Worker {
             final String connClass = connConfig.getString(ConnectorConfig.CONNECTOR_CLASS_CONFIG);
             log.info("Creating connector {} of type {}", connName, connClass);
             final Connector connector = plugins.newConnector(connClass);
-            workerConnector = new WorkerConnector(connName, connector, ctx, metrics,  statusListener);
+            workerConnector = new WorkerConnector(connName, connector, ctx, metrics, statusListener);
             log.info("Instantiated connector {} with version {} of type {}", connName, connector.version(), connector.getClass());
             savedLoader = plugins.compareAndSwapLoaders(connector);
             workerConnector.initialize(connConfig);
@@ -291,7 +280,7 @@ public class Worker {
     private void stopConnectors() {
         // Herder is responsible for stopping connectors. This is an internal method to sequentially
         // stop connectors that have not explicitly been stopped.
-        for (String connector: connectors.keySet())
+        for (String connector : connectors.keySet())
             stopConnector(connector);
     }
 
@@ -345,11 +334,11 @@ public class Worker {
     /**
      * Start a task managed by this worker.
      *
-     * @param id the task ID.
-     * @param connProps the connector properties.
-     * @param taskProps the tasks properties.
+     * @param id             the task ID.
+     * @param connProps      the connector properties.
+     * @param taskProps      the tasks properties.
      * @param statusListener a listener for the runtime status transitions of the task.
-     * @param initialState the initial state of the connector.
+     * @param initialState   the initial state of the connector.
      * @return true if the task started successfully.
      */
     public boolean startTask(
@@ -561,6 +550,7 @@ public class Worker {
 
     /**
      * Get the {@link ConnectMetrics} that uses Kafka Metrics and manages the JMX reporter.
+     *
      * @return the Connect-specific metrics; never null
      */
     public ConnectMetrics metrics() {

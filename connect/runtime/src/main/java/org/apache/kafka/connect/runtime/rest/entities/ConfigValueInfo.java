@@ -31,11 +31,11 @@ public class ConfigValueInfo {
 
     @JsonCreator
     public ConfigValueInfo(
-        @JsonProperty("name") String name,
-        @JsonProperty("value") String value,
-        @JsonProperty("recommended_values") List<String> recommendedValues,
-        @JsonProperty("errors") List<String> errors,
-        @JsonProperty("visible") boolean visible) {
+            @JsonProperty("name") String name,
+            @JsonProperty("value") String value,
+            @JsonProperty("recommended_values") List<String> recommendedValues,
+            @JsonProperty("errors") List<String> errors,
+            @JsonProperty("visible") boolean visible) {
         this.name = name;
         this.value = value;
         this.recommendedValues = recommendedValues;
@@ -74,10 +74,10 @@ public class ConfigValueInfo {
         if (o == null || getClass() != o.getClass()) return false;
         ConfigValueInfo that = (ConfigValueInfo) o;
         return Objects.equals(name, that.name) &&
-               Objects.equals(value, that.value) &&
-               Objects.equals(recommendedValues, that.recommendedValues) &&
-               Objects.equals(errors, that.errors) &&
-               Objects.equals(visible, that.visible);
+                Objects.equals(value, that.value) &&
+                Objects.equals(recommendedValues, that.recommendedValues) &&
+                Objects.equals(errors, that.errors) &&
+                Objects.equals(visible, that.visible);
     }
 
     @Override
@@ -89,16 +89,16 @@ public class ConfigValueInfo {
     public String toString() {
         StringBuffer sb = new StringBuffer();
         sb.append("[")
-            .append(name)
-            .append(",")
-            .append(value)
-            .append(",")
-            .append(recommendedValues)
-            .append(",")
-            .append(errors)
-            .append(",")
-            .append(visible)
-            .append("]");
+                .append(name)
+                .append(",")
+                .append(value)
+                .append(",")
+                .append(recommendedValues)
+                .append(",")
+                .append(errors)
+                .append(",")
+                .append(visible)
+                .append("]");
         return sb.toString();
     }
 

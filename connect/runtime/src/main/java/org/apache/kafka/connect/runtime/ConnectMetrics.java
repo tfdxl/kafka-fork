@@ -19,24 +19,13 @@ package org.apache.kafka.connect.runtime;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.common.MetricName;
 import org.apache.kafka.common.MetricNameTemplate;
-import org.apache.kafka.common.metrics.Gauge;
-import org.apache.kafka.common.metrics.JmxReporter;
-import org.apache.kafka.common.metrics.MetricConfig;
-import org.apache.kafka.common.metrics.Metrics;
-import org.apache.kafka.common.metrics.MetricsReporter;
-import org.apache.kafka.common.metrics.Sensor;
+import org.apache.kafka.common.metrics.*;
 import org.apache.kafka.common.utils.AppInfoParser;
 import org.apache.kafka.common.utils.Time;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
@@ -68,15 +57,41 @@ public class ConnectMetrics {
         this.time = time;
 
         MetricConfig metricConfig = new MetricConfig().samples(config.getInt(CommonClientConfigs.METRICS_NUM_SAMPLES_CONFIG))
-                                                      .timeWindow(config.getLong(CommonClientConfigs.METRICS_SAMPLE_WINDOW_MS_CONFIG),
-                                                                  TimeUnit.MILLISECONDS).recordLevel(
+                .timeWindow(config.getLong(CommonClientConfigs.METRICS_SAMPLE_WINDOW_MS_CONFIG),
+                        TimeUnit.MILLISECONDS).recordLevel(
                         Sensor.RecordingLevel.forName(config.getString(CommonClientConfigs.METRICS_RECORDING_LEVEL_CONFIG)));
         List<MetricsReporter> reporters = config.getConfiguredInstances(CommonClientConfigs.METRIC_REPORTER_CLASSES_CONFIG,
-                                                                        MetricsReporter.class);
+                MetricsReporter.class);
         reporters.add(new JmxReporter(JMX_PREFIX));
         this.metrics = new Metrics(metricConfig, reporters, time);
         LOG.debug("Registering Connect metrics with JMX for worker '{}'", workerId);
         AppInfoParser.registerAppInfo(JMX_PREFIX, workerId, metrics);
+    }
+
+    /**
+     * Create a set of tags using the supplied key and value pairs. The order of the tags will be kept.
+     *
+     * @param keyValue the key and value pairs for the tags; must be an even number
+     * @return the map of tags that can be supplied to the {@link Metrics} methods; never null
+     */
+    static Map<String, String> tags(String... keyValue) {
+        if ((keyValue.length % 2) != 0)
+            throw new IllegalArgumentException("keyValue needs to be specified in pairs");
+        Map<String, String> tags = new LinkedHashMap<>();
+        for (int i = 0; i < keyValue.length; i += 2) {
+            tags.put(keyValue[i], keyValue[i + 1]);
+        }
+        return tags;
+    }
+
+    /**
+     * Utility to generate the documentation for the Connect metrics.
+     *
+     * @param args the arguments
+     */
+    public static void main(String[] args) {
+        ConnectMetricsRegistry metrics = new ConnectMetricsRegistry();
+        System.out.println(Metrics.toHtmlTable(JMX_PREFIX, metrics.getAllTemplates()));
     }
 
     /**
@@ -149,6 +164,20 @@ public class ConnectMetrics {
         metrics.close();
         LOG.debug("Unregistering Connect metrics with JMX for worker '{}'", workerId);
         AppInfoParser.unregisterAppInfo(JMX_PREFIX, workerId, metrics);
+    }
+
+    /**
+     * A simple functional interface that returns a literal value.
+     */
+    public interface LiteralSupplier<T> {
+
+        /**
+         * Return the literal value for the metric.
+         *
+         * @param now the current time in milliseconds
+         * @return the literal metric value; may not be null
+         */
+        T metricValue(long now);
     }
 
     public static class MetricGroupId {
@@ -408,45 +437,5 @@ public class ConnectMetrics {
                 }
             }
         }
-    }
-
-    /**
-     * A simple functional interface that returns a literal value.
-     */
-    public interface LiteralSupplier<T> {
-
-        /**
-         * Return the literal value for the metric.
-         *
-         * @param now the current time in milliseconds
-         * @return the literal metric value; may not be null
-         */
-        T metricValue(long now);
-    }
-
-    /**
-     * Create a set of tags using the supplied key and value pairs. The order of the tags will be kept.
-     *
-     * @param keyValue the key and value pairs for the tags; must be an even number
-     * @return the map of tags that can be supplied to the {@link Metrics} methods; never null
-     */
-    static Map<String, String> tags(String... keyValue) {
-        if ((keyValue.length % 2) != 0)
-            throw new IllegalArgumentException("keyValue needs to be specified in pairs");
-        Map<String, String> tags = new LinkedHashMap<>();
-        for (int i = 0; i < keyValue.length; i += 2) {
-            tags.put(keyValue[i], keyValue[i + 1]);
-        }
-        return tags;
-    }
-
-    /**
-     * Utility to generate the documentation for the Connect metrics.
-     *
-     * @param args the arguments
-     */
-    public static void main(String[] args) {
-        ConnectMetricsRegistry metrics = new ConnectMetricsRegistry();
-        System.out.println(Metrics.toHtmlTable(JMX_PREFIX, metrics.getAllTemplates()));
     }
 }

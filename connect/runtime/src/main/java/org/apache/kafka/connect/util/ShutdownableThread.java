@@ -37,16 +37,14 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 public abstract class ShutdownableThread extends Thread {
     private static final Logger log = LoggerFactory.getLogger(ShutdownableThread.class);
-
-    private AtomicBoolean isRunning = new AtomicBoolean(true);
-    private CountDownLatch shutdownLatch = new CountDownLatch(1);
-
     /**
      * An UncaughtExceptionHandler to register on every instance of this class. This is useful for
      * testing, where AssertionExceptions in the thread may not cause the test to fail. Since one
      * instance is used for all threads, it must be thread-safe.
      */
     volatile public static UncaughtExceptionHandler funcaughtExceptionHandler = null;
+    private AtomicBoolean isRunning = new AtomicBoolean(true);
+    private CountDownLatch shutdownLatch = new CountDownLatch(1);
 
     public ShutdownableThread(String name) {
         // The default is daemon=true so that these threads will not prevent shutdown. We use this
@@ -90,8 +88,9 @@ public abstract class ShutdownableThread extends Thread {
     /**
      * Shutdown the thread, first trying to shut down gracefully using the specified timeout, then
      * forcibly interrupting the thread.
+     *
      * @param gracefulTimeout the maximum time to wait for a graceful exit
-     * @param unit the time unit of the timeout argument
+     * @param unit            the time unit of the timeout argument
      */
     public void shutdown(long gracefulTimeout, TimeUnit unit)
             throws InterruptedException {
@@ -102,8 +101,9 @@ public abstract class ShutdownableThread extends Thread {
 
     /**
      * Attempt graceful shutdown
+     *
      * @param timeout the maximum time to wait
-     * @param unit the time unit of the timeout argument
+     * @param unit    the time unit of the timeout argument
      * @return true if successful, false if the timeout elapsed
      */
     public boolean gracefulShutdown(long timeout, TimeUnit unit) throws InterruptedException {
@@ -121,8 +121,9 @@ public abstract class ShutdownableThread extends Thread {
 
     /**
      * Awaits shutdown of this thread, waiting up to the timeout.
+     *
      * @param timeout the maximum time to wait
-     * @param unit the time unit of the timeout argument
+     * @param unit    the time unit of the timeout argument
      * @return true if successful, false if the timeout elapsed
      * @throws InterruptedException
      */

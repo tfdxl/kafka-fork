@@ -31,6 +31,10 @@ public class TransformationChain<R extends ConnectRecord<R>> {
         this.transformations = transformations;
     }
 
+    public static <R extends ConnectRecord<R>> TransformationChain<R> noOp() {
+        return new TransformationChain<R>(Collections.<Transformation<R>>emptyList());
+    }
+
     public R apply(R record) {
         if (transformations.isEmpty()) return record;
 
@@ -59,10 +63,6 @@ public class TransformationChain<R extends ConnectRecord<R>> {
     @Override
     public int hashCode() {
         return Objects.hash(transformations);
-    }
-
-    public static <R extends ConnectRecord<R>> TransformationChain<R> noOp() {
-        return new TransformationChain<R>(Collections.<Transformation<R>>emptyList());
     }
 
 }

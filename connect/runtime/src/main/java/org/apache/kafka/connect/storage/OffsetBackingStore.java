@@ -52,7 +52,8 @@ public interface OffsetBackingStore {
 
     /**
      * Get the values for the specified keys
-     * @param keys list of keys to look up
+     *
+     * @param keys     list of keys to look up
      * @param callback callback to invoke on completion
      * @return future for the resulting map from key to value
      */
@@ -62,15 +63,17 @@ public interface OffsetBackingStore {
 
     /**
      * Set the specified keys and values.
-     * @param values map from key to value
+     *
+     * @param values   map from key to value
      * @param callback callback to invoke on completion
      * @return void future for the operation
      */
     Future<Void> set(Map<ByteBuffer, ByteBuffer> values,
-                            Callback<Void> callback);
+                     Callback<Void> callback);
 
     /**
      * Configure class with the given key-value pairs
+     *
      * @param config can be DistributedConfig or StandaloneConfig
      */
     void configure(WorkerConfig config);
