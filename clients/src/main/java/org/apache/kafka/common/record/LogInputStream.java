@@ -34,6 +34,7 @@ import java.io.IOException;
 interface LogInputStream<T extends RecordBatch> {
 
     /**
+     * 从底层的输入流中获取下一个record batch
      * Get the next record batch from the underlying input stream.
      *
      * @return The next record batch or null if there is none
