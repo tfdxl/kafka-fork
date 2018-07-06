@@ -222,6 +222,7 @@ class LogSegment private[log](val log: FileRecords, //日志文件
       throw new IllegalArgumentException("Invalid max size for log read (%d)".format(maxSize))
     }
 
+    //日志文件的长度
     val logSize = log.sizeInBytes // this may change, need to save a consistent copy
     val startOffsetAndSize = translateOffset(startOffset)
 
@@ -230,6 +231,7 @@ class LogSegment private[log](val log: FileRecords, //日志文件
       return null
     }
 
+    //将startOffset转换为position
     val startPosition = startOffsetAndSize.position
     val offsetMetadata = new LogOffsetMetadata(startOffset, this.baseOffset, startPosition)
 
