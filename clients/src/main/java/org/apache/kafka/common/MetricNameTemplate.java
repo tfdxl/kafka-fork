@@ -30,8 +30,11 @@ import java.util.Set;
  * is provided, so that the mBean names can be compared and sorted lexicographically.
  */
 public class MetricNameTemplate {
+    //name
     private final String name;
+    //group
     private final String group;
+    //description
     private final String description;
     private LinkedHashSet<String> tags;
 

@@ -25,6 +25,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 /**
+ * 一个灵活的未来，支持链以及其他的异步编程模式，
  * A flexible future which supports call chaining and other asynchronous programming patterns. This will
  * eventually become a thin shim on top of Java 8's CompletableFuture.
  * <p>

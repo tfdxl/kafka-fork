@@ -243,9 +243,12 @@ public class KafkaBasedLog<K, V> {
 
     private void poll(long timeoutMs) {
         try {
+            //拉取消息
             ConsumerRecords<K, V> records = consumer.poll(timeoutMs);
-            for (ConsumerRecord<K, V> record : records)
+            //遍历消息
+            for (ConsumerRecord<K, V> record : records) {
                 consumedCallback.onCompletion(null, record);
+            }
         } catch (WakeupException e) {
             // Expected on get() or stop(). The calling code should handle this
             throw e;

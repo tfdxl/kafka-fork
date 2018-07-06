@@ -43,6 +43,7 @@ public class KafkaFutureImpl<T> extends KafkaFuture<T> {
      */
     private Throwable exception = null;
     /**
+     * 一组对象等待future完成
      * A list of objects waiting for this future to complete (either successfully or
      * exceptionally).  Protected by the object monitor.
      */
@@ -147,6 +148,7 @@ public class KafkaFutureImpl<T> extends KafkaFuture<T> {
     }
 
     /**
+     * 等待future完成，并且返回结果
      * Waits if necessary for this future to complete, and then returns its result.
      */
     @Override
@@ -247,6 +249,13 @@ public class KafkaFutureImpl<T> extends KafkaFuture<T> {
             this.notifyAll();
         }
 
+        /**
+         * 等待
+         *
+         * @return
+         * @throws InterruptedException
+         * @throws ExecutionException
+         */
         synchronized R await() throws InterruptedException, ExecutionException {
             while (true) {
                 if (exception != null)
@@ -259,7 +268,10 @@ public class KafkaFutureImpl<T> extends KafkaFuture<T> {
 
         R await(long timeout, TimeUnit unit)
                 throws InterruptedException, ExecutionException, TimeoutException {
+
+            //开始的时间
             long startMs = System.currentTimeMillis();
+            //需要等待的时间
             long waitTimeMs = unit.toMillis(timeout);
             long delta = 0;
             synchronized (this) {
@@ -291,6 +303,7 @@ public class KafkaFutureImpl<T> extends KafkaFuture<T> {
         public void accept(T val, Throwable exception) {
             try {
                 if (exception != null) {
+                    //value exception
                     biConsumer.accept(null, exception);
                 } else {
                     biConsumer.accept(val, null);

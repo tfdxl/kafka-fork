@@ -17,6 +17,7 @@
 package org.apache.kafka.connect.util;
 
 /**
+ * 通用回调接口
  * Generic interface for callbacks
  */
 public interface Callback<V> {
