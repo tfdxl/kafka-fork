@@ -1698,15 +1698,24 @@ class Log(@volatile var dir: File,
   */
 object Log {
 
+  /**
+    * 日志文件，存放的是消息数据
+    */
   /** a log file */
   val LogFileSuffix = ".log"
 
+  /**
+    * 索引文件
+    */
   /** an index file */
   val IndexFileSuffix = ".index"
 
   /** a time index file */
   val TimeIndexFileSuffix = ".timeindex"
 
+  /**
+    * 生产者的快照
+    */
   val ProducerSnapshotFileSuffix = ".snapshot"
 
   /** an (aborted) txn index */

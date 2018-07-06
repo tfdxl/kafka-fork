@@ -31,6 +31,7 @@ import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
+ * 记录集实现，底层是文件
  * A {@link Records} implementation backed by a file. An optional start and end position can be applied to this
  * instance to enable slicing a range of the log records.
  */
@@ -44,6 +45,8 @@ public class FileRecords extends AbstractRecords implements Closeable {
     // mutable state
     private final AtomicInteger size;
     private final FileChannel channel;
+
+    //底层的日志文件
     private volatile File file;
 
     /**
