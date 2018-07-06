@@ -74,6 +74,11 @@ public abstract class AbstractIterator<T> implements Iterator<T> {
         return null;
     }
 
+    /**
+     * 此方法主要负责用于创建下一个迭代项
+     *
+     * @return
+     */
     protected abstract T makeNext();
 
     private Boolean maybeComputeNext() {
@@ -88,6 +93,9 @@ public abstract class AbstractIterator<T> implements Iterator<T> {
     }
 
     private enum State {
-        READY, NOT_READY, DONE, FAILED
+        READY,//迭代器已经准备好迭代下一项
+        NOT_READY, //没有准备好下一项，需要调用maybeComputeNext
+        DONE,//当前迭代已经结束了
+        FAILED//在迭代过程中出现了异常
     }
 }
