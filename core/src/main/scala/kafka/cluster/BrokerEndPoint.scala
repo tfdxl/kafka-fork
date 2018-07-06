@@ -24,6 +24,7 @@ import org.apache.kafka.common.utils.Utils._
 
 object BrokerEndPoint {
 
+  //uri的正则表达式
   private val uriParseExp = """\[?([0-9a-zA-Z\-%._:]*)\]?:([0-9]+)""".r
 
   /**
