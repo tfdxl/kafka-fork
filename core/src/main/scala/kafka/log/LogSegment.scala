@@ -303,6 +303,8 @@ class LogSegment private[log](val log: FileRecords, //日志文件
     try {
       //日志的迭代器
       for (batch <- log.batches.asScala) {
+
+        //验证消息是否合法
         batch.ensureValid()
 
         // The max timestamp is exposed at the batch level, so no need to iterate the records
@@ -311,13 +313,19 @@ class LogSegment private[log](val log: FileRecords, //日志文件
           offsetOfMaxTimestamp = batch.lastOffset
         }
 
+        //符合添加索引项的条件
         // Build offset index
         if (validBytes - lastIndexEntry > indexIntervalBytes) {
+          //batch开始的offset
           val startOffset = batch.baseOffset
+          //写入到索引文件
           offsetIndex.append(startOffset, validBytes)
+          //添加时间索引
           timeIndex.maybeAppend(maxTimestampSoFar, offsetOfMaxTimestamp)
+          //最后一个索引的entry
           lastIndexEntry = validBytes
         }
+        //添加已经合法的字节数
         validBytes += batch.sizeInBytes()
 
         if (batch.magic >= RecordBatch.MAGIC_VALUE_V2) {
@@ -333,15 +341,19 @@ class LogSegment private[log](val log: FileRecords, //日志文件
         warn("Found invalid messages in log segment %s at byte offset %d: %s."
           .format(log.file.getAbsolutePath, validBytes, e.getMessage))
     }
+    //删除了的字节数
     val truncated = log.sizeInBytes - validBytes
     if (truncated > 0)
       debug(s"Truncated $truncated invalid bytes at the end of segment ${log.file.getAbsoluteFile} during recovery")
 
+    //截取到最大有效的字节数之后的日志
     log.truncateTo(validBytes)
+    //对索引文件进行相应的截断
     offsetIndex.trimToValidSize()
     // A normally closed segment always appends the biggest timestamp ever seen into log segment, we do this as well.
     timeIndex.maybeAppend(maxTimestampSoFar, offsetOfMaxTimestamp, skipFullCheck = true)
     timeIndex.trimToValidSize()
+    //返回已经截取掉的字节数
     truncated
   }
 
@@ -569,6 +581,7 @@ class LogSegment private[log](val log: FileRecords, //日志文件
   def largestTimestamp = if (maxTimestampSoFar >= 0) maxTimestampSoFar else lastModified
 
   /**
+    * 设置segment的最后修改时间
     * Change the last modified time for this log segment
     */
   def lastModified_=(ms: Long) = {

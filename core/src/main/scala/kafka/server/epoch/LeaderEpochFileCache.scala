@@ -46,6 +46,10 @@ trait LeaderEpochCache {
   * @param checkpoint the checkpoint file
   */
 class LeaderEpochFileCache(topicPartition: TopicPartition, leo: () => LogOffsetMetadata, checkpoint: LeaderEpochCheckpoint) extends LeaderEpochCache with Logging {
+
+  /**
+    * 读写锁
+    */
   private val lock = new ReentrantReadWriteLock()
   private var epochs: ListBuffer[EpochEntry] = inWriteLock(lock) { ListBuffer(checkpoint.read(): _*) }
 
@@ -60,6 +64,10 @@ class LeaderEpochFileCache(topicPartition: TopicPartition, leo: () => LogOffsetM
     inWriteLock(lock) {
       if (epoch >= 0 && epoch > latestEpoch && offset >= latestOffset) {
         info(s"Updated PartitionLeaderEpoch. ${epochChangeMsg(epoch, offset)}. Cache now contains ${epochs.size} entries.")
+
+        /**
+          * 构建一个新的EpochEntry追加进去
+          */
         epochs += EpochEntry(epoch, offset)
         flush()
       } else {
