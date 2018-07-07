@@ -56,6 +56,7 @@ object PreferredReplicaLeaderElectionCommand extends Logging {
     var zkClient: KafkaZkClient = null
     try {
       val time = Time.SYSTEM
+      //创建与zk的连接
       zkClient = KafkaZkClient(zkConnect, JaasUtils.isZkSecurityEnabled, 30000, 30000, Int.MaxValue, time)
 
       val partitionsForPreferredReplicaElection =

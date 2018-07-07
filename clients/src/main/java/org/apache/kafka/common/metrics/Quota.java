@@ -21,6 +21,9 @@ package org.apache.kafka.common.metrics;
  */
 public final class Quota {
 
+    /**
+     * 上下限
+     */
     private final boolean upper;
     private final double bound;
 

@@ -418,6 +418,7 @@ object MirrorMaker extends Logging with KafkaMetricsGroup {
   //继承了Thread和
   class MirrorMakerThread(mirrorMakerConsumer: MirrorMakerBaseConsumer,
                           val threadId: Int) extends Thread with Logging with KafkaMetricsGroup {
+    //线程的烂名字
     private val threadName = "mirrormaker-thread-" + threadId
     private val shutdownLatch: CountDownLatch = new CountDownLatch(1)
     private var lastOffsetCommitMs = System.currentTimeMillis()
@@ -429,6 +430,7 @@ object MirrorMaker extends Logging with KafkaMetricsGroup {
     override def run() {
       info("Starting mirror maker thread " + threadName)
       try {
+        //初始化consumer
         mirrorMakerConsumer.init()
 
         // We need the two while loop to make sure when old consumer is used, even there is no message we
@@ -442,6 +444,7 @@ object MirrorMaker extends Logging with KafkaMetricsGroup {
               } else {
                 trace("Sending message with null value and offset %d.".format(data.offset))
               }
+              //直接交给handler进行处理
               val records = messageHandler.handle(data)
               records.asScala.foreach(producer.send)
               maybeFlushAndCommitOffsets()
