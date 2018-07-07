@@ -267,6 +267,7 @@ class LogSegment private[log](val log: FileRecords, //日志文件
             logSize // the max offset is off the end of the log, use the end of the file
           else
             mapping.position
+        //由maxOffset,maxPosition,maxSize共同决定读取的长度
         min(min(maxPosition, endPosition) - startPosition, adjustedMaxSize).toInt
     }
 
@@ -288,13 +289,19 @@ class LogSegment private[log](val log: FileRecords, //日志文件
     */
   @nonthreadsafe
   def recover(producerStateManager: ProducerStateManager, leaderEpochCache: Option[LeaderEpochCache] = None): Int = {
+    //清空索引文件，底层只是移动position
     offsetIndex.reset()
     timeIndex.reset()
     txnIndex.reset()
+
+    //记录已经验证的字节数
     var validBytes = 0
+    //最后一个索引项对应的物理地址
     var lastIndexEntry = 0
+    //目前为止最大的时间戳
     maxTimestampSoFar = RecordBatch.NO_TIMESTAMP
     try {
+      //日志的迭代器
       for (batch <- log.batches.asScala) {
         batch.ensureValid()
 

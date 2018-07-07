@@ -34,7 +34,10 @@ import static org.apache.kafka.common.record.Records.*;
  * A log input stream which is backed by a {@link FileChannel}.
  */
 public class FileLogInputStream implements LogInputStream<FileLogInputStream.FileChannelRecordBatch> {
+
+    //结束的为止
     private final int end;
+    //file
     private final FileChannel channel;
     private final ByteBuffer logHeaderBuffer = ByteBuffer.allocate(HEADER_SIZE_UP_TO_MAGIC);
     private int position;
