@@ -20,6 +20,13 @@ package kafka.server
 import org.apache.kafka.common.record.Records
 import org.apache.kafka.common.requests.FetchResponse.AbortedTransaction
 
+/**
+  * 获取日志数据的信息
+  * @param fetchOffsetMetadata
+  * @param records
+  * @param firstEntryIncomplete
+  * @param abortedTransactions
+  */
 case class FetchDataInfo(fetchOffsetMetadata: LogOffsetMetadata,
                          records: Records,
                          firstEntryIncomplete: Boolean = false,
