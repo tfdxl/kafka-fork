@@ -22,7 +22,7 @@ import java.util.concurrent.{CountDownLatch, TimeUnit}
 import org.apache.kafka.common.internals.FatalExitError
 
 /**
-  * 集成了Thread
+  * 继承了Thread
   * @param name 名字
   * @param isInterruptible 是否可以中断
   */
