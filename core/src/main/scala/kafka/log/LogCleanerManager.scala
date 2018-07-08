@@ -140,18 +140,24 @@ private[log] class LogCleanerManager(val logDirs: Seq[File],
   }
 
   /**
+    * 选择日志进行清楚，并且加入in-progress集合
     * Choose the log to clean next and add it to the in-progress set. We recompute this
     * each time from the full set of logs to allow logs to be dynamically added to the pool of logs
     * the log manager maintains.
     */
   def grabFilthiestCompactedLog(time: Time): Option[LogToClean] = {
     inLock(lock) {
+      //当前时间
       val now = time.milliseconds
+      //最后一次run的实践
       this.timeOfLastRun = now
+      //全部log的cleaner-checkpoint
       val lastClean = allCleanerCheckpoints
       val dirtyLogs = logs.filter {
+        //过滤掉clean.policy配置为delete的log
         case (_, log) => log.config.compact // match logs that are marked as compacted
       }.filterNot {
+        //过滤掉inProgress包含状态的log
         case (topicPartition, _) => inProgress.contains(topicPartition) // skip any logs already in-progress
       }.map {
         case (topicPartition, log) => // create a LogToClean instance for each
@@ -224,6 +230,7 @@ private[log] class LogCleanerManager(val logDirs: Seq[File],
               throw new IllegalStateException(s"Compaction for partition $topicPartition cannot be aborted and paused since it is in $s state.")
           }
       }
+      //如果不是paused的状态那么就一直等
       while (!isCleaningInState(topicPartition, LogCleaningPaused))
         pausedCleaningCond.await(100, TimeUnit.MILLISECONDS)
     }
@@ -276,9 +283,11 @@ private[log] class LogCleanerManager(val logDirs: Seq[File],
 
   def updateCheckpoints(dataDir: File, update: Option[(TopicPartition, Long)]) {
     inLock(lock) {
+      //加锁，获取checkPoint文件，log目录对应的cleaner-offset-checkpoint文件
       val checkpoint = checkpoints(dataDir)
       if (checkpoint != null) {
         try {
+          //update会对相同的key的vaue进行覆盖
           val existing = checkpoint.read().filterKeys(logs.keys) ++ update
           checkpoint.write(existing)
         } catch {

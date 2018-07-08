@@ -26,6 +26,10 @@ import org.apache.kafka.common.TopicPartition
 import scala.collection._
 
 object OffsetCheckpointFile {
+
+  /**
+    * 空格的正则表达式
+    */
   private val WhiteSpacesPattern = Pattern.compile("\\s+")
   private[checkpoints] val CurrentVersion = 0
 
@@ -36,16 +40,19 @@ object OffsetCheckpointFile {
 
     override def fromLine(line: String): Option[(TopicPartition, Long)] = {
       WhiteSpacesPattern.split(line) match {
+          //切割出来的都是字符串
         case Array(topic, partition, offset) =>
           Some(new TopicPartition(topic, partition.toInt), offset.toLong)
         case _ => None
       }
     }
   }
+
 }
 
 trait OffsetCheckpoint {
   def write(epochs: Seq[EpochEntry])
+
   def read(): Seq[EpochEntry]
 }
 
