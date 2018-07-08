@@ -411,8 +411,10 @@ class ZooKeeperClient(connectString: String,
 trait StateChangeHandler {
   val name: String
 
+  //初始化session之前
   def beforeInitializingSession(): Unit = {}
 
+  //初始化session之后
   def afterInitializingSession(): Unit = {}
 
   def onAuthFailure(): Unit = {}
