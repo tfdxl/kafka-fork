@@ -53,6 +53,7 @@ import scala.collection.{Seq, mutable}
 class KafkaZkClient private(zooKeeperClient: ZooKeeperClient, isSecure: Boolean, time: Time) extends AutoCloseable with
   Logging with KafkaMetricsGroup {
 
+  //柱状图
   private val latencyMetric = newHistogram("ZooKeeperRequestLatencyMs")
 
   override def metricName(name: String, metricTags: scala.collection.Map[String, String]): MetricName = {
