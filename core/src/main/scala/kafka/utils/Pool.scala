@@ -1,46 +1,48 @@
 /**
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- * 
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+  * Licensed to the Apache Software Foundation (ASF) under one or more
+  * contributor license agreements.  See the NOTICE file distributed with
+  * this work for additional information regarding copyright ownership.
+  * The ASF licenses this file to You under the Apache License, Version 2.0
+  * (the "License"); you may not use this file except in compliance with
+  * the License.  You may obtain a copy of the License at
+  *
+  * http://www.apache.org/licenses/LICENSE-2.0
+  *
+  * Unless required by applicable law or agreed to in writing, software
+  * distributed under the License is distributed on an "AS IS" BASIS,
+  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  * See the License for the specific language governing permissions and
+  * limitations under the License.
+  */
 
 package kafka.utils
 
 import java.util.concurrent._
 
-import collection.mutable
-import collection.JavaConverters._
 import kafka.common.KafkaException
 
-class Pool[K,V](valueFactory: Option[K => V] = None) extends Iterable[(K, V)] {
+import scala.collection.JavaConverters._
+import scala.collection.mutable
 
+class Pool[K, V](valueFactory: Option[K => V] = None) extends Iterable[(K, V)] {
+
+  //底层使用ConcurrentHashMap保存的
   private val pool: ConcurrentMap[K, V] = new ConcurrentHashMap[K, V]
   private val createLock = new Object
-  
+
   def put(k: K, v: V): V = pool.put(k, v)
-  
+
   def putIfNotExists(k: K, v: V): V = pool.putIfAbsent(k, v)
 
   /**
-   * Gets the value associated with the given key. If there is no associated
-   * value, then create the value using the pool's value factory and return the
-   * value associated with the key. The user should declare the factory method
-   * as lazy if its side-effects need to be avoided.
-   *
-   * @param key The key to lookup.
-   * @return The final value associated with the key.
-   */
+    * Gets the value associated with the given key. If there is no associated
+    * value, then create the value using the pool's value factory and return the
+    * value associated with the key. The user should declare the factory method
+    * as lazy if its side-effects need to be avoided.
+    *
+    * @param key The key to lookup.
+    * @return The final value associated with the key.
+    */
   def getAndMaybePut(key: K): V = {
     if (valueFactory.isEmpty)
       throw new KafkaException("Empty value factory in pool.")
@@ -52,13 +54,14 @@ class Pool[K,V](valueFactory: Option[K => V] = None) extends Iterable[(K, V)] {
     * value, then create the value using the provided by `createValue` and return the
     * value associated with the key.
     *
-    * @param key The key to lookup.
+    * @param key         The key to lookup.
     * @param createValue Factory function.
     * @return The final value associated with the key.
     */
   def getAndMaybePut(key: K, createValue: => V): V = {
     val current = pool.get(key)
     if (current == null) {
+      //double check
       createLock synchronized {
         val current = pool.get(key)
         if (current == null) {
@@ -73,9 +76,9 @@ class Pool[K,V](valueFactory: Option[K => V] = None) extends Iterable[(K, V)] {
   }
 
   def contains(id: K): Boolean = pool.containsKey(id)
-  
+
   def get(key: K): V = pool.get(key)
-  
+
   def remove(key: K): V = pool.remove(key)
 
   def remove(key: K, value: V): Boolean = pool.remove(key, value)
@@ -84,21 +87,22 @@ class Pool[K,V](valueFactory: Option[K => V] = None) extends Iterable[(K, V)] {
 
   def values: Iterable[V] = pool.values.asScala
 
-  def clear() { pool.clear() }
-  
+  def clear() {
+    pool.clear()
+  }
+
   override def size: Int = pool.size
-  
-  override def iterator: Iterator[(K, V)] = new Iterator[(K,V)]() {
-    
+
+  override def iterator: Iterator[(K, V)] = new Iterator[(K, V)]() {
+
+    //entrySet的迭代器
     private val iter = pool.entrySet.iterator
-    
+
     def hasNext: Boolean = iter.hasNext
-    
+
     def next: (K, V) = {
       val n = iter.next
       (n.getKey, n.getValue)
     }
-    
   }
-    
 }
