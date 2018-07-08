@@ -270,9 +270,9 @@ class LogCleaner(initialConfig: CleanerConfig,
     val cleaner = new Cleaner(id = threadId,
       offsetMap = new SkimpyOffsetMap(memory = math.min(config.dedupeBufferSize / config.numThreads, Int.MaxValue).toInt,
         hashAlgorithm = config.hashAlgorithm),
-      ioBufferSize = config.ioBufferSize / config.numThreads / 2,//读写LogSegment的bytebuffer大小
-      maxIoBufferSize = config.maxMessageSize,//消息的最大长度
-      dupBufferLoadFactor = config.dedupeBufferLoadFactor,//指定了SkimpyOffsetMap的最大占用比例
+      ioBufferSize = config.ioBufferSize / config.numThreads / 2, //读写LogSegment的bytebuffer大小
+      maxIoBufferSize = config.maxMessageSize, //消息的最大长度
+      dupBufferLoadFactor = config.dedupeBufferLoadFactor, //指定了SkimpyOffsetMap的最大占用比例
       throttler = throttler,
       time = time,
       checkDone = checkDone)
@@ -437,6 +437,7 @@ private[log] class Cleaner(val id: Int,
   private[log] def clean(cleanable: LogToClean): (Long, CleanerStats) = {
     // figure out the timestamp below which it is safe to remove delete tombstones
     // this position is defined to be a configurable time beneath the last modified time of the last clean segment
+    //计算可以安全删除的"删除标识"
     val deleteHorizonMs =
     cleanable.log.logSegments(0, cleanable.firstDirtyOffset).lastOption match {
       case None => 0L
@@ -454,7 +455,14 @@ private[log] class Cleaner(val id: Int,
 
     // build the offset map
     info("Building offset map for %s...".format(cleanable.log.name))
+    /**
+      * 日志压缩的最大上限就是第一个不能清除的offset
+      */
     val upperBoundOffset = cleanable.firstUncleanableOffset
+
+    /**
+      * 填充offsetMap,确定日志压缩的真正上界
+      */
     buildOffsetMap(log, cleanable.firstDirtyOffset, upperBoundOffset, offsetMap, stats)
     val endOffset = offsetMap.latestOffset + 1
     stats.indexDone()
@@ -466,12 +474,14 @@ private[log] class Cleaner(val id: Int,
 
     // group the segments and clean the groups
     info("Cleaning log %s (cleaning prior to %s, discarding tombstones prior to %s)...".format(log.name, new Date(cleanableHorizonMs), new Date(deleteHorizonMs)))
+    //对要压缩的Segment进行分组，并且按照分组进行clean
     for (group <- groupSegmentsBySize(log.logSegments(0, endOffset), log.config.segmentSize, log.config.maxIndexSize, cleanable.firstUncleanableOffset))
       cleanSegments(log, group, offsetMap, deleteHorizonMs, stats)
 
     // record buffer utilization
     stats.bufferUtilization = offsetMap.utilization
 
+    //写入end的时间
     stats.allDone()
 
     (endOffset, stats)
@@ -768,7 +778,9 @@ private[log] class Cleaner(val id: Int,
                                   end: Long,
                                   map: OffsetMap,
                                   stats: CleanerStats) {
+    //首先清除map
     map.clear()
+    //查找从start~end所有的LogSegment
     val dirty = log.logSegments(start, end).toBuffer
     info("Building offset map for log %s for %d segments in offset range [%d, %d).".format(log.name, dirty.size, start, end))
 
@@ -777,10 +789,14 @@ private[log] class Cleaner(val id: Int,
 
     // Add all the cleanable dirty segments. We must take at least map.slots * load_factor,
     // but we may be able to fit more (if there is lots of duplication in the dirty section of the log)
+    //表示OffsetMap是否被填充满了
     var full = false
+    //循环遍历dirty集合，循环条件是OffsetMap未填充满
     for (segment <- dirty if !full) {
+      //检查LogCleanerManager记录的该分区的压缩状态
       checkDone(log.topicPartition)
 
+      //处理单个Logment,将消息的key和offset添加到OffsetMap
       full = buildOffsetMapForSegment(log.topicPartition, segment, map, start, log.config.maxMessageSize,
         transactionMetadata, stats)
       if (full)
@@ -804,16 +820,24 @@ private[log] class Cleaner(val id: Int,
                                        maxLogMessageSize: Int,
                                        transactionMetadata: CleanedTransactionMetadata,
                                        stats: CleanerStats): Boolean = {
+    //映射startOffset为具体的物理地址
     var position = segment.offsetIndex.lookup(startOffset).position
+    //最大的map的size
     val maxDesiredMapSize = (map.slots * this.dupBufferLoadFactor).toInt
+
+    //开始的位置下小于size
     while (position < segment.log.sizeInBytes) {
       checkDone(topicPartition)
+      //清除readBuffer
       readBuffer.clear()
+      //从logSegment中读取消息
       segment.log.readInto(readBuffer, position)
+      //反序列化为MemoryRecords
       val records = MemoryRecords.readableRecords(readBuffer)
       throttler.maybeThrottle(records.sizeInBytes)
 
       val startPosition = position
+      //遍历消息
       for (batch <- records.batches.asScala) {
         if (batch.isControlBatch) {
           transactionMetadata.onControlBatchRead(batch)
@@ -827,7 +851,9 @@ private[log] class Cleaner(val id: Int,
           } else {
             for (record <- batch.asScala) {
               if (record.hasKey && record.offset >= startOffset) {
+                //当前的map大小还小于设定的大小
                 if (map.size < maxDesiredMapSize)
+                //将key和offset放入offsetMap
                   map.put(record.key, record.offset)
                 else
                   return true
@@ -840,14 +866,21 @@ private[log] class Cleaner(val id: Int,
         if (batch.lastOffset >= startOffset)
           map.updateLatestOffset(batch.lastOffset)
       }
+      //已经读取的字节数
       val bytesRead = records.validBytes
+      //position往后移动
       position += bytesRead
+      //更新统计值
       stats.indexBytesRead(bytesRead)
 
+      /**
+        * position没有移动，表示没有读取到一个完整的message,对readBuffer以及writeBuffer进行扩容
+        */
       // if we didn't read even one complete message, our read buffer may be too small
       if (position == startPosition)
         growBuffers(maxLogMessageSize)
     }
+    //恢复缓冲区
     restoreBuffers()
     false
   }
