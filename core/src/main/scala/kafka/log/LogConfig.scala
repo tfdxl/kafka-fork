@@ -1,36 +1,36 @@
 /**
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+  * Licensed to the Apache Software Foundation (ASF) under one or more
+  * contributor license agreements.  See the NOTICE file distributed with
+  * this work for additional information regarding copyright ownership.
+  * The ASF licenses this file to You under the Apache License, Version 2.0
+  * (the "License"); you may not use this file except in compliance with
+  * the License.  You may obtain a copy of the License at
+  *
+  * http://www.apache.org/licenses/LICENSE-2.0
+  *
+  * Unless required by applicable law or agreed to in writing, software
+  * distributed under the License is distributed on an "AS IS" BASIS,
+  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  * See the License for the specific language governing permissions and
+  * limitations under the License.
+  */
 
 package kafka.log
 
 import java.util.{Collections, Locale, Properties}
 
-import scala.collection.JavaConverters._
 import kafka.api.ApiVersion
 import kafka.message.{BrokerCompressionCodec, Message}
 import kafka.server.{KafkaConfig, ThrottledReplicaListValidator}
 import kafka.utils.Implicits._
-import org.apache.kafka.common.errors.InvalidConfigurationException
+import org.apache.kafka.common.config.ConfigDef.{ConfigKey, ValidList, Validator}
 import org.apache.kafka.common.config.{AbstractConfig, ConfigDef, TopicConfig}
+import org.apache.kafka.common.errors.InvalidConfigurationException
 import org.apache.kafka.common.record.TimestampType
 import org.apache.kafka.common.utils.Utils
 
+import scala.collection.JavaConverters._
 import scala.collection.{Map, mutable}
-import org.apache.kafka.common.config.ConfigDef.{ConfigKey, ValidList, Validator}
 
 object Defaults {
   val SegmentSize = kafka.server.Defaults.LogSegmentBytes
@@ -49,7 +49,7 @@ object Defaults {
   val MinCleanableDirtyRatio = kafka.server.Defaults.LogCleanerMinCleanRatio
 
   @deprecated(message = "This is a misleading variable name as it actually refers to the 'delete' cleanup policy. Use " +
-                        "`CleanupPolicy` instead.", since = "1.0.0")
+    "`CleanupPolicy` instead.", since = "1.0.0")
   val Compact = kafka.server.Defaults.LogCleanupPolicy
 
   val CleanupPolicy = kafka.server.Defaults.LogCleanupPolicy
@@ -68,9 +68,9 @@ object Defaults {
 case class LogConfig(props: java.util.Map[_, _], overriddenConfigs: Set[String] = Set.empty)
   extends AbstractConfig(LogConfig.configDef, props, false) {
   /**
-   * Important note: Any configuration parameter that is passed along from KafkaConfig to LogConfig
-   * should also go in [[kafka.server.KafkaServer.copyKafkaConfigToLog]].
-   */
+    * Important note: Any configuration parameter that is passed along from KafkaConfig to LogConfig
+    * should also go in [[kafka.server.KafkaServer.copyKafkaConfigToLog]].
+    */
   val segmentSize = getInt(LogConfig.SegmentBytesProp)
   val segmentMs = getLong(LogConfig.SegmentMsProp)
   val segmentJitterMs = getLong(LogConfig.SegmentJitterMsProp)
@@ -226,10 +226,10 @@ object LogConfig {
         KafkaConfig.LogFlushIntervalMsProp)
       // can be negative. See kafka.log.LogManager.cleanupSegmentsToMaintainSize
       .define(RetentionBytesProp, LONG, Defaults.RetentionSize, MEDIUM, RetentionSizeDoc,
-        KafkaConfig.LogRetentionBytesProp)
+      KafkaConfig.LogRetentionBytesProp)
       // can be negative. See kafka.log.LogManager.cleanupExpiredSegments
       .define(RetentionMsProp, LONG, Defaults.RetentionMs, MEDIUM, RetentionMsDoc,
-        KafkaConfig.LogRetentionTimeMillisProp)
+      KafkaConfig.LogRetentionTimeMillisProp)
       .define(MaxMessageBytesProp, INT, Defaults.MaxMessageSize, atLeast(0), MEDIUM, MaxMessageSizeDoc,
         KafkaConfig.MessageMaxBytesProp)
       .define(IndexIntervalBytesProp, INT, Defaults.IndexInterval, atLeast(0), MEDIUM, IndexIntervalDoc,
@@ -248,7 +248,7 @@ object LogConfig {
         MEDIUM, UncleanLeaderElectionEnableDoc, KafkaConfig.UncleanLeaderElectionEnableProp)
       .define(MinInSyncReplicasProp, INT, Defaults.MinInSyncReplicas, atLeast(1), MEDIUM, MinInSyncReplicasDoc,
         KafkaConfig.MinInSyncReplicasProp)
-      .define(CompressionTypeProp, STRING, Defaults.CompressionType, in(BrokerCompressionCodec.brokerCompressionOptions:_*),
+      .define(CompressionTypeProp, STRING, Defaults.CompressionType, in(BrokerCompressionCodec.brokerCompressionOptions: _*),
         MEDIUM, CompressionTypeDoc, KafkaConfig.CompressionTypeProp)
       .define(PreAllocateEnableProp, BOOLEAN, Defaults.PreAllocateEnable, MEDIUM, PreAllocateEnableDoc,
         KafkaConfig.LogPreAllocateProp)
@@ -271,8 +271,8 @@ object LogConfig {
   def serverConfigName(configName: String): Option[String] = configDef.serverConfigName(configName)
 
   /**
-   * Create a log config instance using the given properties and defaults
-   */
+    * Create a log config instance using the given properties and defaults
+    */
   def fromProps(defaults: java.util.Map[_ <: Object, _ <: Object], overrides: Properties): LogConfig = {
     val props = new Properties()
     defaults.asScala.foreach { case (k, v) => props.put(k, v) }
@@ -282,27 +282,27 @@ object LogConfig {
   }
 
   /**
-   * Check that property names are valid
-   */
+    * Check that property names are valid
+    */
   def validateNames(props: Properties) {
     val names = configNames
-    for(name <- props.asScala.keys)
+    for (name <- props.asScala.keys)
       if (!names.contains(name))
         throw new InvalidConfigurationException(s"Unknown topic config name: $name")
   }
 
   /**
-   * Check that the given properties contain only valid log config names and that all values can be parsed and are valid
-   */
+    * Check that the given properties contain only valid log config names and that all values can be parsed and are valid
+    */
   def validate(props: Properties) {
     validateNames(props)
     configDef.parse(props)
   }
 
   /**
-   * Map topic config to the broker config with highest priority. Some of these have additional synonyms
-   * that can be obtained using [[kafka.server.DynamicBrokerConfig#brokerConfigSynonyms]]
-   */
+    * Map topic config to the broker config with highest priority. Some of these have additional synonyms
+    * that can be obtained using [[kafka.server.DynamicBrokerConfig#brokerConfigSynonyms]]
+    */
   val TopicConfigSynonyms = Map(
     SegmentBytesProp -> KafkaConfig.LogSegmentBytesProp,
     SegmentMsProp -> KafkaConfig.LogRollTimeMillisProp,
