@@ -34,8 +34,8 @@ import scala.collection.mutable
   * A thread that answers kafka requests.
   */
 class KafkaRequestHandler(id: Int,
-                          brokerId: Int,
-                          val aggregateIdleMeter: Meter,
+                          brokerId: Int,//brokerId
+                          val aggregateIdleMeter: Meter,//聚合的meter
                           val totalHandlerThreads: AtomicInteger,
                           val requestChannel: RequestChannel,
                           apis: KafkaApis,
