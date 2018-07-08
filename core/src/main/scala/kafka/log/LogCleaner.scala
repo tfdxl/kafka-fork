@@ -254,6 +254,7 @@ class LogCleaner(initialConfig: CleanerConfig,
   private[log] def cleanerCount: Int = cleaners.size
 
   /**
+    * 清理线程真正的执行日志的清理工作，每一个线程重复选择最脏的日志，清理他，并且交换到已经清理的segment
     * The cleaner threads do the actual log cleaning. Each thread processes does its cleaning repeatedly by
     * choosing the dirtiest log, cleaning it, and then swapping in the cleaned segments.
     */
@@ -265,12 +266,13 @@ class LogCleaner(initialConfig: CleanerConfig,
     if (config.dedupeBufferSize / config.numThreads > Int.MaxValue)
       warn("Cannot use more than 2G of cleaner buffer space per cleaner thread, ignoring excess buffer space...")
 
+    //真正的日志压缩逻辑
     val cleaner = new Cleaner(id = threadId,
       offsetMap = new SkimpyOffsetMap(memory = math.min(config.dedupeBufferSize / config.numThreads, Int.MaxValue).toInt,
         hashAlgorithm = config.hashAlgorithm),
-      ioBufferSize = config.ioBufferSize / config.numThreads / 2,
-      maxIoBufferSize = config.maxMessageSize,
-      dupBufferLoadFactor = config.dedupeBufferLoadFactor,
+      ioBufferSize = config.ioBufferSize / config.numThreads / 2,//读写LogSegment的bytebuffer大小
+      maxIoBufferSize = config.maxMessageSize,//消息的最大长度
+      dupBufferLoadFactor = config.dedupeBufferLoadFactor,//指定了SkimpyOffsetMap的最大占用比例
       throttler = throttler,
       time = time,
       checkDone = checkDone)
@@ -294,6 +296,7 @@ class LogCleaner(initialConfig: CleanerConfig,
       * Clean a log if there is a dirty log available, otherwise sleep for a bit
       */
     private def cleanOrSleep() {
+      //获取要进行压缩的log
       val cleaned = cleanerManager.grabFilthiestCompactedLog(time) match {
         case None =>
           false
@@ -301,7 +304,9 @@ class LogCleaner(initialConfig: CleanerConfig,
           // there's a log, clean it
           var endOffset = cleanable.firstDirtyOffset
           try {
+            //进行日志压缩
             val (nextDirtyOffset, cleanerStats) = cleaner.clean(cleanable)
+            //记录统计值
             recordStats(cleaner.id, cleanable.log.name, cleanable.firstDirtyOffset, endOffset, cleanerStats)
             endOffset = nextDirtyOffset
           } catch {
@@ -311,6 +316,7 @@ class LogCleaner(initialConfig: CleanerConfig,
               val msg = s"Failed to clean up log for ${cleanable.topicPartition} in dir ${cleanable.log.dir.getParent} due to IOException"
               logDirFailureChannel.maybeAddOfflineLogDir(cleanable.log.dir.getParent, msg, e)
           } finally {
+            //对log的压缩状态进行转换，同时更新cleaner-offset-checkpoint文件
             cleanerManager.doneCleaning(cleanable.topicPartition, cleanable.log.dir.getParentFile, endOffset)
           }
           true
@@ -910,6 +916,7 @@ private case class LogToClean(topicPartition: TopicPartition, log: Log, firstDir
   val totalBytes = cleanBytes + cleanableBytes
   val cleanableRatio = cleanableBytes / totalBytes.toDouble
 
+  //覆盖compare可以获取最大
   override def compare(that: LogToClean): Int = math.signum(this.cleanableRatio - that.cleanableRatio).toInt
 }
 

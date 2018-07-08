@@ -153,6 +153,8 @@ private[log] class LogCleanerManager(val logDirs: Seq[File],
       this.timeOfLastRun = now
       //全部log的cleaner-checkpoint
       val lastClean = allCleanerCheckpoints
+
+      //查找所有的dirtylogs
       val dirtyLogs = logs.filter {
         //过滤掉clean.policy配置为delete的log
         case (_, log) => log.config.compact // match logs that are marked as compacted
@@ -160,20 +162,32 @@ private[log] class LogCleanerManager(val logDirs: Seq[File],
         //过滤掉inProgress包含状态的log
         case (topicPartition, _) => inProgress.contains(topicPartition) // skip any logs already in-progress
       }.map {
+        //创建每一个LogToClean
         case (topicPartition, log) => // create a LogToClean instance for each
+
+          //第一个脏的offset，第一个不能清理的offset
           val (firstDirtyOffset, firstUncleanableDirtyOffset) = LogCleanerManager.cleanableOffsets(log, topicPartition,
             lastClean, now)
+          //创建LogToClean
           LogToClean(topicPartition, log, firstDirtyOffset, firstUncleanableDirtyOffset)
+        //过滤掉空的日志文件
       }.filter(ltc => ltc.totalBytes > 0) // skip any empty logs
 
+      //最脏日志文件的可以清除的比例
       this.dirtiestLogCleanableRatio = if (dirtyLogs.nonEmpty) dirtyLogs.max.cleanableRatio else 0
       // and must meet the minimum threshold for dirty byte ratio
+      //脏比例的要达到最小的阈值
       val cleanableLogs = dirtyLogs.filter(ltc => ltc.cleanableRatio > ltc.log.config.minCleanableRatio)
+
+      //最后可以清除的日志是空的
       if (cleanableLogs.isEmpty) {
         None
       } else {
+        //返回可以清除比例最大的日志
         val filthiest = cleanableLogs.max
+        //设置topicAndPartition为清理中的状态
         inProgress.put(filthiest.topicPartition, LogCleaningInProgress)
+        //返回回去
         Some(filthiest)
       }
     }
