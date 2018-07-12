@@ -506,6 +506,7 @@ private[log] class Cleaner(val id: Int,
       Files.deleteIfExists(new File(file.getPath + Log.CleanedFileSuffix).toPath)
     }
 
+    //首先删除那些.cleaned结尾的文件
     // create a new segment with a suffix appended to the name of the log and indexes
     val firstSegment = segments.head
     deleteCleanedFileIfExists(firstSegment.log.file)
@@ -514,6 +515,7 @@ private[log] class Cleaner(val id: Int,
     deleteCleanedFileIfExists(firstSegment.txnIndex.file)
 
     val baseOffset = firstSegment.baseOffset
+
     val cleaned = LogSegment.open(log.dir, baseOffset, log.config, time, fileSuffix = Log.CleanedFileSuffix,
       initFileSize = log.initFileSize, preallocate = log.config.preallocate)
 
@@ -550,6 +552,9 @@ private[log] class Cleaner(val id: Int,
       // swap in new segment
       info(s"Swapping in cleaned segment ${cleaned.baseOffset} for segment(s) ${segments.map(_.baseOffset).mkString(",")} " +
         s"in log ${log.name}")
+      //首先会将文件的后缀名由".cleaned"修改为".swap"
+      //并见cleaned对象加入到Segment跳跃表管理
+      //之后将分组中的Logsegment从segments中删除
       log.replaceSegments(cleaned, segments)
     } catch {
       case e: LogCleaningAbortedException =>
@@ -636,10 +641,13 @@ private[log] class Cleaner(val id: Int,
           largestOffset = result.maxOffset,
           largestTimestamp = result.maxTimestamp,
           shallowOffsetOfMaxTimestamp = result.shallowOffsetOfMaxTimestamp,
-          records = retained)
+          records = retained)k
         throttler.maybeThrottle(outputBuffer.limit())
       }
 
+      /**
+        * 没有读取到一个完整的消息，表示readbuffer过小，需要扩容
+        */
       // if we read bytes but didn't get even one complete message, our I/O buffer is too small, grow it and try again
       if (readBuffer.limit() > 0 && result.messagesRead == 0)
         growBuffers(maxLogMessageSize)
