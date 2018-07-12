@@ -641,7 +641,7 @@ private[log] class Cleaner(val id: Int,
           largestOffset = result.maxOffset,
           largestTimestamp = result.maxTimestamp,
           shallowOffsetOfMaxTimestamp = result.shallowOffsetOfMaxTimestamp,
-          records = retained)k
+          records = retained)
         throttler.maybeThrottle(outputBuffer.limit())
       }
 
