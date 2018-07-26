@@ -33,13 +33,25 @@ public final class Sensor {
 
     private final Metrics registry;
     private final String name;
+
+    /**
+     * 当前Sensor对象的父sensor
+     */
     private final Sensor[] parents;
+
+    /**
+     * sensor的度量对象
+     */
     private final List<Stat> stats;
     private final List<KafkaMetric> metrics;
     private final MetricConfig config;
     private final Time time;
     private final long inactiveSensorExpirationTimeMs;
     private final RecordingLevel recordingLevel;
+
+    /**
+     * 最后一次执行record的时间戳
+     */
     private volatile long lastRecordTime;
 
     Sensor(Metrics registry, String name, Sensor[] parents, MetricConfig config, Time time,
@@ -117,11 +129,21 @@ public final class Sensor {
 
     public void record(double value, long timeMs, boolean checkQuotas) {
         if (shouldRecord()) {
+            /**
+             * 更新时间
+             */
             this.lastRecordTime = timeMs;
             synchronized (this) {
+                /**
+                 * 调用stat集合的每一个Stat对象的record方法
+                 */
                 // increment all the stats
                 for (Stat stat : this.stats)
                     stat.record(config, value, timeMs);
+
+                /**
+                 * 检查是否超出了MetricConfig的上下限
+                 */
                 if (checkQuotas)
                     checkQuotas(timeMs);
             }

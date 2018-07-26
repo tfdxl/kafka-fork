@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
+ * 采样统计，可以根据事件的数量或者时间
  * A SampledStat records a single scalar value measured over one or more samples. Each sample is recorded over a
  * configurable window. The window can be defined by number of events or elapsed time (or both, if both are given the
  * window is complete when <i>either</i> the event count or elapsed time criterion is met).
@@ -40,7 +41,7 @@ public abstract class SampledStat implements MeasurableStat {
 
     public SampledStat(double initialValue) {
         this.initialValue = initialValue;
-        this.samples = new ArrayList<Sample>(2);
+        this.samples = new ArrayList<>(2);
     }
 
     @Override

@@ -63,6 +63,7 @@ public class ChannelState {
     public static final ChannelState EXPIRED = new ChannelState(State.EXPIRED);
     public static final ChannelState FAILED_SEND = new ChannelState(State.FAILED_SEND);
     public static final ChannelState LOCAL_CLOSE = new ChannelState(State.LOCAL_CLOSE);
+
     private final State state;
     private final AuthenticationException exception;
 
