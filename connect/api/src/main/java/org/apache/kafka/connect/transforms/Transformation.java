@@ -24,7 +24,7 @@ import java.io.Closeable;
 
 /**
  * Single message transformation for Kafka Connect record types.
- *
+ * <p>
  * Connectors can be configured with transformations to make lightweight message-at-a-time modifications.
  */
 public interface Transformation<R extends ConnectRecord<R>> extends Configurable, Closeable {
@@ -32,15 +32,19 @@ public interface Transformation<R extends ConnectRecord<R>> extends Configurable
     /**
      * Apply transformation to the {@code record} and return another record object (which may be {@code record} itself) or {@code null},
      * corresponding to a map or filter operation respectively.
-     *
+     * <p>
      * The implementation must be thread-safe.
      */
     R apply(R record);
 
-    /** Configuration specification for this transformation. **/
+    /**
+     * Configuration specification for this transformation.
+     **/
     ConfigDef config();
 
-    /** Signal that this transformation instance will no longer will be used. **/
+    /**
+     * Signal that this transformation instance will no longer will be used.
+     **/
     @Override
     void close();
 

@@ -1,59 +1,67 @@
 /**
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+  * Licensed to the Apache Software Foundation (ASF) under one or more
+  * contributor license agreements.  See the NOTICE file distributed with
+  * this work for additional information regarding copyright ownership.
+  * The ASF licenses this file to You under the Apache License, Version 2.0
+  * (the "License"); you may not use this file except in compliance with
+  * the License.  You may obtain a copy of the License at
+  *
+  * http://www.apache.org/licenses/LICENSE-2.0
+  *
+  * Unless required by applicable law or agreed to in writing, software
+  * distributed under the License is distributed on an "AS IS" BASIS,
+  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  * See the License for the specific language governing permissions and
+  * limitations under the License.
+  */
 
 package kafka.log
 
 import java.io.File
 import java.nio.ByteBuffer
 
-import kafka.utils.CoreUtils.inLock
 import kafka.common.InvalidOffsetException
+import kafka.utils.CoreUtils.inLock
 
 /**
- * An index that maps offsets to physical file locations for a particular log segment. This index may be sparse:
- * that is it may not hold an entry for all messages in the log.
- *
- * The index is stored in a file that is pre-allocated to hold a fixed maximum number of 8-byte entries.
- *
- * The index supports lookups against a memory-map of this file. These lookups are done using a simple binary search variant
- * to locate the offset/location pair for the greatest offset less than or equal to the target offset.
- *
- * Index files can be opened in two ways: either as an empty, mutable index that allows appends or
- * an immutable read-only index file that has previously been populated. The makeReadOnly method will turn a mutable file into an
- * immutable one and truncate off any extra bytes. This is done when the index file is rolled over.
- *
- * No attempt is made to checksum the contents of this file, in the event of a crash it is rebuilt.
- *
- * The file format is a series of entries. The physical format is a 4 byte "relative" offset and a 4 byte file location for the
- * message with that offset. The offset stored is relative to the base offset of the index file. So, for example,
- * if the base offset was 50, then the offset 55 would be stored as 5. Using relative offsets in this way let's us use
- * only 4 bytes for the offset.
- *
- * The frequency of entries is up to the user of this class.
- *
- * All external APIs translate from relative offsets to full offsets, so users of this class do not interact with the internal
- * storage format.
- */
+  * 对应了磁盘上的一个索引文件
+  * An index that maps offsets to physical file locations for a particular log segment. This index may be sparse:
+  * that is it may not hold an entry for all messages in the log.
+  *
+  * The index is stored in a file that is pre-allocated to hold a fixed maximum number of 8-byte entries.
+  *
+  * The index supports lookups against a memory-map of this file. These lookups are done using a simple binary search variant
+  * to locate the offset/location pair for the greatest offset less than or equal to the target offset.
+  *
+  * Index files can be opened in two ways: either as an empty, mutable index that allows appends or
+  * an immutable read-only index file that has previously been populated. The makeReadOnly method will turn a mutable file into an
+  * immutable one and truncate off any extra bytes. This is done when the index file is rolled over.
+  *
+  * No attempt is made to checksum the contents of this file, in the event of a crash it is rebuilt.
+  *
+  * The file format is a series of entries. The physical format is a 4 byte "relative" offset and a 4 byte file location for the
+  * message with that offset. The offset stored is relative to the base offset of the index file. So, for example,
+  * if the base offset was 50, then the offset 55 would be stored as 5. Using relative offsets in this way let's us use
+  * only 4 bytes for the offset.
+  *
+  * The frequency of entries is up to the user of this class.
+  *
+  * All external APIs translate from relative offsets to full offsets, so users of this class do not interact with the internal
+  * storage format.
+  */
 // Avoid shadowing mutable `file` in AbstractIndex
 class OffsetIndex(_file: File, baseOffset: Long, maxIndexSize: Int = -1, writable: Boolean = true)
-    extends AbstractIndex[Long, Int](_file, baseOffset, maxIndexSize, writable) {
+  extends AbstractIndex[Long, Int](_file, baseOffset, maxIndexSize, writable) {
 
+  /**
+    * 每一个节点都是8字节，4个字节的offset,以及4个字节的postition位置
+    * @return
+    */
   override def entrySize = 8
 
+  /**
+    * 最后一个索引项的offset
+    */
   /* the last offset in the index */
   private[this] var _lastOffset = lastEntry.offset
 
@@ -61,8 +69,8 @@ class OffsetIndex(_file: File, baseOffset: Long, maxIndexSize: Int = -1, writabl
     .format(file.getAbsolutePath, maxEntries, maxIndexSize, _entries, _lastOffset, mmap.position()))
 
   /**
-   * The last entry in the index
-   */
+    * The last entry in the index
+    */
   private def lastEntry: OffsetPosition = {
     inLock(lock) {
       _entries match {
@@ -75,19 +83,21 @@ class OffsetIndex(_file: File, baseOffset: Long, maxIndexSize: Int = -1, writabl
   def lastOffset: Long = _lastOffset
 
   /**
-   * Find the largest offset less than or equal to the given targetOffset
-   * and return a pair holding this offset and its corresponding physical file position.
-   *
-   * @param targetOffset The offset to look up.
-   * @return The offset found and the corresponding file position for this offset
-   *         If the target offset is smaller than the least entry in the index (or the index is empty),
-   *         the pair (baseOffset, 0) is returned.
-   */
+    * 查找小于targetOffset的最大的offset对应的position
+    * Find the largest offset less than or equal to the given targetOffset
+    * and return a pair holding this offset and its corresponding physical file position.
+    *
+    * @param targetOffset The offset to look up.
+    * @return The offset found and the corresponding file position for this offset
+    *         If the target offset is smaller than the least entry in the index (or the index is empty),
+    *         the pair (baseOffset, 0) is returned.
+    */
   def lookup(targetOffset: Long): OffsetPosition = {
     maybeLock(lock) {
+      //创建一个副本
       val idx = mmap.duplicate
       val slot = largestLowerBoundSlotFor(idx, targetOffset, IndexSearchType.KEY)
-      if(slot == -1)
+      if (slot == -1)
         OffsetPosition(baseOffset, 0)
       else
         parseEntry(idx, slot).asInstanceOf[OffsetPosition]
@@ -95,10 +105,10 @@ class OffsetIndex(_file: File, baseOffset: Long, maxIndexSize: Int = -1, writabl
   }
 
   /**
-   * Find an upper bound offset for the given fetch starting position and size. This is an offset which
-   * is guaranteed to be outside the fetched range, but note that it will not generally be the smallest
-   * such offset.
-   */
+    * Find an upper bound offset for the given fetch starting position and size. This is an offset which
+    * is guaranteed to be outside the fetched range, but note that it will not generally be the smallest
+    * such offset.
+    */
   def fetchUpperBoundOffset(fetchOffset: OffsetPosition, fetchSize: Int): Option[OffsetPosition] = {
     maybeLock(lock) {
       val idx = mmap.duplicate
@@ -115,17 +125,18 @@ class OffsetIndex(_file: File, baseOffset: Long, maxIndexSize: Int = -1, writabl
   private def physical(buffer: ByteBuffer, n: Int): Int = buffer.getInt(n * entrySize + 4)
 
   override def parseEntry(buffer: ByteBuffer, n: Int): IndexEntry = {
-      OffsetPosition(baseOffset + relativeOffset(buffer, n), physical(buffer, n))
+    OffsetPosition(baseOffset + relativeOffset(buffer, n), physical(buffer, n))
   }
 
   /**
-   * Get the nth offset mapping from the index
-   * @param n The entry number in the index
-   * @return The offset/position pair at that entry
-   */
+    * Get the nth offset mapping from the index
+    *
+    * @param n The entry number in the index
+    * @return The offset/position pair at that entry
+    */
   def entry(n: Int): OffsetPosition = {
     maybeLock(lock) {
-      if(n >= _entries)
+      if (n >= _entries)
         throw new IllegalArgumentException("Attempt to fetch the %dth entry from an index of size %d.".format(n, _entries))
       val idx = mmap.duplicate
       OffsetPosition(relativeOffset(idx, n), physical(idx, n))
@@ -133,17 +144,18 @@ class OffsetIndex(_file: File, baseOffset: Long, maxIndexSize: Int = -1, writabl
   }
 
   /**
-   * Append an entry for the given offset/location pair to the index. This entry must have a larger offset than all subsequent entries.
-   */
+    * Append an entry for the given offset/location pair to the index. This entry must have a larger offset than all subsequent entries.
+    */
   def append(offset: Long, position: Int) {
+    //先获取到锁
     inLock(lock) {
       require(!isFull, "Attempt to append to a full index (size = " + _entries + ").")
       if (_entries == 0 || offset > _lastOffset) {
         debug("Adding index entry %d => %d to %s.".format(offset, position, file.getName))
         mmap.putInt((offset - baseOffset).toInt)
         mmap.putInt(position)
-        _entries += 1
-        _lastOffset = offset
+        _entries += 1//节点+1
+        _lastOffset = offset//最后一个offset
         require(_entries * entrySize == mmap.position(), entries + " entries but file position in index is " + mmap.position() + ".")
       } else {
         throw new InvalidOffsetException("Attempt to append an offset (%d) to position %d no larger than the last offset appended (%d) to %s."
@@ -165,9 +177,9 @@ class OffsetIndex(_file: File, baseOffset: Long, maxIndexSize: Int = -1, writabl
        * 3) if there is no entry for this offset, delete everything larger than the next smallest
        */
       val newEntries =
-        if(slot < 0)
+        if (slot < 0)
           0
-        else if(relativeOffset(idx, slot) == offset - baseOffset)
+        else if (relativeOffset(idx, slot) == offset - baseOffset)
           slot
         else
           slot + 1
@@ -176,8 +188,8 @@ class OffsetIndex(_file: File, baseOffset: Long, maxIndexSize: Int = -1, writabl
   }
 
   /**
-   * Truncates index to a known number of entries.
-   */
+    * Truncates index to a known number of entries.
+    */
   private def truncateToEntries(entries: Int) {
     inLock(lock) {
       _entries = entries

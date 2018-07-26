@@ -23,22 +23,22 @@ import java.util.TimeZone;
 
 /**
  * <p>
- *     A date representing a calendar day with no time of day or timezone. The corresponding Java type is a java.util.Date
- *     with hours, minutes, seconds, milliseconds set to 0. The underlying representation is an integer representing the
- *     number of standardized days (based on a number of milliseconds with 24 hours/day, 60 minutes/hour, 60 seconds/minute,
- *     1000 milliseconds/second with n) since Unix epoch.
+ * A date representing a calendar day with no time of day or timezone. The corresponding Java type is a java.util.Date
+ * with hours, minutes, seconds, milliseconds set to 0. The underlying representation is an integer representing the
+ * number of standardized days (based on a number of milliseconds with 24 hours/day, 60 minutes/hour, 60 seconds/minute,
+ * 1000 milliseconds/second with n) since Unix epoch.
  * </p>
  */
 public class Date {
     public static final String LOGICAL_NAME = "org.apache.kafka.connect.data.Date";
-
+    public static final Schema SCHEMA = builder().schema();
     private static final long MILLIS_PER_DAY = 24 * 60 * 60 * 1000;
-
     private static final TimeZone UTC = TimeZone.getTimeZone("UTC");
 
     /**
      * Returns a SchemaBuilder for a Date. By returning a SchemaBuilder you can override additional schema settings such
      * as required/optional, default value, and documentation.
+     *
      * @return a SchemaBuilder
      */
     public static SchemaBuilder builder() {
@@ -47,10 +47,9 @@ public class Date {
                 .version(1);
     }
 
-    public static final Schema SCHEMA = builder().schema();
-
     /**
      * Convert a value from its logical format (Date) to it's encoded format.
+     *
      * @param value the logical value
      * @return the encoded value
      */

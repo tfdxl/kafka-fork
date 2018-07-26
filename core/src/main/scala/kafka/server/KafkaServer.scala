@@ -99,6 +99,7 @@ object KafkaServer {
  */
 class KafkaServer(val config: KafkaConfig, time: Time = Time.SYSTEM, threadNamePrefix: Option[String] = None,
                   kafkaMetricsReporters: Seq[KafkaMetricsReporter] = List()) extends Logging with KafkaMetricsGroup {
+  //启动有没有完成
   private val startupComplete = new AtomicBoolean(false)
   private val isShuttingDown = new AtomicBoolean(false)
   private val isStartingUp = new AtomicBoolean(false)
@@ -113,14 +114,20 @@ class KafkaServer(val config: KafkaConfig, time: Time = Time.SYSTEM, threadNameP
 
   val brokerState: BrokerState = new BrokerState
 
+  //卡夫卡的api处理
   var apis: KafkaApis = null
   var authorizer: Option[Authorizer] = None
+
+  //真正的socketServer
   var socketServer: SocketServer = null
   var requestHandlerPool: KafkaRequestHandlerPool = null
 
   var logDirFailureChannel: LogDirFailureChannel = null
+
+  //log管理
   var logManager: LogManager = null
 
+  //副本管理
   var replicaManager: ReplicaManager = null
   var adminManager: AdminManager = null
   var tokenManager: DelegationTokenManager = null
@@ -186,7 +193,7 @@ class KafkaServer(val config: KafkaConfig, time: Time = Time.SYSTEM, threadNameP
    */
   def startup() {
     try {
-      info("starting")
+      info("Monlie kafka is staring ...")
 
       if (isShuttingDown.get)
         throw new IllegalStateException("Kafka server is still shutting down, cannot re-start!")

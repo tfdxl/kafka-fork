@@ -30,7 +30,7 @@ public interface SinkTaskContext {
      * in the sink data store rather than using Kafka consumer offsets. For example, an HDFS connector might record
      * offsets in HDFS to provide exactly once delivery. When the SinkTask is started or a rebalance occurs, the task
      * would reload offsets from HDFS and use this method to reset the consumer to those offsets.
-     *
+     * <p>
      * SinkTasks that do not manage their own offsets do not need to use this method.
      *
      * @param offsets map of offsets for topic partitions
@@ -42,10 +42,10 @@ public interface SinkTaskContext {
      * in the sink data store rather than using Kafka consumer offsets. For example, an HDFS connector might record
      * offsets in HDFS to provide exactly once delivery. When the topic partition is recovered the task
      * would reload offsets from HDFS and use this method to reset the consumer to the offset.
-     *
+     * <p>
      * SinkTasks that do not manage their own offsets do not need to use this method.
      *
-     * @param tp the topic partition to reset offset.
+     * @param tp     the topic partition to reset offset.
      * @param offset the offset to reset to.
      */
     void offset(TopicPartition tp, long offset);
@@ -55,24 +55,28 @@ public interface SinkTaskContext {
      * operations after the timeout. SinkTasks may have certain operations on external systems that may need
      * to retry in case of failures. For example, append a record to an HDFS file may fail due to temporary network
      * issues. SinkTasks use this method to set how long to wait before retrying.
+     *
      * @param timeoutMs the backoff timeout in milliseconds.
      */
     void timeout(long timeoutMs);
 
     /**
      * Get the current set of assigned TopicPartitions for this task.
+     *
      * @return the set of currently assigned TopicPartitions
      */
     Set<TopicPartition> assignment();
 
     /**
      * Pause consumption of messages from the specified TopicPartitions.
+     *
      * @param partitions the partitions which should be paused
      */
     void pause(TopicPartition... partitions);
 
     /**
      * Resume consumption of messages from previously paused TopicPartitions.
+     *
      * @param partitions the partitions to resume
      */
     void resume(TopicPartition... partitions);
@@ -80,7 +84,7 @@ public interface SinkTaskContext {
     /**
      * Request an offset commit. Sink tasks can use this to minimize the potential for redelivery
      * by requesting an offset commit as soon as they flush data to the destination system.
-     *
+     * <p>
      * It is only a hint to the runtime and no timing guarantee should be assumed.
      */
     void requestCommit();

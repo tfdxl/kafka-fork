@@ -41,6 +41,7 @@ public interface Task {
 
     /**
      * Start the Task
+     *
      * @param props initial configuration
      */
     void start(Map<String, String> props);

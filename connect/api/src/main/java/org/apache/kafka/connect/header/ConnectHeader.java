@@ -85,7 +85,7 @@ class ConnectHeader implements Header {
         if (obj instanceof Header) {
             Header that = (Header) obj;
             return Objects.equals(this.key, that.key()) && Objects.equals(this.schema(), that.schema()) && Objects.equals(this.value(),
-                                                                                                                          that.value());
+                    that.value());
         }
         return false;
     }

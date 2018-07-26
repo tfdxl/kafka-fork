@@ -31,6 +31,7 @@ import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
+ * 记录集实现，底层是文件
  * A {@link Records} implementation backed by a file. An optional start and end position can be applied to this
  * instance to enable slicing a range of the log records.
  */
@@ -44,6 +45,8 @@ public class FileRecords extends AbstractRecords implements Closeable {
     // mutable state
     private final AtomicInteger size;
     private final FileChannel channel;
+
+    //底层的日志文件
     private volatile File file;
 
     /**
@@ -182,8 +185,8 @@ public class FileRecords extends AbstractRecords implements Closeable {
      * <p>
      * If this message set is already sliced, the position will be taken relative to that slicing.
      *
-     * @param position The start position to begin the read from
-     * @param size     The number of bytes after the start position to include
+     * @param position The start position to begin the read from 开始读取的物理地址
+     * @param size     The number of bytes after the start position to include 起始位置开始读取的字节数
      * @return A sliced wrapper on this message set limited based on the given position and size
      */
     public FileRecords read(int position, int size) throws IOException {
@@ -191,7 +194,7 @@ public class FileRecords extends AbstractRecords implements Closeable {
             throw new IllegalArgumentException("Invalid position: " + position);
         if (size < 0)
             throw new IllegalArgumentException("Invalid size: " + size);
-
+        //计算结束地址
         int end = this.start + position + size;
         // handle integer overflow or if end is beyond the end of the file
         if (end < 0 || end >= start + sizeInBytes())
@@ -429,6 +432,9 @@ public class FileRecords extends AbstractRecords implements Closeable {
         return new RecordBatchIterator<>(inputStream);
     }
 
+    /**
+     * offset ---> position,size???
+     */
     public static class LogOffsetPosition {
         public final long offset;
         public final int position;

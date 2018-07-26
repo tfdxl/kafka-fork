@@ -40,9 +40,9 @@ import scala.collection.mutable.Set
   * A ZooKeeper client that encourages pipelined requests.
   *
   * @param connectString       comma separated host:port pairs, each corresponding to a zk server
-  * @param sessionTimeoutMs    session timeout in milliseconds
-  * @param connectionTimeoutMs connection timeout in milliseconds
-  * @param maxInFlightRequests maximum number of unacknowledged requests the client will send before blocking.
+  * @param sessionTimeoutMs    session timeout in milliseconds session过期的时间
+  * @param connectionTimeoutMs connection timeout in milliseconds 连接超时的时间
+  * @param maxInFlightRequests maximum number of unacknowledged requests the client will send before blocking.发送之前最多可以没有ack的请求
   */
 class ZooKeeperClient(connectString: String,
                       sessionTimeoutMs: Int,
@@ -56,6 +56,8 @@ class ZooKeeperClient(connectString: String,
   private val initializationLock = new ReentrantReadWriteLock()
   private val isConnectedOrExpiredLock = new ReentrantLock()
   private val isConnectedOrExpiredCondition = isConnectedOrExpiredLock.newCondition()
+
+  //znode变化的处理器
   private val zNodeChangeHandlers = new ConcurrentHashMap[String, ZNodeChangeHandler]().asScala
   private val zNodeChildChangeHandlers = new ConcurrentHashMap[String, ZNodeChildChangeHandler]().asScala
 
@@ -374,6 +376,9 @@ class ZooKeeperClient(connectString: String,
   }
 
   // package level visibility for testing only
+  /**
+    * 实现的watcher
+    */
   private[zookeeper] object ZooKeeperClientWatcher extends Watcher {
     override def process(event: WatchedEvent): Unit = {
       debug(s"Received event: $event")
@@ -406,8 +411,10 @@ class ZooKeeperClient(connectString: String,
 trait StateChangeHandler {
   val name: String
 
+  //初始化session之前
   def beforeInitializingSession(): Unit = {}
 
+  //初始化session之后
   def afterInitializingSession(): Unit = {}
 
   def onAuthFailure(): Unit = {}

@@ -19,10 +19,9 @@ package org.apache.kafka.connect.data;
 import java.util.Objects;
 
 public class SchemaAndValue {
+    public static final SchemaAndValue NULL = new SchemaAndValue(null, null);
     private final Schema schema;
     private final Object value;
-
-    public static final SchemaAndValue NULL = new SchemaAndValue(null, null);
 
     public SchemaAndValue(Schema schema, Object value) {
         this.value = value;

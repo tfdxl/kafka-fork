@@ -25,24 +25,66 @@ import kafka.utils._
 import org.apache.kafka.common.utils.Utils
 
 trait OffsetMap {
+
+  /**
+    * 槽的个数
+    *
+    * @return
+    */
   def slots: Int
 
+  /**
+    * 放入数据
+    *
+    * @param key
+    * @param offset
+    */
   def put(key: ByteBuffer, offset: Long)
 
+  /**
+    * 获取数据
+    *
+    * @param key
+    * @return
+    */
   def get(key: ByteBuffer): Long
 
+  /**
+    * 更新最新的offset
+    *
+    * @param offset
+    */
   def updateLatestOffset(offset: Long)
 
+  /**
+    * 清除哈希表
+    */
   def clear()
 
+  /**
+    * 节点的个数
+    *
+    * @return
+    */
   def size: Int
 
+  /**
+    * 哈希表的使用率
+    *
+    * @return
+    */
   def utilization: Double = size.toDouble / slots
 
+  /**
+    * 获取最新的offset
+    *
+    * @return
+    */
   def latestOffset: Long
 }
 
 /**
+  * 一个用户复制日志的哈希表
   * An hash table used for deduplicating the log. This hash table uses a cryptographicly secure hash of the key as a proxy for the key
   * for comparisons and to save space on object overhead. Collisions are resolved by probing. This hash table does not support deletes.
   *
@@ -51,14 +93,24 @@ trait OffsetMap {
   */
 @nonthreadsafe
 class SkimpyOffsetMap(val memory: Int, val hashAlgorithm: String = "MD5") extends OffsetMap {
+
+  /**
+    * 分配的内存
+    */
   private val bytes = ByteBuffer.allocate(memory)
 
+  /**
+    * 哈希算法
+    */
   /* the hash algorithm instance to use, default is MD5 */
   private val digest = MessageDigest.getInstance(hashAlgorithm)
 
   /* the number of bytes for this hash algorithm */
   private val hashSize = digest.getDigestLength
 
+  /**
+    * 创建哈希的缓冲区从而避免每次都分配
+    */
   /* create some hash buffers to avoid reallocating each time */
   private val hash1 = new Array[Byte](hashSize)
   private val hash2 = new Array[Byte](hashSize)
@@ -81,6 +133,7 @@ class SkimpyOffsetMap(val memory: Int, val hashAlgorithm: String = "MD5") extend
   val bytesPerEntry = hashSize + 8
 
   /**
+    * 使用的内存/每一个节点的大下
     * The maximum number of entries this map can contain
     */
   val slots: Int = memory / bytesPerEntry
@@ -179,6 +232,11 @@ class SkimpyOffsetMap(val memory: Int, val hashAlgorithm: String = "MD5") extend
     */
   override def latestOffset: Long = lastOffset
 
+  /**
+    * 最后的offset
+    *
+    * @param offset
+    */
   override def updateLatestOffset(offset: Long): Unit = {
     lastOffset = offset
   }

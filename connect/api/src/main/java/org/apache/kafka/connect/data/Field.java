@@ -20,7 +20,7 @@ import java.util.Objects;
 
 /**
  * <p>
- *     A field in a {@link Struct}, consisting of a field name, index, and {@link Schema} for the field value.
+ * A field in a {@link Struct}, consisting of a field name, index, and {@link Schema} for the field value.
  * </p>
  */
 public class Field {
@@ -36,6 +36,7 @@ public class Field {
 
     /**
      * Get the name of this field.
+     *
      * @return the name of this field
      */
     public String name() {
@@ -45,6 +46,7 @@ public class Field {
 
     /**
      * Get the index of this field within the struct.
+     *
      * @return the index of this field
      */
     public int index() {
@@ -53,6 +55,7 @@ public class Field {
 
     /**
      * Get the schema of this field
+     *
      * @return the schema of values of this field
      */
     public Schema schema() {

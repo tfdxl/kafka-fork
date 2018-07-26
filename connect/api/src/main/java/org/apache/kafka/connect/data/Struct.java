@@ -26,13 +26,13 @@ import java.util.Objects;
 
 /**
  * <p>
- *     A structured record containing a set of named fields with values, each field using an independent {@link Schema}.
- *     Struct objects must specify a complete {@link Schema} up front, and only fields specified in the Schema may be set.
+ * A structured record containing a set of named fields with values, each field using an independent {@link Schema}.
+ * Struct objects must specify a complete {@link Schema} up front, and only fields specified in the Schema may be set.
  * </p>
  * <p>
- *     The Struct's {@link #put(String, Object)} method returns the Struct itself to provide a fluent API for constructing
- *     complete objects:
- *     <pre>
+ * The Struct's {@link #put(String, Object)} method returns the Struct itself to provide a fluent API for constructing
+ * complete objects:
+ * <pre>
  *         Schema schema = SchemaBuilder.struct().name("com.example.Person")
  *             .field("name", Schema.STRING_SCHEMA).field("age", Schema.INT32_SCHEMA).build()
  *         Struct struct = new Struct(schema).put("name", "Bobby McGee").put("age", 21)
@@ -46,6 +46,7 @@ public class Struct {
 
     /**
      * Create a new Struct for this {@link Schema}
+     *
      * @param schema the {@link Schema} for the Struct
      */
     public Struct(Schema schema) {
@@ -57,6 +58,7 @@ public class Struct {
 
     /**
      * Get the schema for this Struct.
+     *
      * @return the Struct's schema
      */
     public Schema schema() {
@@ -67,6 +69,7 @@ public class Struct {
      * Get the value of a field, returning the default value if no value has been set yet and a default value is specified
      * in the field's schema. Because this handles fields of all types, the value is returned as an {@link Object} and
      * must be cast to a more specific type.
+     *
      * @param fieldName the field name to lookup
      * @return the value for the field
      */
@@ -79,6 +82,7 @@ public class Struct {
      * Get the value of a field, returning the default value if no value has been set yet and a default value is specified
      * in the field's schema. Because this handles fields of all types, the value is returned as an {@link Object} and
      * must be cast to a more specific type.
+     *
      * @param field the field to lookup
      * @return the value for the field
      */
@@ -92,6 +96,7 @@ public class Struct {
 
     /**
      * Get the underlying raw value for the field without accounting for default values.
+     *
      * @param fieldName the field to get the value of
      * @return the raw value
      */
@@ -194,8 +199,9 @@ public class Struct {
     /**
      * Set the value of a field. Validates the value, throwing a {@link DataException} if it does not match the field's
      * {@link Schema}.
+     *
      * @param fieldName the name of the field to set
-     * @param value the value of the field
+     * @param value     the value of the field
      * @return the Struct, to allow chaining of {@link #put(String, Object)} calls
      */
     public Struct put(String fieldName, Object value) {
@@ -206,6 +212,7 @@ public class Struct {
     /**
      * Set the value of a field. Validates the value, throwing a {@link DataException} if it does not match the field's
      * {@link Schema}.
+     *
      * @param field the field to set
      * @param value the value of the field
      * @return the Struct, to allow chaining of {@link #put(String, Object)} calls

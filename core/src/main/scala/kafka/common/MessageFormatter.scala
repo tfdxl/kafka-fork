@@ -32,6 +32,11 @@ trait MessageFormatter {
 
   def init(props: Properties) {}
 
+  /**
+    * 按照指定的格式进行输出
+    * @param consumerRecord
+    * @param output
+    */
   def writeTo(consumerRecord: ConsumerRecord[Array[Byte], Array[Byte]], output: PrintStream): Unit
 
   def close() {}

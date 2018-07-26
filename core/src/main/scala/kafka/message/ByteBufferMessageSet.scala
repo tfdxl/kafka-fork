@@ -1,19 +1,19 @@
 /**
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+  * Licensed to the Apache Software Foundation (ASF) under one or more
+  * contributor license agreements.  See the NOTICE file distributed with
+  * this work for additional information regarding copyright ownership.
+  * The ASF licenses this file to You under the Apache License, Version 2.0
+  * (the "License"); you may not use this file except in compliance with
+  * the License.  You may obtain a copy of the License at
+  *
+  * http://www.apache.org/licenses/LICENSE-2.0
+  *
+  * Unless required by applicable law or agreed to in writing, software
+  * distributed under the License is distributed on an "AS IS" BASIS,
+  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  * See the License for the specific language governing permissions and
+  * limitations under the License.
+  */
 
 package kafka.message
 
@@ -70,62 +70,63 @@ private class OffsetAssigner(offsets: Seq[Long]) {
 }
 
 /**
- * A sequence of messages stored in a byte buffer
- *
- * There are two ways to create a ByteBufferMessageSet
- *
- * Option 1: From a ByteBuffer which already contains the serialized message set. Consumers will use this method.
- *
- * Option 2: Give it a list of messages along with instructions relating to serialization format. Producers will use this method.
- *
- *
- * Message format v1 has the following changes:
- * - For non-compressed messages, timestamp and timestamp type attributes have been added. The offsets of
- *   the messages remain absolute offsets.
- * - For compressed messages, timestamp and timestamp type attributes have been added and inner offsets (IO) are used
- *   for inner messages of compressed messages (see offset calculation details below). The timestamp type
- *   attribute is only set in wrapper messages. Inner messages always have CreateTime as the timestamp type in attributes.
- *
- * We set the timestamp in the following way:
- * For non-compressed messages: the timestamp and timestamp type message attributes are set and used.
- * For compressed messages:
- * 1. Wrapper messages' timestamp type attribute is set to the proper value
- * 2. Wrapper messages' timestamp is set to:
- *    - the max timestamp of inner messages if CreateTime is used
- *    - the current server time if wrapper message's timestamp = LogAppendTime.
- *      In this case the wrapper message timestamp is used and all the timestamps of inner messages are ignored.
- * 3. Inner messages' timestamp will be:
- *    - used when wrapper message's timestamp type is CreateTime
- *    - ignored when wrapper message's timestamp type is LogAppendTime
- * 4. Inner messages' timestamp type will always be ignored with one exception: producers must set the inner message
- *    timestamp type to CreateTime, otherwise the messages will be rejected by broker.
- *
- * Absolute offsets are calculated in the following way:
- * Ideally the conversion from relative offset(RO) to absolute offset(AO) should be:
- *
- * AO = AO_Of_Last_Inner_Message + RO
- *
- * However, note that the message sets sent by producers are compressed in a streaming way.
- * And the relative offset of an inner message compared with the last inner message is not known until
- * the last inner message is written.
- * Unfortunately we are not able to change the previously written messages after the last message is written to
- * the message set when stream compression is used.
- *
- * To solve this issue, we use the following solution:
- *
- * 1. When the producer creates a message set, it simply writes all the messages into a compressed message set with
- *    offset 0, 1, ... (inner offset).
- * 2. The broker will set the offset of the wrapper message to the absolute offset of the last message in the
- *    message set.
- * 3. When a consumer sees the message set, it first decompresses the entire message set to find out the inner
- *    offset (IO) of the last inner message. Then it computes RO and AO of previous messages:
- *
- *    RO = IO_of_a_message - IO_of_the_last_message
- *    AO = AO_Of_Last_Inner_Message + RO
- *
- * 4. This solution works for compacted message sets as well.
- *
- */
+  * 一个序列的消息，存储在字节缓存中
+  * A sequence of messages stored in a byte buffer
+  * 有两种方式创建ByteBufferMesageSet
+  * There are two ways to create a ByteBufferMessageSet
+  * 1.从一个字节缓存中，里面已经包含了序列化的消息
+  * Option 1: From a ByteBuffer which already contains the serialized message set. Consumers will use this method.
+  *
+  * Option 2: Give it a list of messages along with instructions relating to serialization format. Producers will use this method.
+  *
+  *
+  * Message format v1 has the following changes:
+  * - For non-compressed messages, timestamp and timestamp type attributes have been added. The offsets of
+  * the messages remain absolute offsets.
+  * - For compressed messages, timestamp and timestamp type attributes have been added and inner offsets (IO) are used
+  * for inner messages of compressed messages (see offset calculation details below). The timestamp type
+  * attribute is only set in wrapper messages. Inner messages always have CreateTime as the timestamp type in attributes.
+  *
+  * We set the timestamp in the following way:
+  * For non-compressed messages: the timestamp and timestamp type message attributes are set and used.
+  * For compressed messages:
+  * 1. Wrapper messages' timestamp type attribute is set to the proper value
+  * 2. Wrapper messages' timestamp is set to:
+  *    - the max timestamp of inner messages if CreateTime is used
+  *    - the current server time if wrapper message's timestamp = LogAppendTime.
+  * In this case the wrapper message timestamp is used and all the timestamps of inner messages are ignored.
+  * 3. Inner messages' timestamp will be:
+  *    - used when wrapper message's timestamp type is CreateTime
+  *    - ignored when wrapper message's timestamp type is LogAppendTime
+  * 4. Inner messages' timestamp type will always be ignored with one exception: producers must set the inner message
+  * timestamp type to CreateTime, otherwise the messages will be rejected by broker.
+  *
+  * Absolute offsets are calculated in the following way:
+  * Ideally the conversion from relative offset(RO) to absolute offset(AO) should be:
+  *
+  * AO = AO_Of_Last_Inner_Message + RO
+  *
+  * However, note that the message sets sent by producers are compressed in a streaming way.
+  * And the relative offset of an inner message compared with the last inner message is not known until
+  * the last inner message is written.
+  * Unfortunately we are not able to change the previously written messages after the last message is written to
+  * the message set when stream compression is used.
+  *
+  * To solve this issue, we use the following solution:
+  *
+  * 1. When the producer creates a message set, it simply writes all the messages into a compressed message set with
+  * offset 0, 1, ... (inner offset).
+  * 2. The broker will set the offset of the wrapper message to the absolute offset of the last message in the
+  * message set.
+  * 3. When a consumer sees the message set, it first decompresses the entire message set to find out the inner
+  * offset (IO) of the last inner message. Then it computes RO and AO of previous messages:
+  *
+  * RO = IO_of_a_message - IO_of_the_last_message
+  * AO = AO_Of_Last_Inner_Message + RO
+  *
+  * 4. This solution works for compacted message sets as well.
+  *
+  */
 class ByteBufferMessageSet(val buffer: ByteBuffer) extends MessageSet with Logging {
 
   private[kafka] def this(compressionCodec: CompressionCodec,
@@ -133,16 +134,16 @@ class ByteBufferMessageSet(val buffer: ByteBuffer) extends MessageSet with Loggi
                           timestampType: TimestampType,
                           messages: Message*) {
     this(ByteBufferMessageSet.create(OffsetAssigner(offsetCounter, messages.size), compressionCodec,
-      timestampType, messages:_*))
+      timestampType, messages: _*))
   }
 
   def this(compressionCodec: CompressionCodec, offsetCounter: LongRef, messages: Message*) {
-    this(compressionCodec, offsetCounter, TimestampType.CREATE_TIME, messages:_*)
+    this(compressionCodec, offsetCounter, TimestampType.CREATE_TIME, messages: _*)
   }
 
   def this(compressionCodec: CompressionCodec, offsetSeq: Seq[Long], messages: Message*) {
     this(ByteBufferMessageSet.create(new OffsetAssigner(offsetSeq), compressionCodec,
-      TimestampType.CREATE_TIME, messages:_*))
+      TimestampType.CREATE_TIME, messages: _*))
   }
 
   def this(compressionCodec: CompressionCodec, messages: Message*) {
@@ -172,18 +173,18 @@ class ByteBufferMessageSet(val buffer: ByteBuffer) extends MessageSet with Loggi
   }
 
   /**
-   * The total number of bytes in this message set, including any partial trailing messages
-   */
+    * The total number of bytes in this message set, including any partial trailing messages
+    */
   def sizeInBytes: Int = buffer.limit()
 
   /**
-   * The total number of bytes in this message set not including any partial, trailing messages
-   */
+    * The total number of bytes in this message set not including any partial, trailing messages
+    */
   def validBytes: Int = asRecords.validBytes
 
   /**
-   * Two message sets are equal if their respective byte buffers are equal
-   */
+    * Two message sets are equal if their respective byte buffers are equal
+    */
   override def equals(other: Any): Boolean = {
     other match {
       case that: ByteBufferMessageSet =>

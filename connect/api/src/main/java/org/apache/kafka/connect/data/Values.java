@@ -25,19 +25,8 @@ import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
 import java.nio.ByteBuffer;
-import java.text.CharacterIterator;
-import java.text.DateFormat;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.text.StringCharacterIterator;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.TimeZone;
+import java.text.*;
+import java.util.*;
 
 /**
  * Utility for converting from one Connect value to a different form. This is useful when the caller expects a value of a particular type
@@ -891,7 +880,7 @@ public class Values {
             switch (previous.type()) {
                 case INT8:
                     if (newType == Type.INT16 || newType == Type.INT32 || newType == Type.INT64 || newType == Type.FLOAT32 || newType ==
-                                                                                                                              Type.FLOAT64) {
+                            Type.FLOAT64) {
                         return newSchema;
                     }
                     break;
@@ -929,7 +918,7 @@ public class Values {
                     break;
                 case FLOAT64:
                     if (newType == Type.INT8 || newType == Type.INT16 || newType == Type.INT32 || newType == Type.INT64 || newType ==
-                                                                                                                           Type.FLOAT32) {
+                            Type.FLOAT32) {
                         return previous;
                     }
                     break;

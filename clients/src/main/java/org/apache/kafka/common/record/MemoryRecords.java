@@ -469,8 +469,9 @@ public class MemoryRecords extends AbstractRecords {
      * @return The number of valid bytes
      */
     public int validBytes() {
-        if (validBytes >= 0)
+        if (validBytes >= 0) {
             return validBytes;
+        }
 
         int bytes = 0;
         for (RecordBatch batch : batches())
@@ -567,7 +568,8 @@ public class MemoryRecords extends AbstractRecords {
         return buffer.hashCode();
     }
 
-    public static abstract class RecordFilter {
+    public static abstract class
+    RecordFilter {
         /**
          * Check whether the full batch can be discarded (i.e. whether we even need to
          * check the records individually).

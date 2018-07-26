@@ -498,7 +498,7 @@ public final class Utils {
      *
      * @param filename The path of the file to read
      */
-    public static Properties loadProps(String filename) throws IOException, FileNotFoundException {
+    public static Properties loadProps(String filename) throws IOException {
         Properties props = new Properties();
         try (InputStream propStream = new FileInputStream(filename)) {
             props.load(propStream);

@@ -54,6 +54,7 @@ public abstract class Connector {
     /**
      * Initialize this connector, using the provided ConnectorContext to notify the runtime of
      * input configuration changes.
+     *
      * @param ctx context object used to interact with the Kafka Connect runtime
      */
     public void initialize(ConnectorContext ctx) {
@@ -72,7 +73,7 @@ public abstract class Connector {
      * implement special handling of this case if it will avoid unnecessary changes to running Tasks.
      * </p>
      *
-     * @param ctx context object used to interact with the Kafka Connect runtime
+     * @param ctx         context object used to interact with the Kafka Connect runtime
      * @param taskConfigs existing task configurations, which may be used when generating new task configs to avoid
      *                    churn in partition to task assignments
      */
@@ -124,6 +125,7 @@ public abstract class Connector {
 
     /**
      * Validate the connector configuration values against configuration definitions.
+     *
      * @param connectorConfigs the provided configuration values
      * @return List of Config, each Config contains the updated configuration information given
      * the current configuration values.
@@ -136,6 +138,7 @@ public abstract class Connector {
 
     /**
      * Define the configuration for the connector.
+     *
      * @return The ConfigDef for this connector.
      */
     public abstract ConfigDef config();

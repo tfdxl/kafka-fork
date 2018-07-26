@@ -46,6 +46,8 @@ import scala.collection.mutable.HashMap
 import scala.util.control.ControlThrowable
 
 /**
+  * 主要实现kafka集群的数据同步
+  * 原理：通过消费者从源集群中获取消息，再通过生产者追加到目的集群
   * The mirror maker has the following architecture:
   * N个镜像制造线程
   * - There are N mirror maker thread shares one ZookeeperConsumerConnector and each owns a Kafka stream.
@@ -66,11 +68,14 @@ import scala.util.control.ControlThrowable
 object MirrorMaker extends Logging with KafkaMetricsGroup {
 
   private[tools] var producer: MirrorMakerProducer = null
+  //线程的集合
   private var mirrorMakerThreads: Seq[MirrorMakerThread] = null
   private val isShuttingDown: AtomicBoolean = new AtomicBoolean(false)
   // Track the messages not successfully sent by mirror maker.
+  //记录MifforMaker发送失败的消息的个数
   private val numDroppedMessages: AtomicInteger = new AtomicInteger(0)
   private var messageHandler: MirrorMakerMessageHandler = null
+  //也就是生产者进行flush操作和提交offset的周期
   private var offsetCommitIntervalMs = 0
   private var abortOnSendFailure: Boolean = true
   @volatile private var exitingOnSendFailure: Boolean = false
@@ -392,7 +397,9 @@ object MirrorMaker extends Logging with KafkaMetricsGroup {
       // Shutdown consumer threads.
       info("Shutting down consumer threads.")
       if (mirrorMakerThreads != null) {
+        //关闭
         mirrorMakerThreads.foreach(_.shutdown())
+        //要等待关闭
         mirrorMakerThreads.foreach(_.awaitShutdown())
       }
       info("Closing producer.")
@@ -411,6 +418,7 @@ object MirrorMaker extends Logging with KafkaMetricsGroup {
   //继承了Thread和
   class MirrorMakerThread(mirrorMakerConsumer: MirrorMakerBaseConsumer,
                           val threadId: Int) extends Thread with Logging with KafkaMetricsGroup {
+    //线程的烂名字
     private val threadName = "mirrormaker-thread-" + threadId
     private val shutdownLatch: CountDownLatch = new CountDownLatch(1)
     private var lastOffsetCommitMs = System.currentTimeMillis()
@@ -422,6 +430,7 @@ object MirrorMaker extends Logging with KafkaMetricsGroup {
     override def run() {
       info("Starting mirror maker thread " + threadName)
       try {
+        //初始化consumer
         mirrorMakerConsumer.init()
 
         // We need the two while loop to make sure when old consumer is used, even there is no message we
@@ -435,6 +444,7 @@ object MirrorMaker extends Logging with KafkaMetricsGroup {
               } else {
                 trace("Sending message with null value and offset %d.".format(data.offset))
               }
+              //直接交给handler进行处理
               val records = messageHandler.handle(data)
               records.asScala.foreach(producer.send)
               maybeFlushAndCommitOffsets()

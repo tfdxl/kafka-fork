@@ -18,6 +18,7 @@
 package kafka.common
 
 /**
+  * 一个可变的单元，存储了Long类型的值，非线程安全的
   * A mutable cell that holds a value of type `Long`. One should generally prefer using value-based programming (i.e.
   * passing and returning `Long` values), but this class can be useful in some scenarios.
   *

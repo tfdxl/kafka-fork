@@ -224,9 +224,11 @@ public abstract class AbstractRecords implements Records {
 
             @Override
             protected Record makeNext() {
+                //先从本地获取下一个
                 if (records != null && records.hasNext())
                     return records.next();
 
+                //本地没有从所有的batch中继续获取
                 if (batches.hasNext()) {
                     records = batches.next().iterator();
                     return makeNext();

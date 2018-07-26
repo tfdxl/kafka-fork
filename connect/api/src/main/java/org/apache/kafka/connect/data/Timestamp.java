@@ -20,16 +20,18 @@ import org.apache.kafka.connect.errors.DataException;
 
 /**
  * <p>
- *     A timestamp representing an absolute time, without timezone information. The corresponding Java type is a
- *     java.util.Date. The underlying representation is a long representing the number of milliseconds since Unix epoch.
+ * A timestamp representing an absolute time, without timezone information. The corresponding Java type is a
+ * java.util.Date. The underlying representation is a long representing the number of milliseconds since Unix epoch.
  * </p>
  */
 public class Timestamp {
     public static final String LOGICAL_NAME = "org.apache.kafka.connect.data.Timestamp";
+    public static final Schema SCHEMA = builder().schema();
 
     /**
      * Returns a SchemaBuilder for a Timestamp. By returning a SchemaBuilder you can override additional schema settings such
      * as required/optional, default value, and documentation.
+     *
      * @return a SchemaBuilder
      */
     public static SchemaBuilder builder() {
@@ -38,10 +40,9 @@ public class Timestamp {
                 .version(1);
     }
 
-    public static final Schema SCHEMA = builder().schema();
-
     /**
      * Convert a value from its logical format (Date) to it's encoded format.
+     *
      * @param value the logical value
      * @return the encoded value
      */
