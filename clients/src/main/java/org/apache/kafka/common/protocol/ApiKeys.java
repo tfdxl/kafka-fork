@@ -137,7 +137,9 @@ public enum ApiKeys {
     public final byte minRequiredInterBrokerMagic;
 
     public final Schema[] requestSchemas;
+
     public final Schema[] responseSchemas;
+
     public final boolean requiresDelayedAllocation;
 
     ApiKeys(int id, String name, Schema[] requestSchemas, Schema[] responseSchemas) {
