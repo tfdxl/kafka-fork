@@ -132,7 +132,9 @@ public class PartitionStates<S> {
     }
 
     public static class PartitionState<S> {
+
         private final TopicPartition topicPartition;
+
         private final S value;
 
         public PartitionState(TopicPartition topicPartition, S state) {
