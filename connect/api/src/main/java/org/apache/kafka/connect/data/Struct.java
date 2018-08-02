@@ -42,6 +42,7 @@ import java.util.Objects;
 public class Struct {
 
     private final Schema schema;
+
     private final Object[] values;
 
     /**
@@ -289,6 +290,5 @@ public class Struct {
         }
         return sb.append("}").toString();
     }
-
 }
 
