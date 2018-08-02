@@ -24,6 +24,7 @@ import java.util.List;
  * for writing connectors.
  */
 public class ConnectorUtils {
+
     /**
      * Given a list of elements and a target number of groups, generates list of groups of
      * elements to match the target number of groups, spreading them evenly among the groups.
@@ -37,17 +38,22 @@ public class ConnectorUtils {
      * @param numGroups the number of output groups to generate.
      */
     public static <T> List<List<T>> groupPartitions(List<T> elements, int numGroups) {
-        if (numGroups <= 0)
+
+        if (numGroups <= 0) {
             throw new IllegalArgumentException("Number of groups must be positive.");
+        }
 
         List<List<T>> result = new ArrayList<>(numGroups);
 
         // Each group has either n+1 or n raw partitions
         int perGroup = elements.size() / numGroups;
+
+        //剩余的
         int leftover = elements.size() - (numGroups * perGroup);
 
         int assigned = 0;
         for (int group = 0; group < numGroups; group++) {
+
             int numThisGroup = group < leftover ? perGroup + 1 : perGroup;
             List<T> groupList = new ArrayList<>(numThisGroup);
             for (int i = 0; i < numThisGroup; i++) {
