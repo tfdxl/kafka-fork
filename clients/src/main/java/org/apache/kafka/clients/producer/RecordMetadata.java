@@ -33,13 +33,18 @@ public final class RecordMetadata {
 
     private final long offset;
     // The timestamp of the message.
+    //日志追加的时间和创建的时间
     // If LogAppendTime is used for the topic, the timestamp will be the timestamp returned by the broker.
     // If CreateTime is used for the topic, the timestamp is the timestamp in the corresponding ProducerRecord if the
     // user provided one. Otherwise, it will be the producer local time when the producer record was handed to the
     // producer.
+
     private final long timestamp;
+
     private final int serializedKeySize;
+
     private final int serializedValueSize;
+
     private final TopicPartition topicPartition;
 
     private volatile Long checksum;
