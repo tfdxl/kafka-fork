@@ -24,6 +24,7 @@ import java.util.Objects;
  * </p>
  */
 public class Field {
+
     private final String name;
     private final int index;
     private final Schema schema;

@@ -182,10 +182,12 @@ public interface Schema {
          */
         STRING,
         /**
+         * 一连串的无符号的8位的字节
          * Sequence of unsigned 8-bit bytes
          */
         BYTES,
         /**
+         * 有顺序的一连串的元素
          * An ordered sequence of elements, each of which shares the same type.
          */
         ARRAY,
