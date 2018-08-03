@@ -258,8 +258,9 @@ public class Struct {
 
     private Field lookupField(String fieldName) {
         Field field = schema.field(fieldName);
-        if (field == null)
+        if (field == null) {
             throw new DataException(fieldName + " is not a valid field name");
+        }
         return field;
     }
 
@@ -267,8 +268,9 @@ public class Struct {
     // Used to implement the get*() methods that return typed data instead of Object
     private Object getCheckType(String fieldName, Schema.Type type) {
         Field field = lookupField(fieldName);
-        if (field.schema().type() != type)
+        if (field.schema().type() != type) {
             throw new DataException("Field '" + fieldName + "' is not of type " + type);
+        }
         return values[field.index()];
     }
 
