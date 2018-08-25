@@ -140,8 +140,9 @@ final class InFlightRequests {
      */
     public boolean isEmpty() {
         for (Deque<NetworkClient.InFlightRequest> deque : this.requests.values()) {
-            if (!deque.isEmpty())
+            if (!deque.isEmpty()) {
                 return false;
+            }
         }
         return true;
     }
@@ -179,8 +180,9 @@ final class InFlightRequests {
             if (!deque.isEmpty()) {
                 NetworkClient.InFlightRequest request = deque.peekLast();
                 long timeSinceSend = now - request.sendTimeMs;
-                if (timeSinceSend > requestTimeoutMs)
+                if (timeSinceSend > requestTimeoutMs) {
                     nodeIds.add(nodeId);
+                }
             }
         }
         return nodeIds;

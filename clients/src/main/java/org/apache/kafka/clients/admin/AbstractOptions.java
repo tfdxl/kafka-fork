@@ -20,6 +20,8 @@ package org.apache.kafka.clients.admin;
 
 /**
  * This class implements the common APIs that are shared by Options classes for various AdminClient commands
+ *
+ * @author monlie
  */
 public abstract class AbstractOptions<T extends AbstractOptions> {
 

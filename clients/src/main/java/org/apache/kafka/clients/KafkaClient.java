@@ -26,6 +26,7 @@ import java.util.List;
 /**
  * The interface for {@link NetworkClient}
  */
+@SuppressWarnings("AlibabaAbstractMethodOrInterfaceMethodMustUseJavadoc")
 public interface KafkaClient extends Closeable {
 
     /**
@@ -35,6 +36,7 @@ public interface KafkaClient extends Closeable {
      * @param node The node to check
      * @param now  The current timestamp
      */
+    @SuppressWarnings("AlibabaAbstractMethodOrInterfaceMethodMustUseJavadoc")
     boolean isReady(Node node, long now);
 
     /**
@@ -94,6 +96,7 @@ public interface KafkaClient extends Closeable {
      * @param now     The current time in ms
      * @throws IllegalStateException If a request is sent to an unready node
      */
+    @SuppressWarnings("AlibabaAbstractMethodOrInterfaceMethodMustUseJavadoc")
     List<ClientResponse> poll(long timeout, long now);
 
     /**
@@ -126,11 +129,13 @@ public interface KafkaClient extends Closeable {
     /**
      * The number of currently in-flight requests for which we have not yet returned a response
      */
+    @SuppressWarnings("AlibabaAbstractMethodOrInterfaceMethodMustUseJavadoc")
     int inFlightRequestCount();
 
     /**
      * Return true if there is at least one in-flight request and false otherwise.
      */
+    @SuppressWarnings("AlibabaAbstractMethodOrInterfaceMethodMustUseJavadoc")
     boolean hasInFlightRequests();
 
     /**
@@ -138,16 +143,19 @@ public interface KafkaClient extends Closeable {
      *
      * @param nodeId The id of the node
      */
+    @SuppressWarnings("AlibabaAbstractMethodOrInterfaceMethodMustUseJavadoc")
     int inFlightRequestCount(String nodeId);
 
     /**
      * Return true if there is at least one in-flight request for a particular node and false otherwise.
      */
+    @SuppressWarnings("AlibabaAbstractMethodOrInterfaceMethodMustUseJavadoc")
     boolean hasInFlightRequests(String nodeId);
 
     /**
      * Return true if there is at least one node with connection in ready state and false otherwise.
      */
+    @SuppressWarnings("AlibabaAbstractMethodOrInterfaceMethodMustUseJavadoc")
     boolean hasReadyNodes();
 
     /**
@@ -163,6 +171,7 @@ public interface KafkaClient extends Closeable {
      * @param createdTimeMs  the time in milliseconds to use as the creation time of the request
      * @param expectResponse true iff we expect a response
      */
+    @SuppressWarnings("AlibabaAbstractMethodOrInterfaceMethodMustUseJavadoc")
     ClientRequest newClientRequest(String nodeId, AbstractRequest.Builder<?> requestBuilder,
                                    long createdTimeMs, boolean expectResponse);
 
@@ -175,6 +184,7 @@ public interface KafkaClient extends Closeable {
      * @param expectResponse true iff we expect a response
      * @param callback       the callback to invoke when we get a response
      */
+    @SuppressWarnings("AlibabaAbstractMethodOrInterfaceMethodMustUseJavadoc")
     ClientRequest newClientRequest(String nodeId, AbstractRequest.Builder<?> requestBuilder, long createdTimeMs,
                                    boolean expectResponse, RequestCompletionHandler callback);
 

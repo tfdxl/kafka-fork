@@ -37,6 +37,7 @@ object ControllerState {
   // Note: `rateAndTimeMetricName` is based on the case object name by default. Changing a name is a breaking change
   // unless `rateAndTimeMetricName` is overridden.
 
+  //空闲的状态吗
   case object Idle extends ControllerState {
     def value = 0
 
