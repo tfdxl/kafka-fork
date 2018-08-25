@@ -23,6 +23,7 @@ import org.apache.kafka.common.annotation.InterfaceStability;
  *
  * @param <K> the type of keys
  * @param <V> the type of values
+ * @author monlie
  */
 @InterfaceStability.Evolving
 public interface Processor<K, V> {

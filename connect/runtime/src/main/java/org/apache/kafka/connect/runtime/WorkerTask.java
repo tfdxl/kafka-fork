@@ -227,11 +227,11 @@ abstract class WorkerTask implements Runnable {
         } finally {
             try {
                 Plugins.compareAndSwapLoaders(savedLoader);
-                shutdownLatch.countDown();
             } finally {
                 try {
                     releaseResources();
                 } finally {
+                    shutdownLatch.countDown();
                     taskMetricsGroup.close();
                 }
             }
@@ -408,7 +408,7 @@ abstract class WorkerTask implements Runnable {
             delegateListener.onShutdown(id);
         }
 
-        public void recordState(TargetState state) {
+        void recordState(TargetState state) {
             switch (state) {
                 case STARTED:
                     taskStateTimer.changeState(State.RUNNING, time.milliseconds());
