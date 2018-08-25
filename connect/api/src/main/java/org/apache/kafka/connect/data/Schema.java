@@ -22,6 +22,7 @@ import java.util.Map;
 
 /**
  * <p>
+ * 抽象数据类型，可以是原始数据类型和复杂数据类型
  * Definition of an abstract data type. Data types can be primitive types (integer types, floating point types,
  * boolean, strings, and bytes) or complex types (typed arrays, maps with one key schema and value schema,
  * and structs that have a fixed set of field names each with an associated value schema). Any type can be specified
@@ -181,10 +182,12 @@ public interface Schema {
          */
         STRING,
         /**
+         * 一连串的无符号的8位的字节
          * Sequence of unsigned 8-bit bytes
          */
         BYTES,
         /**
+         * 有顺序的一连串的元素
          * An ordered sequence of elements, each of which shares the same type.
          */
         ARRAY,

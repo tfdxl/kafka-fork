@@ -27,7 +27,9 @@ public final class TopicPartition implements Serializable {
      * partition
      */
     private final int partition;
+
     private final String topic;
+
     private int hash = 0;
 
     public TopicPartition(String topic, int partition) {

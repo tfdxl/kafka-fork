@@ -21,8 +21,10 @@ import org.apache.kafka.common.protocol.Errors
 import org.apache.kafka.common.resource.{ResourceType => JResourceType}
 
 sealed trait ResourceType extends BaseEnum {
+
   def error: Errors
 
+  //转换成为Java的每局类型
   def toJava: JResourceType
 }
 

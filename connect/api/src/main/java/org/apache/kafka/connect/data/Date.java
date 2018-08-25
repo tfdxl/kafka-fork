@@ -30,9 +30,13 @@ import java.util.TimeZone;
  * </p>
  */
 public class Date {
+
     public static final String LOGICAL_NAME = "org.apache.kafka.connect.data.Date";
+
     public static final Schema SCHEMA = builder().schema();
+
     private static final long MILLIS_PER_DAY = 24 * 60 * 60 * 1000;
+
     private static final TimeZone UTC = TimeZone.getTimeZone("UTC");
 
     /**

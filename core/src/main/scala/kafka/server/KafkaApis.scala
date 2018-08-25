@@ -64,7 +64,7 @@ import scala.collection.mutable.ArrayBuffer
 import scala.util.{Failure, Success, Try}
 
 /**
-  * 统一的kafka server请求处理器,将请求进行分发到不同的handle*方法进行处理
+  * 统一的kafka server请求处理器,将请求进行分发到不同的handle方法进行处理
   * Logic to handle the various Kafka requests
   */
 class KafkaApis(val requestChannel: RequestChannel,
@@ -963,7 +963,7 @@ class KafkaApis(val requestChannel: RequestChannel,
     */
   def handleTopicMetadataRequest(request: RequestChannel.Request) {
     val metadataRequest = request.body[MetadataRequest]
-    val requestVersion = request  .header.apiVersion
+    val requestVersion = request.header.apiVersion
 
     val topics =
     // Handle old metadata request logic. Version 0 has no way to specify "no topics".

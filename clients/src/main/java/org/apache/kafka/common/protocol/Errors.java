@@ -568,6 +568,7 @@ public enum Errors {
     private final short code;
     private final ApiExceptionBuilder builder;
     private final ApiException exception;
+
     Errors(int code, String defaultExceptionString, ApiExceptionBuilder builder) {
         this.code = (short) code;
         this.builder = builder;
