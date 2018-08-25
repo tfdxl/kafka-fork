@@ -122,8 +122,9 @@ public class ListOffsetRequest extends AbstractRequest {
                     PartitionData partitionData = new PartitionData(timestamp, maxNumOffsets);
                     offsetData.put(tp, partitionData);
                 } else {
-                    if (partitionTimestamps.put(tp, timestamp) != null)
+                    if (partitionTimestamps.put(tp, timestamp) != null) {
                         duplicatePartitions.add(tp);
+                    }
                 }
             }
         }
@@ -200,8 +201,9 @@ public class ListOffsetRequest extends AbstractRequest {
 
         struct.set(REPLICA_ID_KEY_NAME, replicaId);
 
-        if (struct.hasField(ISOLATION_LEVEL_KEY_NAME))
+        if (struct.hasField(ISOLATION_LEVEL_KEY_NAME)) {
             struct.set(ISOLATION_LEVEL_KEY_NAME, isolationLevel.id());
+        }
         List<Struct> topicArray = new ArrayList<>();
         for (Map.Entry<String, Map<Integer, Object>> topicEntry : topicsData.entrySet()) {
             Struct topicData = struct.instance(TOPICS_KEY_NAME);
@@ -248,10 +250,11 @@ public class ListOffsetRequest extends AbstractRequest {
 
         public static Builder forConsumer(boolean requireTimestamp, IsolationLevel isolationLevel) {
             short minVersion = 0;
-            if (isolationLevel == IsolationLevel.READ_COMMITTED)
+            if (isolationLevel == IsolationLevel.READ_COMMITTED) {
                 minVersion = 2;
-            else if (requireTimestamp)
+            } else if (requireTimestamp) {
                 minVersion = 1;
+            }
             return new Builder(minVersion, ApiKeys.LIST_OFFSETS.latestVersion(), CONSUMER_REPLICA_ID, isolationLevel);
         }
 

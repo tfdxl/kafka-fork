@@ -57,8 +57,9 @@ public class SaslHandshakeResponse extends AbstractResponse {
         error = Errors.forCode(struct.get(ERROR_CODE));
         Object[] mechanisms = struct.getArray(ENABLED_MECHANISMS_KEY_NAME);
         ArrayList<String> enabledMechanisms = new ArrayList<>();
-        for (Object mechanism : mechanisms)
+        for (Object mechanism : mechanisms) {
             enabledMechanisms.add((String) mechanism);
+        }
         this.enabledMechanisms = enabledMechanisms;
     }
 

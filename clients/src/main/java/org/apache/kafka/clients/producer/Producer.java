@@ -91,6 +91,7 @@ public interface Producer<K, V> extends Closeable {
     /**
      * See {@link KafkaProducer#close()}
      */
+    @Override
     void close();
 
     /**

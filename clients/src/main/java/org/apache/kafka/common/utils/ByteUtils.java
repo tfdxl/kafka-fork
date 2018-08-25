@@ -140,8 +140,9 @@ public final class ByteUtils {
         while (((b = buffer.get()) & 0x80) != 0) {
             value |= (b & 0x7f) << i;
             i += 7;
-            if (i > 28)
+            if (i > 28) {
                 throw illegalVarintException(value);
+            }
         }
         value |= b << i;
         return (value >>> 1) ^ -(value & 1);
@@ -163,8 +164,9 @@ public final class ByteUtils {
         while (((b = in.readByte()) & 0x80) != 0) {
             value |= (b & 0x7f) << i;
             i += 7;
-            if (i > 28)
+            if (i > 28) {
                 throw illegalVarintException(value);
+            }
         }
         value |= b << i;
         return (value >>> 1) ^ -(value & 1);
@@ -186,8 +188,9 @@ public final class ByteUtils {
         while (((b = in.readByte()) & 0x80) != 0) {
             value |= (b & 0x7f) << i;
             i += 7;
-            if (i > 63)
+            if (i > 63) {
                 throw illegalVarlongException(value);
+            }
         }
         value |= b << i;
         return (value >>> 1) ^ -(value & 1);
@@ -208,8 +211,9 @@ public final class ByteUtils {
         while (((b = buffer.get()) & 0x80) != 0) {
             value |= (b & 0x7f) << i;
             i += 7;
-            if (i > 63)
+            if (i > 63) {
                 throw illegalVarlongException(value);
+            }
         }
         value |= b << i;
         return (value >>> 1) ^ -(value & 1);

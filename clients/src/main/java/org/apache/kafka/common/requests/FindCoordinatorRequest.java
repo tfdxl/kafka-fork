@@ -59,14 +59,16 @@ public class FindCoordinatorRequest extends AbstractRequest {
     public FindCoordinatorRequest(Struct struct, short version) {
         super(version);
 
-        if (struct.hasField(COORDINATOR_TYPE_KEY_NAME))
+        if (struct.hasField(COORDINATOR_TYPE_KEY_NAME)) {
             this.coordinatorType = CoordinatorType.forId(struct.getByte(COORDINATOR_TYPE_KEY_NAME));
-        else
+        } else {
             this.coordinatorType = CoordinatorType.GROUP;
-        if (struct.hasField(GROUP_ID))
+        }
+        if (struct.hasField(GROUP_ID)) {
             this.coordinatorKey = struct.get(GROUP_ID);
-        else
+        } else {
             this.coordinatorKey = struct.getString(COORDINATOR_KEY_KEY_NAME);
+        }
     }
 
     public static Schema[] schemaVersions() {
@@ -103,12 +105,14 @@ public class FindCoordinatorRequest extends AbstractRequest {
     @Override
     protected Struct toStruct() {
         Struct struct = new Struct(ApiKeys.FIND_COORDINATOR.requestSchema(version()));
-        if (struct.hasField(GROUP_ID))
+        if (struct.hasField(GROUP_ID)) {
             struct.set(GROUP_ID, coordinatorKey);
-        else
+        } else {
             struct.set(COORDINATOR_KEY_KEY_NAME, coordinatorKey);
-        if (struct.hasField(COORDINATOR_TYPE_KEY_NAME))
+        }
+        if (struct.hasField(COORDINATOR_TYPE_KEY_NAME)) {
             struct.set(COORDINATOR_TYPE_KEY_NAME, coordinatorType.id);
+        }
         return struct;
     }
 
@@ -149,9 +153,10 @@ public class FindCoordinatorRequest extends AbstractRequest {
         @Override
         public FindCoordinatorRequest build(short version) {
             //版本比最小的还要小
-            if (version < minVersion)
+            if (version < minVersion) {
                 throw new UnsupportedVersionException("Cannot create a v" + version + " FindCoordinator request " +
                         "because we require features supported only in " + minVersion + " or later.");
+            }
             return new FindCoordinatorRequest(coordinatorType, coordinatorKey, version);
         }
 

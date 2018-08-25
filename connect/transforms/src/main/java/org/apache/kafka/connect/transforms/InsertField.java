@@ -84,7 +84,9 @@ public abstract class InsertField<R extends ConnectRecord<R>> implements Transfo
         }
 
         public static InsertionSpec parse(String spec) {
-            if (spec == null) return null;
+            if (spec == null) {
+                return null;
+            }
             if (spec.endsWith("?")) {
                 return new InsertionSpec(spec.substring(0, spec.length() - 1), true);
             }

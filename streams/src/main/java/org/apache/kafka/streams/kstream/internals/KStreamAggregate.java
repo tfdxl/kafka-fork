@@ -91,6 +91,7 @@ public class KStreamAggregate<K, V, T> implements KStreamAggProcessorSupplier<K,
 
         return new KTableValueGetterSupplier<K, T>() {
 
+            @Override
             public KTableValueGetter<K, T> get() {
                 return new KStreamAggregateValueGetter();
             }

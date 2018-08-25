@@ -55,35 +55,41 @@ public class ArrayOf extends Type {
         int size = objs.length;
         buffer.putInt(size);
 
-        for (Object obj : objs)
+        for (Object obj : objs) {
             type.write(buffer, obj);
+        }
     }
 
     @Override
     public Object read(ByteBuffer buffer) {
         int size = buffer.getInt();
-        if (size < 0 && isNullable())
+        if (size < 0 && isNullable()) {
             return null;
-        else if (size < 0)
+        } else if (size < 0) {
             throw new SchemaException("Array size " + size + " cannot be negative");
+        }
 
-        if (size > buffer.remaining())
+        if (size > buffer.remaining()) {
             throw new SchemaException("Error reading array of size " + size + ", only " + buffer.remaining() + " bytes available");
+        }
         Object[] objs = new Object[size];
-        for (int i = 0; i < size; i++)
+        for (int i = 0; i < size; i++) {
             objs[i] = type.read(buffer);
+        }
         return objs;
     }
 
     @Override
     public int sizeOf(Object o) {
         int size = 4;
-        if (o == null)
+        if (o == null) {
             return size;
+        }
 
         Object[] objs = (Object[]) o;
-        for (Object obj : objs)
+        for (Object obj : objs) {
             size += type.sizeOf(obj);
+        }
         return size;
     }
 
@@ -99,12 +105,14 @@ public class ArrayOf extends Type {
     @Override
     public Object[] validate(Object item) {
         try {
-            if (isNullable() && item == null)
+            if (isNullable() && item == null) {
                 return null;
+            }
 
             Object[] array = (Object[]) item;
-            for (Object obj : array)
+            for (Object obj : array) {
                 type.validate(obj);
+            }
             return array;
         } catch (ClassCastException e) {
             throw new SchemaException("Not an Object[].");

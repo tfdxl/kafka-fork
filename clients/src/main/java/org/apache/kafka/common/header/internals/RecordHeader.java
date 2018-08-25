@@ -40,10 +40,12 @@ public class RecordHeader implements Header {
         this.valueBuffer = valueBuffer;
     }
 
+    @Override
     public String key() {
         return key;
     }
 
+    @Override
     public byte[] value() {
 
         //value为空，buffer不为空

@@ -35,8 +35,9 @@ public class Table<R, C, V> {
 
     public V get(R row, C column) {
         Map<C, V> columns = table.get(row);
-        if (columns == null)
+        if (columns == null) {
             return null;
+        }
         return columns.get(column);
     }
 
@@ -46,19 +47,22 @@ public class Table<R, C, V> {
 
     public V remove(R row, C column) {
         Map<C, V> columns = table.get(row);
-        if (columns == null)
+        if (columns == null) {
             return null;
+        }
 
         V value = columns.remove(column);
-        if (columns.isEmpty())
+        if (columns.isEmpty()) {
             table.remove(row);
+        }
         return value;
     }
 
     public Map<C, V> row(R row) {
         Map<C, V> columns = table.get(row);
-        if (columns == null)
+        if (columns == null) {
             return Collections.emptyMap();
+        }
         return Collections.unmodifiableMap(columns);
     }
 

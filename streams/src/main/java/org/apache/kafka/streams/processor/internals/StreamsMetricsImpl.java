@@ -101,11 +101,13 @@ public class StreamsMetricsImpl implements StreamsMetrics {
         // extract the additional tags if there are any
         Map<String, String> tagMap = new HashMap<>(this.tags);
         if (tags != null) {
-            if ((tags.length % 2) != 0)
+            if ((tags.length % 2) != 0) {
                 throw new IllegalArgumentException("Tags needs to be specified in key-value pairs");
+            }
 
-            for (int i = 0; i < tags.length; i += 2)
+            for (int i = 0; i < tags.length; i += 2) {
                 tagMap.put(tags[i], tags[i + 1]);
+            }
         }
         return tagMap;
     }

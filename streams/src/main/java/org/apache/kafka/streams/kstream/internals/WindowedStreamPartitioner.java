@@ -42,6 +42,7 @@ public class WindowedStreamPartitioner<K, V> implements StreamPartitioner<Window
      * @param numPartitions the total number of partitions
      * @return an integer between 0 and {@code numPartitions-1}, or {@code null} if the default partitioning logic should be used
      */
+    @Override
     public Integer partition(final Windowed<K> windowedKey, final V value, final int numPartitions) {
         final byte[] keyBytes = serializer.serializeBaseKey(topic, windowedKey);
 

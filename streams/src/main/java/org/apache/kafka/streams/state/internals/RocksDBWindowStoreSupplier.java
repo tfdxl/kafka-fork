@@ -63,6 +63,7 @@ public class RocksDBWindowStoreSupplier<K, V> extends AbstractStoreSupplier<K, V
         }
     }
 
+    @Override
     public WindowStore<K, V> get() {
         return builder.build();
     }

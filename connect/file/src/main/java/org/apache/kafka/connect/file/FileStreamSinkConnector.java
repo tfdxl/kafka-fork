@@ -62,8 +62,9 @@ public class FileStreamSinkConnector extends SinkConnector {
         ArrayList<Map<String, String>> configs = new ArrayList<>();
         for (int i = 0; i < maxTasks; i++) {
             Map<String, String> config = new HashMap<>();
-            if (filename != null)
+            if (filename != null) {
                 config.put(FILE_CONFIG, filename);
+            }
             configs.add(config);
         }
         return configs;

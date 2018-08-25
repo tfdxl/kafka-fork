@@ -102,14 +102,18 @@ public class AccessControlEntryFilter {
      * Returns true if this filter matches the given AccessControlEntry.
      */
     public boolean matches(AccessControlEntry other) {
-        if ((principal() != null) && (!data.principal().equals(other.principal())))
+        if ((principal() != null) && (!data.principal().equals(other.principal()))) {
             return false;
-        if ((host() != null) && (!host().equals(other.host())))
+        }
+        if ((host() != null) && (!host().equals(other.host()))) {
             return false;
-        if ((operation() != AclOperation.ANY) && (!operation().equals(other.operation())))
+        }
+        if ((operation() != AclOperation.ANY) && (!operation().equals(other.operation()))) {
             return false;
-        if ((permissionType() != AclPermissionType.ANY) && (!permissionType().equals(other.permissionType())))
+        }
+        if ((permissionType() != AclPermissionType.ANY) && (!permissionType().equals(other.permissionType()))) {
             return false;
+        }
         return true;
     }
 
@@ -131,8 +135,9 @@ public class AccessControlEntryFilter {
 
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof AccessControlEntryFilter))
+        if (!(o instanceof AccessControlEntryFilter)) {
             return false;
+        }
         AccessControlEntryFilter other = (AccessControlEntryFilter) o;
         return data.equals(other.data);
     }

@@ -146,15 +146,17 @@ public abstract class AbstractResponse extends AbstractRequestResponse {
 
     protected Map<Errors, Integer> errorCounts(Map<?, Errors> errors) {
         Map<Errors, Integer> errorCounts = new HashMap<>();
-        for (Errors error : errors.values())
+        for (Errors error : errors.values()) {
             updateErrorCounts(errorCounts, error);
+        }
         return errorCounts;
     }
 
     protected Map<Errors, Integer> apiErrorCounts(Map<?, ApiError> errors) {
         Map<Errors, Integer> errorCounts = new HashMap<>();
-        for (ApiError apiError : errors.values())
+        for (ApiError apiError : errors.values()) {
             updateErrorCounts(errorCounts, apiError.error());
+        }
         return errorCounts;
     }
 

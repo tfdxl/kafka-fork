@@ -43,6 +43,7 @@ class KTableKTableOuterJoin<K, R, V1, V2> extends KTableKTableAbstractJoin<K, R,
             super(valueGetterSupplier1, valueGetterSupplier2);
         }
 
+        @Override
         public KTableValueGetter<K, R> get() {
             return new KTableKTableOuterJoinValueGetter(valueGetterSupplier1.get(), valueGetterSupplier2.get());
         }
@@ -111,8 +112,9 @@ class KTableKTableOuterJoin<K, R, V1, V2> extends KTableKTableAbstractJoin<K, R,
             V1 value1 = valueGetter1.get(key);
             V2 value2 = valueGetter2.get(key);
 
-            if (value1 != null || value2 != null)
+            if (value1 != null || value2 != null) {
                 newValue = joiner.apply(value1, value2);
+            }
 
             return newValue;
         }

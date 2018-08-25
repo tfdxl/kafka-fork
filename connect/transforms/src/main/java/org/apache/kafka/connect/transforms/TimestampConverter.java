@@ -107,8 +107,9 @@ public abstract class TimestampConverter<R extends ConnectRecord<R>> implements 
         TRANSLATORS.put(TYPE_STRING, new TimestampTranslator() {
             @Override
             public Date toRaw(Config config, Object orig) {
-                if (!(orig instanceof String))
+                if (!(orig instanceof String)) {
                     throw new DataException("Expected string timestamp to be a String, but found " + orig.getClass());
+                }
                 try {
                     return config.format.parse((String) orig);
                 } catch (ParseException e) {
@@ -133,8 +134,9 @@ public abstract class TimestampConverter<R extends ConnectRecord<R>> implements 
         TRANSLATORS.put(TYPE_UNIX, new TimestampTranslator() {
             @Override
             public Date toRaw(Config config, Object orig) {
-                if (!(orig instanceof Long))
+                if (!(orig instanceof Long)) {
                     throw new DataException("Expected Unix timestamp to be a Long, but found " + orig.getClass());
+                }
                 return Timestamp.toLogical(Timestamp.SCHEMA, (Long) orig);
             }
 
@@ -152,8 +154,9 @@ public abstract class TimestampConverter<R extends ConnectRecord<R>> implements 
         TRANSLATORS.put(TYPE_DATE, new TimestampTranslator() {
             @Override
             public Date toRaw(Config config, Object orig) {
-                if (!(orig instanceof Date))
+                if (!(orig instanceof Date)) {
                     throw new DataException("Expected Date to be a java.util.Date, but found " + orig.getClass());
+                }
                 // Already represented as a java.util.Date and Connect Dates are a subset of valid java.util.Date values
                 return (Date) orig;
             }
@@ -178,8 +181,9 @@ public abstract class TimestampConverter<R extends ConnectRecord<R>> implements 
         TRANSLATORS.put(TYPE_TIME, new TimestampTranslator() {
             @Override
             public Date toRaw(Config config, Object orig) {
-                if (!(orig instanceof Date))
+                if (!(orig instanceof Date)) {
                     throw new DataException("Expected Time to be a java.util.Date, but found " + orig.getClass());
+                }
                 // Already represented as a java.util.Date and Connect Times are a subset of valid java.util.Date values
                 return (Date) orig;
             }
@@ -206,8 +210,9 @@ public abstract class TimestampConverter<R extends ConnectRecord<R>> implements 
         TRANSLATORS.put(TYPE_TIMESTAMP, new TimestampTranslator() {
             @Override
             public Date toRaw(Config config, Object orig) {
-                if (!(orig instanceof Date))
+                if (!(orig instanceof Date)) {
                     throw new DataException("Expected Timestamp to be a java.util.Date, but found " + orig.getClass());
+                }
                 return (Date) orig;
             }
 
@@ -344,8 +349,9 @@ public abstract class TimestampConverter<R extends ConnectRecord<R>> implements 
                         builder.field(field.name(), field.schema());
                     }
                 }
-                if (schema.isOptional())
+                if (schema.isOptional()) {
                     builder.optional();
+                }
                 if (schema.defaultValue() != null) {
                     Struct updatedDefaultValue = applyValueWithSchema((Struct) schema.defaultValue(), builder);
                     builder.defaultValue(updatedDefaultValue);

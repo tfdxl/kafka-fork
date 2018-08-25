@@ -107,12 +107,13 @@ public class RestClient {
             log.error("IO error forwarding REST request: ", e);
             throw new ConnectRestException(Response.Status.INTERNAL_SERVER_ERROR, "IO Error trying to forward REST request: " + e.getMessage(), e);
         } finally {
-            if (client != null)
+            if (client != null) {
                 try {
                     client.stop();
                 } catch (Exception e) {
                     log.error("Failed to stop HTTP client", e);
                 }
+            }
         }
     }
 
@@ -125,8 +126,9 @@ public class RestClient {
     private static Map<String, String> convertHttpFieldsToMap(HttpFields httpFields) {
         Map<String, String> headers = new HashMap<String, String>();
 
-        if (httpFields == null || httpFields.size() == 0)
+        if (httpFields == null || httpFields.size() == 0) {
             return headers;
+        }
 
         for (HttpField field : httpFields) {
             headers.put(field.getName(), field.getValue());

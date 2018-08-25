@@ -48,9 +48,11 @@ public class AbstractConfig {
     @SuppressWarnings("unchecked")
     public AbstractConfig(ConfigDef definition, Map<?, ?> originals, boolean doLog) {
         /* check that all the keys are really strings */
-        for (Map.Entry<?, ?> entry : originals.entrySet())
-            if (!(entry.getKey() instanceof String))
+        for (Map.Entry<?, ?> entry : originals.entrySet()) {
+            if (!(entry.getKey() instanceof String)) {
                 throw new ConfigException(entry.getKey().toString(), entry.getValue(), "Key must be a string.");
+            }
+        }
         this.originals = (Map<String, ?>) originals;
         this.values = definition.parse(this.originals);
         Map<String, Object> configUpdates = postProcessParsedConfig(Collections.unmodifiableMap(this.values));
@@ -60,8 +62,9 @@ public class AbstractConfig {
         definition.parse(this.values);
         this.used = Collections.synchronizedSet(new HashSet<String>());
         this.definition = definition;
-        if (doLog)
+        if (doLog) {
             logAll();
+        }
     }
 
     public AbstractConfig(ConfigDef definition, Map<?, ?> originals) {
@@ -80,8 +83,9 @@ public class AbstractConfig {
     }
 
     protected Object get(String key) {
-        if (!values.containsKey(key))
+        if (!values.containsKey(key)) {
             throw new ConfigException(String.format("Unknown configuration '%s'", key));
+        }
         used.add(key);
         return values.get(key);
     }
@@ -121,8 +125,9 @@ public class AbstractConfig {
 
     public ConfigDef.Type typeOf(String key) {
         ConfigDef.ConfigKey configKey = definition.configKeys().get(key);
-        if (configKey == null)
+        if (configKey == null) {
             return null;
+        }
         return configKey.type;
     }
 
@@ -155,9 +160,10 @@ public class AbstractConfig {
     public Map<String, String> originalsStrings() {
         Map<String, String> copy = new RecordingMap<>();
         for (Map.Entry<String, ?> entry : originals.entrySet()) {
-            if (!(entry.getValue() instanceof String))
+            if (!(entry.getValue() instanceof String)) {
                 throw new ClassCastException("Non-string value found in original settings for key " + entry.getKey() +
                         ": " + (entry.getValue() == null ? null : entry.getValue().getClass().getName()));
+            }
             copy.put(entry.getKey(), (String) entry.getValue());
         }
         return copy;
@@ -184,10 +190,11 @@ public class AbstractConfig {
         Map<String, Object> result = new RecordingMap<>(prefix, false);
         for (Map.Entry<String, ?> entry : originals.entrySet()) {
             if (entry.getKey().startsWith(prefix) && entry.getKey().length() > prefix.length()) {
-                if (strip)
+                if (strip) {
                     result.put(entry.getKey().substring(prefix.length()), entry.getValue());
-                else
+                } else {
                     result.put(entry.getKey(), entry.getValue());
+                }
             }
         }
         return result;
@@ -215,13 +222,14 @@ public class AbstractConfig {
             if (entry.getKey().startsWith(prefix) && entry.getKey().length() > prefix.length()) {
                 String keyWithNoPrefix = entry.getKey().substring(prefix.length());
                 ConfigDef.ConfigKey configKey = definition.configKeys().get(keyWithNoPrefix);
-                if (configKey != null)
+                if (configKey != null) {
                     result.put(keyWithNoPrefix, definition.parseValue(configKey, entry.getValue(), true));
-                else {
+                } else {
                     String keyWithNoSecondaryPrefix = keyWithNoPrefix.substring(keyWithNoPrefix.indexOf('.') + 1);
                     configKey = definition.configKeys().get(keyWithNoSecondaryPrefix);
-                    if (configKey != null)
+                    if (configKey != null) {
                         result.put(keyWithNoPrefix, definition.parseValue(configKey, entry.getValue(), true));
+                    }
                 }
             }
         }
@@ -245,8 +253,9 @@ public class AbstractConfig {
 
             for (Map.Entry<String, ?> entry : withPrefix.entrySet()) {
                 ConfigDef.ConfigKey configKey = definition.configKeys().get(entry.getKey());
-                if (configKey != null)
+                if (configKey != null) {
                     result.put(entry.getKey(), definition.parseValue(configKey, entry.getValue(), true));
+                }
             }
 
             return result;
@@ -277,8 +286,9 @@ public class AbstractConfig {
      * Log warnings for any unused configurations
      */
     public void logUnused() {
-        for (String key : unused())
+        for (String key : unused()) {
             log.warn("The configuration '{}' was supplied but isn't a known config.", key);
+        }
     }
 
     /**
@@ -291,13 +301,16 @@ public class AbstractConfig {
      */
     public <T> T getConfiguredInstance(String key, Class<T> t) {
         Class<?> c = getClass(key);
-        if (c == null)
+        if (c == null) {
             return null;
+        }
         Object o = Utils.newInstance(c);
-        if (!t.isInstance(o))
+        if (!t.isInstance(o)) {
             throw new KafkaException(c.getName() + " is not an instance of " + t.getName());
-        if (o instanceof Configurable)
+        }
+        if (o instanceof Configurable) {
             ((Configurable) o).configure(originals());
+        }
         return t.cast(o);
     }
 
@@ -341,8 +354,9 @@ public class AbstractConfig {
      */
     public <T> List<T> getConfiguredInstances(List<String> classNames, Class<T> t, Map<String, Object> configOverrides) {
         List<T> objects = new ArrayList<T>();
-        if (classNames == null)
+        if (classNames == null) {
             return objects;
+        }
         Map<String, Object> configPairs = originals();
         configPairs.putAll(configOverrides);
         for (Object klass : classNames) {
@@ -355,12 +369,15 @@ public class AbstractConfig {
                 }
             } else if (klass instanceof Class<?>) {
                 o = Utils.newInstance((Class<?>) klass);
-            } else
+            } else {
                 throw new KafkaException("List contains element of type " + klass.getClass().getName() + ", expected String or Class");
-            if (!t.isInstance(o))
+            }
+            if (!t.isInstance(o)) {
                 throw new KafkaException(klass + " is not an instance of " + t.getName());
-            if (o instanceof Configurable)
+            }
+            if (o instanceof Configurable) {
                 ((Configurable) o).configure(configPairs);
+            }
             objects.add(t.cast(o));
         }
         return objects;
@@ -368,8 +385,12 @@ public class AbstractConfig {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         AbstractConfig that = (AbstractConfig) o;
 
@@ -420,8 +441,9 @@ public class AbstractConfig {
                     keyWithPrefix = prefix + stringKey;
                 }
                 ignore(keyWithPrefix);
-                if (withIgnoreFallback)
+                if (withIgnoreFallback) {
                     ignore(stringKey);
+                }
             }
             return super.get(key);
         }

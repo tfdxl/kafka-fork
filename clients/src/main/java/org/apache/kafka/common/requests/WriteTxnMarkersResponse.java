@@ -155,8 +155,9 @@ public class WriteTxnMarkersResponse extends AbstractResponse {
     public Map<Errors, Integer> errorCounts() {
         Map<Errors, Integer> errorCounts = new HashMap<>();
         for (Map<TopicPartition, Errors> allErrors : errors.values()) {
-            for (Errors error : allErrors.values())
+            for (Errors error : allErrors.values()) {
                 updateErrorCounts(errorCounts, error);
+            }
         }
         return errorCounts;
     }

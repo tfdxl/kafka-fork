@@ -142,7 +142,9 @@ public class WorkerGroupMember {
     }
 
     public void stop() {
-        if (stopped) return;
+        if (stopped) {
+            return;
+        }
         stop(false);
     }
 
@@ -151,8 +153,9 @@ public class WorkerGroupMember {
     }
 
     public void poll(long timeout) {
-        if (timeout < 0)
+        if (timeout < 0) {
             throw new IllegalArgumentException("Timeout must not be negative");
+        }
         coordinator.poll(timeout);
     }
 
@@ -198,9 +201,10 @@ public class WorkerGroupMember {
         ClientUtils.closeQuietly(metrics, "consumer metrics", firstException);
         ClientUtils.closeQuietly(client, "consumer network client", firstException);
         AppInfoParser.unregisterAppInfo(JMX_PREFIX, clientId, metrics);
-        if (firstException.get() != null && !swallowException)
+        if (firstException.get() != null && !swallowException) {
             throw new KafkaException("Failed to stop the Connect group member", firstException.get());
-        else
+        } else {
             log.debug("The Connect group member has stopped.");
+        }
     }
 }

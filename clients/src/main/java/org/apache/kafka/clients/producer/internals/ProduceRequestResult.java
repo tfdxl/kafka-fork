@@ -64,8 +64,9 @@ public final class ProduceRequestResult {
      * Mark this request as complete and unblock any threads waiting on its completion.
      */
     public void done() {
-        if (baseOffset == null)
+        if (baseOffset == null) {
             throw new IllegalStateException("The method `set` must be invoked before this method.");
+        }
         this.latch.countDown();
     }
 

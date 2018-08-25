@@ -118,6 +118,7 @@ public final class RecordAccumulator {
     private void registerMetrics(Metrics metrics, String metricGrpName) {
         MetricName metricName = metrics.metricName("waiting-threads", metricGrpName, "The number of user threads blocked waiting for buffer memory to enqueue their records");
         Measurable waitingThreads = new Measurable() {
+            @Override
             public double measure(MetricConfig config, long now) {
                 return free.queued();
             }
@@ -126,6 +127,7 @@ public final class RecordAccumulator {
 
         metricName = metrics.metricName("buffer-total-bytes", metricGrpName, "The maximum amount of buffer memory the client can use (whether or not it is currently used).");
         Measurable totalBytes = new Measurable() {
+            @Override
             public double measure(MetricConfig config, long now) {
                 return free.totalMemory();
             }
@@ -134,6 +136,7 @@ public final class RecordAccumulator {
 
         metricName = metrics.metricName("buffer-available-bytes", metricGrpName, "The total amount of buffer memory that is not being used (either unallocated or in the free list).");
         Measurable availableBytes = new Measurable() {
+            @Override
             public double measure(MetricConfig config, long now) {
                 return free.availableMemory();
             }
@@ -171,16 +174,20 @@ public final class RecordAccumulator {
         // abortIncompleteBatches().
         appendsInProgress.incrementAndGet();
         ByteBuffer buffer = null;
-        if (headers == null) headers = Record.EMPTY_HEADERS;
+        if (headers == null) {
+            headers = Record.EMPTY_HEADERS;
+        }
         try {
             // check if we have an in-progress batch
             Deque<ProducerBatch> dq = getOrCreateDeque(tp);
             synchronized (dq) {
-                if (closed)
+                if (closed) {
                     throw new IllegalStateException("Cannot send after the producer is closed.");
+                }
                 RecordAppendResult appendResult = tryAppend(timestamp, key, value, headers, callback, dq);
-                if (appendResult != null)
+                if (appendResult != null) {
                     return appendResult;
+                }
             }
 
             // we don't have an in-progress record batch try to allocate a new batch
@@ -190,8 +197,9 @@ public final class RecordAccumulator {
             buffer = free.allocate(size, maxTimeToBlock);
             synchronized (dq) {
                 // Need to check if producer is closed again after grabbing the dequeue lock.
-                if (closed)
+                if (closed) {
                     throw new IllegalStateException("Cannot send after the producer is closed.");
+                }
 
                 RecordAppendResult appendResult = tryAppend(timestamp, key, value, headers, callback, dq);
                 if (appendResult != null) {
@@ -212,8 +220,9 @@ public final class RecordAccumulator {
                 return new RecordAppendResult(future, dq.size() > 1 || batch.isFull(), true);
             }
         } finally {
-            if (buffer != null)
+            if (buffer != null) {
                 free.deallocate(buffer);
+            }
             appendsInProgress.decrementAndGet();
         }
     }
@@ -239,10 +248,11 @@ public final class RecordAccumulator {
         ProducerBatch last = deque.peekLast();
         if (last != null) {
             FutureRecordMetadata future = last.tryAppend(timestamp, key, value, headers, callback, time.milliseconds());
-            if (future == null)
+            if (future == null) {
                 last.closeForRecordAppends();
-            else
+            } else {
                 return new RecordAppendResult(future, deque.size() > 1 || last.isFull(), false);
+            }
         }
         return null;
     }
@@ -292,10 +302,11 @@ public final class RecordAccumulator {
         batch.reenqueued(now);
         Deque<ProducerBatch> deque = getOrCreateDeque(batch.topicPartition);
         synchronized (deque) {
-            if (transactionManager != null)
+            if (transactionManager != null) {
                 insertInSequenceOrder(deque, batch);
-            else
+            } else {
                 deque.addFirst(batch);
+            }
         }
     }
 
@@ -342,13 +353,15 @@ public final class RecordAccumulator {
     // IllegalStateException instead.
     private void insertInSequenceOrder(Deque<ProducerBatch> deque, ProducerBatch batch) {
         // When we are requeing and have enabled idempotence, the reenqueued batch must always have a sequence.
-        if (batch.baseSequence() == RecordBatch.NO_SEQUENCE)
+        if (batch.baseSequence() == RecordBatch.NO_SEQUENCE) {
             throw new IllegalStateException("Trying to reenqueue a batch which doesn't have a sequence even " +
                     "though idempotence is enabled.");
+        }
 
-        if (transactionManager.nextBatchBySequence(batch.topicPartition) == null)
+        if (transactionManager.nextBatchBySequence(batch.topicPartition) == null) {
             throw new IllegalStateException("We are reenqueueing a batch which is not tracked as part of the in flight " +
                     "requests. batch.topicPartition: " + batch.topicPartition + "; batch.baseSequence: " + batch.baseSequence());
+        }
 
         ProducerBatch firstBatchInQueue = deque.peekFirst();
         if (firstBatchInQueue != null && firstBatchInQueue.hasSequence() && firstBatchInQueue.baseSequence() < batch.baseSequence()) {
@@ -361,8 +374,9 @@ public final class RecordAccumulator {
             // Since we reenqueue exactly one batch a time and ensure that the queue is ordered by sequence always, it
             // is a simple linear scan of a subset of the in flight batches to find the right place in the queue each time.
             List<ProducerBatch> orderedBatches = new ArrayList<>();
-            while (deque.peekFirst() != null && deque.peekFirst().hasSequence() && deque.peekFirst().baseSequence() < batch.baseSequence())
+            while (deque.peekFirst() != null && deque.peekFirst().hasSequence() && deque.peekFirst().baseSequence() < batch.baseSequence()) {
                 orderedBatches.add(deque.pollFirst());
+            }
 
             log.debug("Reordered incoming batch with sequence {} for partition {}. It was placed in the queue at " +
                     "position {}", batch.baseSequence(), batch.topicPartition, orderedBatches.size());
@@ -452,8 +466,9 @@ public final class RecordAccumulator {
         for (Map.Entry<TopicPartition, Deque<ProducerBatch>> entry : this.batches.entrySet()) {
             Deque<ProducerBatch> deque = entry.getValue();
             synchronized (deque) {
-                if (!deque.isEmpty())
+                if (!deque.isEmpty()) {
                     return true;
+                }
             }
         }
         return false;
@@ -473,8 +488,9 @@ public final class RecordAccumulator {
                                                    Set<Node> nodes,
                                                    int maxSize,
                                                    long now) {
-        if (nodes.isEmpty())
+        if (nodes.isEmpty()) {
             return Collections.emptyMap();
+        }
 
         Map<Integer, List<ProducerBatch>> batches = new HashMap<>();
         for (Node node : nodes) {
@@ -505,13 +521,16 @@ public final class RecordAccumulator {
                                         ProducerIdAndEpoch producerIdAndEpoch = null;
                                         boolean isTransactional = false;
                                         if (transactionManager != null) {
-                                            if (!transactionManager.isSendToPartitionAllowed(tp))
+                                            if (!transactionManager.isSendToPartitionAllowed(tp)) {
                                                 break;
+                                            }
 
                                             producerIdAndEpoch = transactionManager.producerIdAndEpoch();
                                             if (!producerIdAndEpoch.isValid())
                                                 // we cannot send the batch until we have refreshed the producer id
+                                            {
                                                 break;
+                                            }
 
                                             isTransactional = transactionManager.isTransactional();
 
@@ -519,7 +538,9 @@ public final class RecordAccumulator {
                                                 // Don't drain any new batches while the state of previous sequence numbers
                                                 // is unknown. The previous batches would be unknown if they were aborted
                                                 // on the client after being sent to the broker at least once.
+                                            {
                                                 break;
+                                            }
 
                                             int firstInFlightSequence = transactionManager.firstInFlightSequence(first.topicPartition);
                                             if (firstInFlightSequence != RecordBatch.NO_SEQUENCE && first.hasSequence()
@@ -529,7 +550,9 @@ public final class RecordAccumulator {
                                                 // and drain that. We only move on when the next in line batch is complete (either successfully
                                                 // or due to a fatal broker error). This effectively reduces our
                                                 // in flight request count to 1.
+                                            {
                                                 break;
+                                            }
                                         }
 
                                         ProducerBatch batch = deque.pollFirst();
@@ -578,14 +601,16 @@ public final class RecordAccumulator {
      */
     private Deque<ProducerBatch> getOrCreateDeque(TopicPartition tp) {
         Deque<ProducerBatch> d = this.batches.get(tp);
-        if (d != null)
+        if (d != null) {
             return d;
+        }
         d = new ArrayDeque<>();
         Deque<ProducerBatch> previous = this.batches.putIfAbsent(tp, d);
-        if (previous == null)
+        if (previous == null) {
             return d;
-        else
+        } else {
             return previous;
+        }
     }
 
     /**
@@ -595,8 +620,9 @@ public final class RecordAccumulator {
         incomplete.remove(batch);
         // Only deallocate the batch if it is not a split batch because split batch are allocated outside the
         // buffer pool.
-        if (!batch.isSplitBatch())
+        if (!batch.isSplitBatch()) {
             free.deallocate(batch.buffer(), batch.initialCapacity());
+        }
     }
 
     /**
@@ -639,8 +665,9 @@ public final class RecordAccumulator {
      */
     public void awaitFlushCompletion() throws InterruptedException {
         try {
-            for (ProducerBatch batch : this.incomplete.copyAll())
+            for (ProducerBatch batch : this.incomplete.copyAll()) {
                 batch.produceFuture.await();
+            }
         } finally {
             this.flushesInProgress.decrementAndGet();
         }

@@ -63,17 +63,22 @@ public final class TopicPartitionReplica implements Serializable {
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj)
+        if (this == obj) {
             return true;
-        if (obj == null)
+        }
+        if (obj == null) {
             return false;
-        if (getClass() != obj.getClass())
+        }
+        if (getClass() != obj.getClass()) {
             return false;
+        }
         TopicPartitionReplica other = (TopicPartitionReplica) obj;
-        if (partition != other.partition)
+        if (partition != other.partition) {
             return false;
-        if (brokerId != other.brokerId)
+        }
+        if (brokerId != other.brokerId) {
             return false;
+        }
         if (topic == null) {
             if (other.topic != null) {
                 return false;

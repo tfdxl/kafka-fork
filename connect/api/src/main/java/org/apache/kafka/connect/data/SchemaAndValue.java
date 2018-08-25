@@ -38,8 +38,12 @@ public class SchemaAndValue {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         SchemaAndValue that = (SchemaAndValue) o;
         return Objects.equals(schema, that.schema) &&
                 Objects.equals(value, that.value);

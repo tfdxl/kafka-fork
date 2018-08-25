@@ -72,10 +72,12 @@ public final class Sensor {
 
     /* Validate that this sensor doesn't end up referencing itself */
     private void checkForest(Set<Sensor> sensors) {
-        if (!sensors.add(this))
+        if (!sensors.add(this)) {
             throw new IllegalArgumentException("Circular dependency in sensors: " + name() + " is its own parent.");
-        for (Sensor parent : parents)
+        }
+        for (Sensor parent : parents) {
             parent.checkForest(sensors);
+        }
     }
 
     /**
@@ -138,17 +140,20 @@ public final class Sensor {
                  * 调用stat集合的每一个Stat对象的record方法
                  */
                 // increment all the stats
-                for (Stat stat : this.stats)
+                for (Stat stat : this.stats) {
                     stat.record(config, value, timeMs);
+                }
 
                 /**
                  * 检查是否超出了MetricConfig的上下限
                  */
-                if (checkQuotas)
+                if (checkQuotas) {
                     checkQuotas(timeMs);
+                }
             }
-            for (Sensor parent : parents)
+            for (Sensor parent : parents) {
                 parent.record(value, timeMs, checkQuotas);
+            }
         }
     }
 
@@ -275,9 +280,10 @@ public final class Sensor {
         }
 
         public static RecordingLevel forId(int id) {
-            if (id < MIN_RECORDING_LEVEL_KEY || id > MAX_RECORDING_LEVEL_KEY)
+            if (id < MIN_RECORDING_LEVEL_KEY || id > MAX_RECORDING_LEVEL_KEY) {
                 throw new IllegalArgumentException(String.format("Unexpected RecordLevel id `%s`, it should be between `%s` " +
                         "and `%s` (inclusive)", id, MIN_RECORDING_LEVEL_KEY, MAX_RECORDING_LEVEL_KEY));
+            }
             return ID_TO_TYPE[id];
         }
 

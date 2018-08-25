@@ -123,8 +123,9 @@ public class RecordBatchIterationBenchmark {
     public void measureIteratorForBatchWithSingleMessage(Blackhole bh) throws IOException {
         for (RecordBatch batch : MemoryRecords.readableRecords(singleBatchBuffer.duplicate()).batches()) {
             try (CloseableIterator<Record> iterator = batch.streamingIterator(bufferSupplier)) {
-                while (iterator.hasNext())
+                while (iterator.hasNext()) {
                     bh.consume(iterator.next());
+                }
             }
         }
     }
@@ -135,8 +136,9 @@ public class RecordBatchIterationBenchmark {
         for (int i = 0; i < batchCount; ++i) {
             for (RecordBatch batch : MemoryRecords.readableRecords(batchBuffers[i].duplicate()).batches()) {
                 try (CloseableIterator<Record> iterator = batch.streamingIterator(bufferSupplier)) {
-                    while (iterator.hasNext())
+                    while (iterator.hasNext()) {
                         bh.consume(iterator.next());
+                    }
                 }
             }
         }

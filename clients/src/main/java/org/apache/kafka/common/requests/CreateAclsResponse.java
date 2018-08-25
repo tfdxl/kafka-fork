@@ -90,8 +90,9 @@ public class CreateAclsResponse extends AbstractResponse {
     @Override
     public Map<Errors, Integer> errorCounts() {
         Map<Errors, Integer> errorCounts = new HashMap<>();
-        for (AclCreationResponse response : aclCreationResponses)
+        for (AclCreationResponse response : aclCreationResponses) {
             updateErrorCounts(errorCounts, response.error.error());
+        }
         return errorCounts;
     }
 

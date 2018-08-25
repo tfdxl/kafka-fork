@@ -201,8 +201,9 @@ public class VerifiableProducer {
         Integer valuePrefix = res.getInt("valuePrefix");
         Long createTime = (long) res.getInt("createTime");
 
-        if (createTime == -1L)
+        if (createTime == -1L) {
             createTime = null;
+        }
 
         Properties producerProps = new Properties();
         producerProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, res.getString("brokerList"));
@@ -444,6 +445,7 @@ public class VerifiableProducer {
             this.value = value;
         }
 
+        @Override
         public void onCompletion(RecordMetadata recordMetadata, Exception e) {
             synchronized (System.out) {
                 if (e == null) {

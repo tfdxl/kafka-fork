@@ -70,8 +70,9 @@ public class MockConnector extends Connector {
 
             String delayMsString = config.get(DELAY_MS_KEY);
             long delayMs = DEFAULT_FAILURE_DELAY_MS;
-            if (delayMsString != null)
+            if (delayMsString != null) {
                 delayMs = Long.parseLong(delayMsString);
+            }
 
             log.debug("Started MockConnector with failure delay of {} ms", delayMs);
             executor = Executors.newSingleThreadScheduledExecutor();
@@ -102,8 +103,9 @@ public class MockConnector extends Connector {
             executor.shutdownNow();
 
             try {
-                if (!executor.awaitTermination(20, TimeUnit.SECONDS))
+                if (!executor.awaitTermination(20, TimeUnit.SECONDS)) {
                     throw new RuntimeException("Failed timely termination of scheduler");
+                }
             } catch (InterruptedException e) {
                 throw new RuntimeException("Task was interrupted during shutdown");
             }

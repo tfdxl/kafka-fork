@@ -90,6 +90,7 @@ public class NetworkReceive implements Receive {
         return !size.hasRemaining() && buffer != null && !buffer.hasRemaining();
     }
 
+    @Override
     public long readFrom(ScatteringByteChannel channel) throws IOException {
         return readFromReadableChannel(channel);
     }
@@ -121,16 +122,19 @@ public class NetworkReceive implements Receive {
         int read = 0;
         if (size.hasRemaining()) {
             int bytesRead = channel.read(size);
-            if (bytesRead < 0)
+            if (bytesRead < 0) {
                 throw new EOFException();
+            }
             read += bytesRead;
             if (!size.hasRemaining()) {
                 size.rewind();
                 int receiveSize = size.getInt();
-                if (receiveSize < 0)
+                if (receiveSize < 0) {
                     throw new InvalidReceiveException("Invalid receive (size = " + receiveSize + ")");
-                if (maxSize != UNLIMITED && receiveSize > maxSize)
+                }
+                if (maxSize != UNLIMITED && receiveSize > maxSize) {
                     throw new InvalidReceiveException("Invalid receive (size = " + receiveSize + " larger than " + maxSize + ")");
+                }
                 requestedBufferSize = receiveSize; //may be 0 for some payloads (SASL)
                 if (receiveSize == 0) {
                     buffer = EMPTY_BUFFER;
@@ -139,13 +143,15 @@ public class NetworkReceive implements Receive {
         }
         if (buffer == null && requestedBufferSize != -1) { //we know the size we want but havent been able to allocate it yet
             buffer = memoryPool.tryAllocate(requestedBufferSize);
-            if (buffer == null)
+            if (buffer == null) {
                 log.trace("Broker low on memory - could not allocate buffer of size {} for source {}", requestedBufferSize, source);
+            }
         }
         if (buffer != null) {
             int bytesRead = channel.read(buffer);
-            if (bytesRead < 0)
+            if (bytesRead < 0) {
                 throw new EOFException();
+            }
             read += bytesRead;
         }
 

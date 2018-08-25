@@ -70,8 +70,9 @@ public class AppInfoParser {
         MBeanServer server = ManagementFactory.getPlatformMBeanServer();
         try {
             ObjectName name = new ObjectName(prefix + ":type=app-info,id=" + Sanitizer.jmxSanitize(id));
-            if (server.isRegistered(name))
+            if (server.isRegistered(name)) {
                 server.unregisterMBean(name);
+            }
 
             unregisterMetrics(metrics);
         } catch (JMException e) {

@@ -101,10 +101,12 @@ public class LoginManager {
     /* Should only be used in tests. */
     public static void closeAll() {
         synchronized (LoginManager.class) {
-            for (String key : new ArrayList<>(STATIC_INSTANCES.keySet()))
+            for (String key : new ArrayList<>(STATIC_INSTANCES.keySet())) {
                 STATIC_INSTANCES.remove(key).login.close();
-            for (Password key : new ArrayList<>(DYNAMIC_INSTANCES.keySet()))
+            }
+            for (Password key : new ArrayList<>(DYNAMIC_INSTANCES.keySet())) {
                 DYNAMIC_INSTANCES.remove(key).login.close();
+            }
         }
     }
 
@@ -132,9 +134,9 @@ public class LoginManager {
      */
     public void release() {
         synchronized (LoginManager.class) {
-            if (refCount == 0)
+            if (refCount == 0) {
                 throw new IllegalStateException("release() called on disposed " + this);
-            else if (refCount == 1) {
+            } else if (refCount == 1) {
                 if (cacheKey instanceof Password) {
                     DYNAMIC_INSTANCES.remove(cacheKey);
                 } else {

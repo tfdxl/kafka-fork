@@ -74,8 +74,9 @@ public class KStreamWindowAggregate<K, V, T, W extends Window> implements KStrea
         public void process(K key, V value) {
             // if the key is null, we do not need proceed aggregating the record
             // the record with the table
-            if (key == null)
+            if (key == null) {
                 return;
+            }
 
             // first get the matching windows
             long timestamp = context().timestamp();
@@ -101,8 +102,9 @@ public class KStreamWindowAggregate<K, V, T, W extends Window> implements KStrea
 
                         T oldAgg = entry.value;
 
-                        if (oldAgg == null)
+                        if (oldAgg == null) {
                             oldAgg = initializer.apply();
+                        }
 
                         // try to add the new value (there will never be old value)
                         T newAgg = aggregator.apply(key, value, oldAgg);
@@ -130,6 +132,7 @@ public class KStreamWindowAggregate<K, V, T, W extends Window> implements KStrea
 
         return new KTableValueGetterSupplier<Windowed<K>, T>() {
 
+            @Override
             public KTableValueGetter<Windowed<K>, T> get() {
                 return new KStreamWindowAggregateValueGetter();
             }

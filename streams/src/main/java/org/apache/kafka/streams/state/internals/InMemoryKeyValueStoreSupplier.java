@@ -45,6 +45,7 @@ public class InMemoryKeyValueStoreSupplier<K, V> extends AbstractStoreSupplier<K
         super(name, keySerde, valueSerde, time, logged, logConfig);
     }
 
+    @Override
     public KeyValueStore get() {
         InMemoryKeyValueStore<K, V> store = new InMemoryKeyValueStore<>(name, keySerde, valueSerde);
 

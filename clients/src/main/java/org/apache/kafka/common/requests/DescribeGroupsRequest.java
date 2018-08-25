@@ -50,8 +50,9 @@ public class DescribeGroupsRequest extends AbstractRequest {
     public DescribeGroupsRequest(Struct struct, short version) {
         super(version);
         this.groupIds = new ArrayList<>();
-        for (Object groupId : struct.getArray(GROUP_IDS_KEY_NAME))
+        for (Object groupId : struct.getArray(GROUP_IDS_KEY_NAME)) {
             this.groupIds.add((String) groupId);
+        }
     }
 
     public static Schema[] schemaVersions() {

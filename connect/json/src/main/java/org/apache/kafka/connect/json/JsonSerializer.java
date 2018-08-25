@@ -43,8 +43,9 @@ public class JsonSerializer implements Serializer<JsonNode> {
 
     @Override
     public byte[] serialize(String topic, JsonNode data) {
-        if (data == null)
+        if (data == null) {
             return null;
+        }
 
         try {
             return objectMapper.writeValueAsBytes(data);

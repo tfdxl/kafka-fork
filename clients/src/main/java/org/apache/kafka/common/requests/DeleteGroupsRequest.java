@@ -49,8 +49,9 @@ public class DeleteGroupsRequest extends AbstractRequest {
         super(version);
         Object[] groupsArray = struct.getArray(GROUPS_KEY_NAME);
         Set<String> groups = new HashSet<>(groupsArray.length);
-        for (Object group : groupsArray)
+        for (Object group : groupsArray) {
             groups.add((String) group);
+        }
 
         this.groups = groups;
     }
@@ -74,8 +75,9 @@ public class DeleteGroupsRequest extends AbstractRequest {
     public AbstractResponse getErrorResponse(int throttleTimeMs, Throwable e) {
         Errors error = Errors.forException(e);
         Map<String, Errors> groupErrors = new HashMap<>(groups.size());
-        for (String group : groups)
+        for (String group : groups) {
             groupErrors.put(group, error);
+        }
 
         switch (version()) {
             case 0:

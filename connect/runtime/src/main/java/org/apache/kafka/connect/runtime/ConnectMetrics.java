@@ -75,8 +75,9 @@ public class ConnectMetrics {
      * @return the map of tags that can be supplied to the {@link Metrics} methods; never null
      */
     static Map<String, String> tags(String... keyValue) {
-        if ((keyValue.length % 2) != 0)
+        if ((keyValue.length % 2) != 0) {
             throw new IllegalArgumentException("keyValue needs to be specified in pairs");
+        }
         Map<String, String> tags = new LinkedHashMap<>();
         for (int i = 0; i < keyValue.length; i += 2) {
             tags.put(keyValue[i], keyValue[i + 1]);
@@ -137,8 +138,9 @@ public class ConnectMetrics {
         if (group == null) {
             group = new MetricGroup(groupId);
             MetricGroup previous = groupsByName.putIfAbsent(groupId, group);
-            if (previous != null)
+            if (previous != null) {
                 group = previous;
+            }
         }
         return group;
     }
@@ -234,8 +236,9 @@ public class ConnectMetrics {
 
         @Override
         public boolean equals(Object obj) {
-            if (obj == this)
+            if (obj == this) {
                 return true;
+            }
             if (obj instanceof MetricGroupId) {
                 MetricGroupId that = (MetricGroupId) obj;
                 return this.groupName.equals(that.groupName) && this.tags.equals(that.tags);
@@ -418,8 +421,9 @@ public class ConnectMetrics {
         public synchronized Sensor sensor(String name, MetricConfig config, Sensor.RecordingLevel recordingLevel, Sensor... parents) {
             // We need to make sure that all sensor names are unique across all groups, so use the sensor prefix
             Sensor result = metrics.sensor(sensorPrefix + name, config, Long.MAX_VALUE, recordingLevel, parents);
-            if (result != null)
+            if (result != null) {
                 sensorNames.add(result.name());
+            }
             return result;
         }
 

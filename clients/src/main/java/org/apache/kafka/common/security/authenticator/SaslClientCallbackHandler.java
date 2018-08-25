@@ -53,8 +53,9 @@ public class SaslClientCallbackHandler implements AuthCallbackHandler {
                 NameCallback nc = (NameCallback) callback;
                 if (!isKerberos && subject != null && !subject.getPublicCredentials(String.class).isEmpty()) {
                     nc.setName(subject.getPublicCredentials(String.class).iterator().next());
-                } else
+                } else {
                     nc.setName(nc.getDefaultName());
+                }
             } else if (callback instanceof PasswordCallback) {
                 if (!isKerberos && subject != null && !subject.getPrivateCredentials(String.class).isEmpty()) {
                     char[] password = subject.getPrivateCredentials(String.class).iterator().next().toCharArray();
@@ -78,8 +79,9 @@ public class SaslClientCallbackHandler implements AuthCallbackHandler {
                 String authId = ac.getAuthenticationID();
                 String authzId = ac.getAuthorizationID();
                 ac.setAuthorized(authId.equals(authzId));
-                if (ac.isAuthorized())
+                if (ac.isAuthorized()) {
                     ac.setAuthorizedID(authzId);
+                }
             } else if (callback instanceof ScramExtensionsCallback) {
                 ScramExtensionsCallback sc = (ScramExtensionsCallback) callback;
                 if (!isKerberos && subject != null && !subject.getPublicCredentials(Map.class).isEmpty()) {

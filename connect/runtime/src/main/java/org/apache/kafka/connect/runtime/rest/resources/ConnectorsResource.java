@@ -220,8 +220,9 @@ public class ConnectorsResource {
     private void checkAndPutConnectorConfigName(String connectorName, Map<String, String> connectorConfig) {
         String includedName = connectorConfig.get(ConnectorConfig.NAME_CONFIG);
         if (includedName != null) {
-            if (!includedName.equals(connectorName))
+            if (!includedName.equals(connectorName)) {
                 throw new BadRequestException("Connector name configuration (" + includedName + ") doesn't match connector name in the URL (" + connectorName + ")");
+            }
         } else {
             connectorConfig.put(ConnectorConfig.NAME_CONFIG, connectorName);
         }

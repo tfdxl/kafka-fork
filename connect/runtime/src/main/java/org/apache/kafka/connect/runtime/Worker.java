@@ -180,8 +180,9 @@ public class Worker {
             ConnectorStatus.Listener statusListener,
             TargetState initialState
     ) {
-        if (connectors.containsKey(connName))
+        if (connectors.containsKey(connName)) {
             throw new ConnectException("Connector with name " + connName + " already exists");
+        }
 
         final WorkerConnector workerConnector;
         ClassLoader savedLoader = plugins.currentThreadLoader();
@@ -207,8 +208,9 @@ public class Worker {
         }
 
         WorkerConnector existing = connectors.putIfAbsent(connName, workerConnector);
-        if (existing != null)
+        if (existing != null) {
             throw new ConnectException("Connector with name " + connName + " already exists");
+        }
 
         log.info("Finished creating connector {}", connName);
         workerMetricsGroup.recordConnectorStartupSuccess();
@@ -224,8 +226,9 @@ public class Worker {
      */
     public boolean isSinkConnector(String connName) {
         WorkerConnector workerConnector = connectors.get(connName);
-        if (workerConnector == null)
+        if (workerConnector == null) {
             throw new ConnectException("Connector " + connName + " not found in this worker.");
+        }
 
         ClassLoader savedLoader = plugins.currentThreadLoader();
         try {
@@ -246,8 +249,9 @@ public class Worker {
         log.trace("Reconfiguring connector tasks for {}", connName);
 
         WorkerConnector workerConnector = connectors.get(connName);
-        if (workerConnector == null)
+        if (workerConnector == null) {
             throw new ConnectException("Connector " + connName + " not found in this worker.");
+        }
 
         int maxTasks = connConfig.getInt(ConnectorConfig.TASKS_MAX_CONFIG);
         Map<String, String> connOriginals = connConfig.originalsStrings();
@@ -280,8 +284,9 @@ public class Worker {
     private void stopConnectors() {
         // Herder is responsible for stopping connectors. This is an internal method to sequentially
         // stop connectors that have not explicitly been stopped.
-        for (String connector : connectors.keySet())
+        for (String connector : connectors.keySet()) {
             stopConnector(connector);
+        }
     }
 
     /**
@@ -350,8 +355,9 @@ public class Worker {
     ) {
         log.info("Creating task {}", id);
 
-        if (tasks.containsKey(id))
+        if (tasks.containsKey(id)) {
             throw new ConnectException("Task already exists in this worker: " + id);
+        }
 
         final WorkerTask workerTask;
         ClassLoader savedLoader = plugins.currentThreadLoader();
@@ -408,8 +414,9 @@ public class Worker {
         }
 
         WorkerTask existing = tasks.putIfAbsent(id, workerTask);
-        if (existing != null)
+        if (existing != null) {
             throw new ConnectException("Task already exists in this worker: " + id);
+        }
 
         executor.submit(workerTask);
         if (workerTask instanceof WorkerSourceTask) {
@@ -456,8 +463,9 @@ public class Worker {
         }
 
         log.info("Stopping task {}", task.id());
-        if (task instanceof WorkerSourceTask)
+        if (task instanceof WorkerSourceTask) {
             sourceTaskOffsetCommitter.remove(task.id());
+        }
 
         ClassLoader savedLoader = plugins.currentThreadLoader();
         try {

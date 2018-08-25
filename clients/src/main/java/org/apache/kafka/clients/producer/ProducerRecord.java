@@ -65,14 +65,17 @@ public class ProducerRecord<K, V> {
      * @param headers   the headers that will be included in the record
      */
     public ProducerRecord(String topic, Integer partition, Long timestamp, K key, V value, Iterable<Header> headers) {
-        if (topic == null)
+        if (topic == null) {
             throw new IllegalArgumentException("Topic cannot be null.");
-        if (timestamp != null && timestamp < 0)
+        }
+        if (timestamp != null && timestamp < 0) {
             throw new IllegalArgumentException(
                     String.format("Invalid timestamp: %d. Timestamp should always be non-negative or null.", timestamp));
-        if (partition != null && partition < 0)
+        }
+        if (partition != null && partition < 0) {
             throw new IllegalArgumentException(
                     String.format("Invalid partition: %d. Partition number should always be non-negative or null.", partition));
+        }
         this.topic = topic;
         this.partition = partition;
         this.key = key;
@@ -195,25 +198,27 @@ public class ProducerRecord<K, V> {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o)
+        if (this == o) {
             return true;
-        else if (!(o instanceof ProducerRecord))
+        } else if (!(o instanceof ProducerRecord)) {
             return false;
+        }
 
         ProducerRecord<?, ?> that = (ProducerRecord<?, ?>) o;
 
-        if (key != null ? !key.equals(that.key) : that.key != null)
+        if (key != null ? !key.equals(that.key) : that.key != null) {
             return false;
-        else if (partition != null ? !partition.equals(that.partition) : that.partition != null)
+        } else if (partition != null ? !partition.equals(that.partition) : that.partition != null) {
             return false;
-        else if (topic != null ? !topic.equals(that.topic) : that.topic != null)
+        } else if (topic != null ? !topic.equals(that.topic) : that.topic != null) {
             return false;
-        else if (headers != null ? !headers.equals(that.headers) : that.headers != null)
+        } else if (headers != null ? !headers.equals(that.headers) : that.headers != null) {
             return false;
-        else if (value != null ? !value.equals(that.value) : that.value != null)
+        } else if (value != null ? !value.equals(that.value) : that.value != null) {
             return false;
-        else if (timestamp != null ? !timestamp.equals(that.timestamp) : that.timestamp != null)
+        } else if (timestamp != null ? !timestamp.equals(that.timestamp) : that.timestamp != null) {
             return false;
+        }
 
         return true;
     }

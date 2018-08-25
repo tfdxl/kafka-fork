@@ -70,8 +70,9 @@ public class KStreamWindowReduce<K, V, W extends Window> implements KStreamAggPr
         public void process(K key, V value) {
             // if the key is null, we do not need proceed aggregating
             // the record with the table
-            if (key == null)
+            if (key == null) {
                 return;
+            }
 
             // first get the matching windows
             long timestamp = context().timestamp();
@@ -126,6 +127,7 @@ public class KStreamWindowReduce<K, V, W extends Window> implements KStreamAggPr
 
         return new KTableValueGetterSupplier<Windowed<K>, V>() {
 
+            @Override
             public KTableValueGetter<Windowed<K>, V> get() {
                 return new KStreamWindowReduceValueGetter();
             }

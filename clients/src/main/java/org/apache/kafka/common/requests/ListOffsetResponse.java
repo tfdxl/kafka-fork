@@ -114,8 +114,9 @@ public class ListOffsetResponse extends AbstractResponse {
                 if (partitionResponse.hasField(OFFSETS_KEY_NAME)) {
                     Object[] offsets = partitionResponse.getArray(OFFSETS_KEY_NAME);
                     List<Long> offsetsList = new ArrayList<>();
-                    for (Object offset : offsets)
+                    for (Object offset : offsets) {
                         offsetsList.add((Long) offset);
+                    }
                     partitionData = new PartitionData(error, offsetsList);
                 } else {
                     long timestamp = partitionResponse.getLong(TIMESTAMP_KEY_NAME);
@@ -146,8 +147,9 @@ public class ListOffsetResponse extends AbstractResponse {
     @Override
     public Map<Errors, Integer> errorCounts() {
         Map<Errors, Integer> errorCounts = new HashMap<>();
-        for (PartitionData response : responseData.values())
+        for (PartitionData response : responseData.values()) {
             updateErrorCounts(errorCounts, response.error);
+        }
         return errorCounts;
     }
 
@@ -167,9 +169,9 @@ public class ListOffsetResponse extends AbstractResponse {
                 Struct partitionData = topicData.instance(PARTITIONS_KEY_NAME);
                 partitionData.set(PARTITION_ID, partitionEntry.getKey());
                 partitionData.set(ERROR_CODE, offsetPartitionData.error.code());
-                if (version == 0)
+                if (version == 0) {
                     partitionData.set(OFFSETS_KEY_NAME, offsetPartitionData.offsets.toArray());
-                else {
+                } else {
                     partitionData.set(TIMESTAMP_KEY_NAME, offsetPartitionData.timestamp);
                     partitionData.set(OFFSET_KEY_NAME, offsetPartitionData.offset);
                 }

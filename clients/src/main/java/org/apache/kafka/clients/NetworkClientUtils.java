@@ -62,8 +62,9 @@ public final class NetworkClientUtils {
         long startTime = time.milliseconds();
         long expiryTime = startTime + timeoutMs;
 
-        if (isReady(client, node, startTime) || client.ready(node, startTime))
+        if (isReady(client, node, startTime) || client.ready(node, startTime)) {
             return true;
+        }
 
         long attemptStartTime = time.milliseconds();
         while (!client.isReady(node, attemptStartTime) && attemptStartTime < expiryTime) {
@@ -72,8 +73,9 @@ public final class NetworkClientUtils {
             }
             long pollTimeout = expiryTime - attemptStartTime;
             client.poll(pollTimeout, attemptStartTime);
-            if (client.authenticationException(node) != null)
+            if (client.authenticationException(node) != null) {
                 throw client.authenticationException(node);
+            }
             attemptStartTime = time.milliseconds();
         }
         return client.isReady(node, attemptStartTime);

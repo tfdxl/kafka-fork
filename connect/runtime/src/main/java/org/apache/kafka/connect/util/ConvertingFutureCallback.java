@@ -36,8 +36,9 @@ public abstract class ConvertingFutureCallback<U, T> implements Callback<U>, Fut
     public void onCompletion(Throwable error, U result) {
         this.exception = error;
         this.result = convert(result);
-        if (underlying != null)
+        if (underlying != null) {
             underlying.onCompletion(error, this.result);
+        }
         finishedLatch.countDown();
     }
 
@@ -65,8 +66,9 @@ public abstract class ConvertingFutureCallback<U, T> implements Callback<U>, Fut
     @Override
     public T get(long l, TimeUnit timeUnit)
             throws InterruptedException, ExecutionException, TimeoutException {
-        if (!finishedLatch.await(l, timeUnit))
+        if (!finishedLatch.await(l, timeUnit)) {
             throw new TimeoutException("Timed out waiting for future");
+        }
         return result();
     }
 

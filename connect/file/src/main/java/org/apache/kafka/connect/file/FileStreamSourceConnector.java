@@ -78,8 +78,9 @@ public class FileStreamSourceConnector extends SourceConnector {
         ArrayList<Map<String, String>> configs = new ArrayList<>();
         // Only one input stream makes sense.
         Map<String, String> config = new HashMap<>();
-        if (filename != null)
+        if (filename != null) {
             config.put(FILE_CONFIG, filename);
+        }
         config.put(TOPIC_CONFIG, topic);
         config.put(TASK_BATCH_SIZE_CONFIG, String.valueOf(batchSize));
         configs.add(config);

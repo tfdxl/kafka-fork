@@ -661,8 +661,9 @@ public class KafkaConsumer<K, V> implements Consumer<K, V> {
                           Deserializer<V> valueDeserializer) {
         try {
             String clientId = config.getString(ConsumerConfig.CLIENT_ID_CONFIG);
-            if (clientId.isEmpty())
+            if (clientId.isEmpty()) {
                 clientId = "consumer-" + CONSUMER_CLIENT_ID_SEQUENCE.getAndIncrement();
+            }
             this.clientId = clientId;
             String groupId = config.getString(ConsumerConfig.GROUP_ID_CONFIG);
 
@@ -856,6 +857,7 @@ public class KafkaConsumer<K, V> implements Consumer<K, V> {
      *
      * @return The set of partitions currently assigned to this consumer
      */
+    @Override
     public Set<TopicPartition> assignment() {
         acquireAndEnsureOpen();
         try {
@@ -871,6 +873,7 @@ public class KafkaConsumer<K, V> implements Consumer<K, V> {
      *
      * @return The set of topics currently subscribed to
      */
+    @Override
     public Set<String> subscription() {
         acquireAndEnsureOpen();
         try {
@@ -928,8 +931,9 @@ public class KafkaConsumer<K, V> implements Consumer<K, V> {
                 this.unsubscribe();
             } else {
                 for (String topic : topics) {
-                    if (topic == null || topic.trim().isEmpty())
+                    if (topic == null || topic.trim().isEmpty()) {
                         throw new IllegalArgumentException("Topic collection to subscribe to cannot contain null or empty topic");
+                    }
                 }
 
                 throwIfNoAssignorsConfigured();
@@ -992,8 +996,9 @@ public class KafkaConsumer<K, V> implements Consumer<K, V> {
     public void subscribe(Pattern pattern, ConsumerRebalanceListener listener) {
         acquireAndEnsureOpen();
         try {
-            if (pattern == null)
+            if (pattern == null) {
                 throw new IllegalArgumentException("Topic pattern to subscribe to cannot be null");
+            }
 
             throwIfNoAssignorsConfigured();
 
@@ -1032,6 +1037,7 @@ public class KafkaConsumer<K, V> implements Consumer<K, V> {
      * Unsubscribe from topics currently subscribed with {@link #subscribe(Collection)} or {@link #subscribe(Pattern)}.
      * This also clears any partitions directly assigned through {@link #assign(Collection)}.
      */
+    @Override
     public void unsubscribe() {
         acquireAndEnsureOpen();
         try {
@@ -1075,8 +1081,9 @@ public class KafkaConsumer<K, V> implements Consumer<K, V> {
                 Set<String> topics = new HashSet<>();
                 for (TopicPartition tp : partitions) {
                     String topic = (tp != null) ? tp.topic() : null;
-                    if (topic == null || topic.trim().isEmpty())
+                    if (topic == null || topic.trim().isEmpty()) {
                         throw new IllegalArgumentException("Topic partitions to assign to cannot have null or empty topic");
+                    }
                     topics.add(topic);
                 }
 
@@ -1144,8 +1151,9 @@ public class KafkaConsumer<K, V> implements Consumer<K, V> {
                     //
                     // NOTE: since the consumed position has already been updated, we must not allow
                     // wakeups or any other errors to be triggered prior to returning the fetched records.
-                    if (fetcher.sendFetches() > 0 || client.hasPendingRequests())
+                    if (fetcher.sendFetches() > 0 || client.hasPendingRequests()) {
                         client.pollNoWakeup();
+                    }
 
                     return this.interceptors.onConsume(new ConsumerRecords<>(records));
                 }
@@ -1191,8 +1199,9 @@ public class KafkaConsumer<K, V> implements Consumer<K, V> {
 
         // We do not want to be stuck blocking in poll if we are missing some positions
         // since the offset lookup may be backing off after a failure
-        if (!hasAllFetchPositions && pollTimeout > retryBackoffMs)
+        if (!hasAllFetchPositions && pollTimeout > retryBackoffMs) {
             pollTimeout = retryBackoffMs;
+        }
 
         client.poll(pollTimeout, nowMs, new PollCondition() {
             @Override
@@ -1205,8 +1214,9 @@ public class KafkaConsumer<K, V> implements Consumer<K, V> {
 
         // after the long poll, we should check whether the group needs to rebalance
         // prior to returning data so that the group can stabilize faster
-        if (coordinator.needRejoin())
+        if (coordinator.needRejoin()) {
             return Collections.emptyMap();
+        }
 
         return fetcher.fetchedRecords();
     }
@@ -1365,8 +1375,9 @@ public class KafkaConsumer<K, V> implements Consumer<K, V> {
     public void seek(TopicPartition partition, long offset) {
         acquireAndEnsureOpen();
         try {
-            if (offset < 0)
+            if (offset < 0) {
                 throw new IllegalArgumentException("seek offset must not be a negative number");
+            }
 
             log.debug("Seeking to offset {} for partition {}", offset, partition);
             this.subscriptions.seek(partition, offset);
@@ -1382,6 +1393,7 @@ public class KafkaConsumer<K, V> implements Consumer<K, V> {
      *
      * @throws IllegalArgumentException if {@code partitions} is {@code null} or the provided TopicPartition is not assigned to this consumer
      */
+    @Override
     public void seekToBeginning(Collection<TopicPartition> partitions) {
         acquireAndEnsureOpen();
         try {
@@ -1408,6 +1420,7 @@ public class KafkaConsumer<K, V> implements Consumer<K, V> {
      *
      * @throws IllegalArgumentException if {@code partitions} is {@code null} or the provided TopicPartition is not assigned to this consumer
      */
+    @Override
     public void seekToEnd(Collection<TopicPartition> partitions) {
         acquireAndEnsureOpen();
         try {
@@ -1445,11 +1458,13 @@ public class KafkaConsumer<K, V> implements Consumer<K, V> {
      *                                                                  configured groupId. See the exception for more details
      * @throws org.apache.kafka.common.KafkaException                   for any other unrecoverable errors
      */
+    @Override
     public long position(TopicPartition partition) {
         acquireAndEnsureOpen();
         try {
-            if (!this.subscriptions.isAssigned(partition))
+            if (!this.subscriptions.isAssigned(partition)) {
                 throw new IllegalArgumentException("You can only check the position for partitions assigned to this consumer.");
+            }
             Long offset = this.subscriptions.position(partition);
             while (offset == null) {
                 // batch update fetch positions for any partitions without a valid position
@@ -1521,8 +1536,9 @@ public class KafkaConsumer<K, V> implements Consumer<K, V> {
         try {
             Cluster cluster = this.metadata.fetch();
             List<PartitionInfo> parts = cluster.partitionsForTopic(topic);
-            if (!parts.isEmpty())
+            if (!parts.isEmpty()) {
                 return parts;
+            }
 
             Map<String, List<PartitionInfo>> topicMetadata = fetcher.getTopicMetadata(
                     new MetadataRequest.Builder(Collections.singletonList(topic), true), requestTimeoutMs);
@@ -1640,9 +1656,10 @@ public class KafkaConsumer<K, V> implements Consumer<K, V> {
             for (Map.Entry<TopicPartition, Long> entry : timestampsToSearch.entrySet()) {
                 // we explicitly exclude the earliest and latest offset here so the timestamp in the returned
                 // OffsetAndTimestamp is always positive.
-                if (entry.getValue() < 0)
+                if (entry.getValue() < 0) {
                     throw new IllegalArgumentException("The target time for partition " + entry.getKey() + " is " +
                             entry.getValue() + ". The target time cannot be negative.");
+                }
             }
             return fetcher.offsetsByTimes(timestampsToSearch, requestTimeoutMs);
         } finally {
@@ -1733,9 +1750,11 @@ public class KafkaConsumer<K, V> implements Consumer<K, V> {
      * @throws InterruptException                     If the thread is interrupted before or while this function is called
      * @throws org.apache.kafka.common.KafkaException for any other error during close
      */
+    @Override
     public void close(long timeout, TimeUnit timeUnit) {
-        if (timeout < 0)
+        if (timeout < 0) {
             throw new IllegalArgumentException("The timeout cannot be negative.");
+        }
         acquire();
         try {
             if (!closed) {
@@ -1759,8 +1778,9 @@ public class KafkaConsumer<K, V> implements Consumer<K, V> {
 
     private ClusterResourceListeners configureClusterResourceListeners(Deserializer<K> keyDeserializer, Deserializer<V> valueDeserializer, List<?>... candidateLists) {
         ClusterResourceListeners clusterResourceListeners = new ClusterResourceListeners();
-        for (List<?> candidateList : candidateLists)
+        for (List<?> candidateList : candidateLists) {
             clusterResourceListeners.maybeAddAll(candidateList);
+        }
 
         clusterResourceListeners.maybeAdd(keyDeserializer);
         clusterResourceListeners.maybeAdd(valueDeserializer);
@@ -1771,8 +1791,9 @@ public class KafkaConsumer<K, V> implements Consumer<K, V> {
         log.trace("Closing the Kafka consumer");
         AtomicReference<Throwable> firstException = new AtomicReference<>();
         try {
-            if (coordinator != null)
+            if (coordinator != null) {
                 coordinator.close(Math.min(timeoutMs, requestTimeoutMs));
+            }
         } catch (Throwable t) {
             firstException.compareAndSet(null, t);
             log.error("Failed to close coordinator", t);
@@ -1804,8 +1825,9 @@ public class KafkaConsumer<K, V> implements Consumer<K, V> {
      *                                                                defined
      */
     private boolean updateFetchPositions() {
-        if (subscriptions.hasAllFetchPositions())
+        if (subscriptions.hasAllFetchPositions()) {
             return true;
+        }
 
         // If there are any partitions which do not have a valid position and are not
         // awaiting reset, then we need to fetch committed offsets. We will only do a
@@ -1866,8 +1888,9 @@ public class KafkaConsumer<K, V> implements Consumer<K, V> {
     }
 
     private void throwIfNoAssignorsConfigured() {
-        if (assignors.isEmpty())
+        if (assignors.isEmpty()) {
             throw new IllegalStateException("Must configure at least one partition assigner class name to " +
                     ConsumerConfig.PARTITION_ASSIGNMENT_STRATEGY_CONFIG + " configuration property");
+        }
     }
 }

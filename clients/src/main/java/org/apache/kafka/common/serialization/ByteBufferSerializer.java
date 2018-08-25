@@ -21,13 +21,16 @@ import java.util.Map;
 
 public class ByteBufferSerializer implements Serializer<ByteBuffer> {
 
+    @Override
     public void configure(Map<String, ?> configs, boolean isKey) {
         // nothing to do
     }
 
+    @Override
     public byte[] serialize(String topic, ByteBuffer data) {
-        if (data == null)
+        if (data == null) {
             return null;
+        }
 
         data.rewind();
 
@@ -44,6 +47,7 @@ public class ByteBufferSerializer implements Serializer<ByteBuffer> {
         return ret;
     }
 
+    @Override
     public void close() {
         // nothing to do
     }

@@ -42,6 +42,7 @@ public interface Partitioner extends Configurable, Closeable {
     /**
      * This is called when partitioner is closed.
      */
+    @Override
     void close();
 
 }

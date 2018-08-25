@@ -34,16 +34,20 @@ public class Topic {
     private static final int MAX_NAME_LENGTH = 249;
 
     public static void validate(String topic) {
-        if (topic.isEmpty())
+        if (topic.isEmpty()) {
             throw new InvalidTopicException("Topic name is illegal, it can't be empty");
-        if (topic.equals(".") || topic.equals(".."))
+        }
+        if (topic.equals(".") || topic.equals("..")) {
             throw new InvalidTopicException("Topic name cannot be \".\" or \"..\"");
-        if (topic.length() > MAX_NAME_LENGTH)
+        }
+        if (topic.length() > MAX_NAME_LENGTH) {
             throw new InvalidTopicException("Topic name is illegal, it can't be longer than " + MAX_NAME_LENGTH +
                     " characters, topic name: " + topic);
-        if (!containsValidPattern(topic))
+        }
+        if (!containsValidPattern(topic)) {
             throw new InvalidTopicException("Topic name \"" + topic + "\" is illegal, it contains a character other than " +
                     "ASCII alphanumerics, '.', '_' and '-'");
+        }
     }
 
     public static boolean isInternal(String topic) {
@@ -81,8 +85,9 @@ public class Topic {
             // We don't use Character.isLetterOrDigit(c) because it's slower
             boolean validChar = (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') || (c >= 'A' && c <= 'Z') || c == '.' ||
                     c == '_' || c == '-';
-            if (!validChar)
+            if (!validChar) {
                 return false;
+            }
         }
         return true;
     }

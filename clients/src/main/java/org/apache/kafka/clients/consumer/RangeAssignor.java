@@ -48,8 +48,9 @@ public class RangeAssignor extends AbstractPartitionAssignor {
         Map<String, List<String>> res = new HashMap<>();
         for (Map.Entry<String, Subscription> subscriptionEntry : consumerMetadata.entrySet()) {
             String consumerId = subscriptionEntry.getKey();
-            for (String topic : subscriptionEntry.getValue().topics())
+            for (String topic : subscriptionEntry.getValue().topics()) {
                 put(res, topic, consumerId);
+            }
         }
         return res;
     }
@@ -59,16 +60,18 @@ public class RangeAssignor extends AbstractPartitionAssignor {
                                                     Map<String, Subscription> subscriptions) {
         Map<String, List<String>> consumersPerTopic = consumersPerTopic(subscriptions);
         Map<String, List<TopicPartition>> assignment = new HashMap<>();
-        for (String memberId : subscriptions.keySet())
+        for (String memberId : subscriptions.keySet()) {
             assignment.put(memberId, new ArrayList<TopicPartition>());
+        }
 
         for (Map.Entry<String, List<String>> topicEntry : consumersPerTopic.entrySet()) {
             String topic = topicEntry.getKey();
             List<String> consumersForTopic = topicEntry.getValue();
 
             Integer numPartitionsForTopic = partitionsPerTopic.get(topic);
-            if (numPartitionsForTopic == null)
+            if (numPartitionsForTopic == null) {
                 continue;
+            }
 
             Collections.sort(consumersForTopic);
 

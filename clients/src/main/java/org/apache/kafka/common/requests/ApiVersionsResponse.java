@@ -110,8 +110,9 @@ public class ApiVersionsResponse extends AbstractResponse {
     }
 
     public static ApiVersionsResponse defaultApiVersionsResponse() {
-        if (defaultApiVersionsResponse == null)
+        if (defaultApiVersionsResponse == null) {
             defaultApiVersionsResponse = createApiVersionsResponse(DEFAULT_THROTTLE_TIME, RecordBatch.CURRENT_MAGIC_VALUE);
+        }
         return defaultApiVersionsResponse;
     }
 

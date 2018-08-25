@@ -39,8 +39,9 @@ public class Schema extends Type {
         this.fieldsByName = new HashMap<>();
         for (int i = 0; i < this.fields.length; i++) {
             Field def = fs[i];
-            if (fieldsByName.containsKey(def.name))
+            if (fieldsByName.containsKey(def.name)) {
                 throw new SchemaException("Schema contains a duplicate field: " + def.name);
+            }
             this.fields[i] = new BoundField(def, this, i);
             this.fieldsByName.put(def.name, this.fields[i]);
         }
@@ -50,8 +51,9 @@ public class Schema extends Type {
         if (node instanceof Schema) {
             Schema schema = (Schema) node;
             visitor.visit(schema);
-            for (BoundField f : schema.fields())
+            for (BoundField f : schema.fields()) {
                 handleNode(f.def.type, visitor);
+            }
         } else if (node instanceof ArrayOf) {
             ArrayOf array = (ArrayOf) node;
             visitor.visit(array);
@@ -156,8 +158,9 @@ public class Schema extends Type {
         b.append('{');
         for (int i = 0; i < this.fields.length; i++) {
             b.append(this.fields[i].toString());
-            if (i < this.fields.length - 1)
+            if (i < this.fields.length - 1) {
                 b.append(',');
+            }
         }
         b.append("}");
         return b.toString();

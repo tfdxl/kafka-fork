@@ -22,13 +22,16 @@ import java.util.Map;
 
 public class ShortDeserializer implements Deserializer<Short> {
 
+    @Override
     public void configure(Map<String, ?> configs, boolean isKey) {
         // nothing to do
     }
 
+    @Override
     public Short deserialize(String topic, byte[] data) {
-        if (data == null)
+        if (data == null) {
             return null;
+        }
         if (data.length != 2) {
             throw new SerializationException("Size of data received by ShortDeserializer is not 2");
         }
@@ -41,6 +44,7 @@ public class ShortDeserializer implements Deserializer<Short> {
         return value;
     }
 
+    @Override
     public void close() {
         // nothing to do
     }

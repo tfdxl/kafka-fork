@@ -66,8 +66,9 @@ public class Decimal {
      * @return the encoded value
      */
     public static byte[] fromLogical(Schema schema, BigDecimal value) {
-        if (value.scale() != scale(schema))
+        if (value.scale() != scale(schema)) {
             throw new DataException("BigDecimal has mismatching scale value for given Decimal schema");
+        }
         return value.unscaledValue().toByteArray();
     }
 
@@ -77,8 +78,9 @@ public class Decimal {
 
     private static int scale(Schema schema) {
         String scaleString = schema.parameters().get(SCALE_FIELD);
-        if (scaleString == null)
+        if (scaleString == null) {
             throw new DataException("Invalid Decimal schema: scale parameter not found.");
+        }
         try {
             return Integer.parseInt(scaleString);
         } catch (NumberFormatException e) {

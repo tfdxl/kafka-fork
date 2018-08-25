@@ -42,8 +42,9 @@ public class JsonDeserializer implements Deserializer<JsonNode> {
 
     @Override
     public JsonNode deserialize(String topic, byte[] bytes) {
-        if (bytes == null)
+        if (bytes == null) {
             return null;
+        }
 
         JsonNode data;
         try {

@@ -59,8 +59,9 @@ public final class FutureRecordMetadata implements Future<RecordMetadata> {
     @Override
     public RecordMetadata get() throws InterruptedException, ExecutionException {
         this.result.await();
-        if (nextRecordMetadata != null)
+        if (nextRecordMetadata != null) {
             return nextRecordMetadata.get();
+        }
         return valueOrError();
     }
 
@@ -70,10 +71,12 @@ public final class FutureRecordMetadata implements Future<RecordMetadata> {
         long now = System.currentTimeMillis();
         long deadline = Long.MAX_VALUE - timeout < now ? Long.MAX_VALUE : now + timeout;
         boolean occurred = this.result.await(timeout, unit);
-        if (nextRecordMetadata != null)
+        if (nextRecordMetadata != null) {
             return nextRecordMetadata.get(deadline - System.currentTimeMillis(), TimeUnit.MILLISECONDS);
-        if (!occurred)
+        }
+        if (!occurred) {
             throw new TimeoutException("Timeout after waiting for " + TimeUnit.MILLISECONDS.convert(timeout, unit) + " ms.");
+        }
         return valueOrError();
     }
 
@@ -83,17 +86,19 @@ public final class FutureRecordMetadata implements Future<RecordMetadata> {
      * old big batch has been deemed as done.
      */
     void chain(FutureRecordMetadata futureRecordMetadata) {
-        if (nextRecordMetadata == null)
+        if (nextRecordMetadata == null) {
             nextRecordMetadata = futureRecordMetadata;
-        else
+        } else {
             nextRecordMetadata.chain(futureRecordMetadata);
+        }
     }
 
     RecordMetadata valueOrError() throws ExecutionException {
-        if (this.result.error() != null)
+        if (this.result.error() != null) {
             throw new ExecutionException(this.result.error());
-        else
+        } else {
             return value();
+        }
     }
 
     Long checksumOrNull() {
@@ -101,8 +106,9 @@ public final class FutureRecordMetadata implements Future<RecordMetadata> {
     }
 
     RecordMetadata value() {
-        if (nextRecordMetadata != null)
+        if (nextRecordMetadata != null) {
             return nextRecordMetadata.value();
+        }
         return new RecordMetadata(result.topicPartition(), this.result.baseOffset(), this.relativeOffset,
                 timestamp(), this.checksum, this.serializedKeySize, this.serializedValueSize);
     }
@@ -113,8 +119,9 @@ public final class FutureRecordMetadata implements Future<RecordMetadata> {
 
     @Override
     public boolean isDone() {
-        if (nextRecordMetadata != null)
+        if (nextRecordMetadata != null) {
             return nextRecordMetadata.isDone();
+        }
         return this.result.completed();
     }
 

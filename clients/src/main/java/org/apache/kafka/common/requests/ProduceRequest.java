@@ -116,8 +116,9 @@ public class ProduceRequest extends AbstractRequest {
         this.partitionRecords = partitionRecords;
         this.partitionSizes = createPartitionSizes(partitionRecords);
 
-        for (MemoryRecords records : partitionRecords.values())
+        for (MemoryRecords records : partitionRecords.values()) {
             validateRecords(version, records);
+        }
     }
     public ProduceRequest(Struct struct, short version) {
         super(version);
@@ -146,8 +147,9 @@ public class ProduceRequest extends AbstractRequest {
 
     private static Map<TopicPartition, Integer> createPartitionSizes(Map<TopicPartition, MemoryRecords> partitionRecords) {
         Map<TopicPartition, Integer> result = new HashMap<>(partitionRecords.size());
-        for (Map.Entry<TopicPartition, MemoryRecords> entry : partitionRecords.entrySet())
+        for (Map.Entry<TopicPartition, MemoryRecords> entry : partitionRecords.entrySet()) {
             result.put(entry.getKey(), entry.getValue().sizeInBytes());
+        }
         return result;
     }
 
@@ -181,18 +183,21 @@ public class ProduceRequest extends AbstractRequest {
     private void validateRecords(short version, MemoryRecords records) {
         if (version >= 3) {
             Iterator<MutableRecordBatch> iterator = records.batches().iterator();
-            if (!iterator.hasNext())
+            if (!iterator.hasNext()) {
                 throw new InvalidRecordException("Produce requests with version " + version + " must have at least " +
                         "one record batch");
+            }
 
             MutableRecordBatch entry = iterator.next();
-            if (entry.magic() != RecordBatch.MAGIC_VALUE_V2)
+            if (entry.magic() != RecordBatch.MAGIC_VALUE_V2) {
                 throw new InvalidRecordException("Produce requests with version " + version + " are only allowed to " +
                         "contain record batches with magic version 2");
+            }
 
-            if (iterator.hasNext())
+            if (iterator.hasNext()) {
                 throw new InvalidRecordException("Produce requests with version " + version + " are only allowed to " +
                         "contain exactly one record batch");
+            }
             idempotent = entry.hasProducerId();
             transactional = entry.isTransactional();
         }
@@ -242,10 +247,11 @@ public class ProduceRequest extends AbstractRequest {
         bld.append("{acks=").append(acks)
                 .append(",timeout=").append(timeout);
 
-        if (verbose)
+        if (verbose) {
             bld.append(",partitionSizes=").append(Utils.mkString(partitionSizes, "[", "]", "=", ","));
-        else
+        } else {
             bld.append(",numPartitions=").append(partitionSizes.size());
+        }
 
         bld.append("}");
         return bld.toString();
@@ -254,15 +260,17 @@ public class ProduceRequest extends AbstractRequest {
     @Override
     public ProduceResponse getErrorResponse(int throttleTimeMs, Throwable e) {
         /* In case the producer doesn't actually want any response */
-        if (acks == 0)
+        if (acks == 0) {
             return null;
+        }
 
         Errors error = Errors.forException(e);
         Map<TopicPartition, ProduceResponse.PartitionResponse> responseMap = new HashMap<>();
         ProduceResponse.PartitionResponse partitionResponse = new ProduceResponse.PartitionResponse(error);
 
-        for (TopicPartition tp : partitions())
+        for (TopicPartition tp : partitions()) {
             responseMap.put(tp, partitionResponse);
+        }
 
         short versionId = version();
         switch (versionId) {
@@ -315,9 +323,10 @@ public class ProduceRequest extends AbstractRequest {
     public Map<TopicPartition, MemoryRecords> partitionRecordsOrFail() {
         // Store it in a local variable to protect against concurrent updates
         Map<TopicPartition, MemoryRecords> partitionRecords = this.partitionRecords;
-        if (partitionRecords == null)
+        if (partitionRecords == null) {
             throw new IllegalStateException("The partition records are no longer available because " +
                     "clearPartitionRecords() has been invoked.");
+        }
         return partitionRecords;
     }
 

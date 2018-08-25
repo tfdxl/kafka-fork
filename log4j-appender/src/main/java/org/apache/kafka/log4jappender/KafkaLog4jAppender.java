@@ -197,18 +197,24 @@ public class KafkaLog4jAppender extends AppenderSkeleton {
     public void activateOptions() {
         // check for config parameter validity
         Properties props = new Properties();
-        if (brokerList != null)
+        if (brokerList != null) {
             props.put(BOOTSTRAP_SERVERS_CONFIG, brokerList);
-        if (props.isEmpty())
+        }
+        if (props.isEmpty()) {
             throw new ConfigException("The bootstrap servers property should be specified");
-        if (topic == null)
+        }
+        if (topic == null) {
             throw new ConfigException("Topic must be specified by the Kafka log4j appender");
-        if (compressionType != null)
+        }
+        if (compressionType != null) {
             props.put(COMPRESSION_TYPE_CONFIG, compressionType);
-        if (requiredNumAcks != Integer.MAX_VALUE)
+        }
+        if (requiredNumAcks != Integer.MAX_VALUE) {
             props.put(ACKS_CONFIG, Integer.toString(requiredNumAcks));
-        if (retries > 0)
+        }
+        if (retries > 0) {
             props.put(RETRIES_CONFIG, retries);
+        }
         if (securityProtocol != null) {
             props.put(SECURITY_PROTOCOL_CONFIG, securityProtocol);
         }

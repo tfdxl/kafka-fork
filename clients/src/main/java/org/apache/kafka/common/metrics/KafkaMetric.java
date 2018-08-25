@@ -33,8 +33,9 @@ public final class KafkaMetric implements Metric {
                        MetricConfig config, Time time) {
         this.metricName = metricName;
         this.lock = lock;
-        if (!(valueProvider instanceof Measurable) && !(valueProvider instanceof Gauge))
+        if (!(valueProvider instanceof Measurable) && !(valueProvider instanceof Gauge)) {
             throw new IllegalArgumentException("Unsupported metric value provider of class " + valueProvider.getClass());
+        }
         this.metricValueProvider = valueProvider;
         this.config = config;
         this.time = time;
@@ -64,27 +65,30 @@ public final class KafkaMetric implements Metric {
     public Object metricValue() {
         long now = time.milliseconds();
         synchronized (this.lock) {
-            if (this.metricValueProvider instanceof Measurable)
+            if (this.metricValueProvider instanceof Measurable) {
                 return ((Measurable) metricValueProvider).measure(config, now);
-            else if (this.metricValueProvider instanceof Gauge)
+            } else if (this.metricValueProvider instanceof Gauge) {
                 return ((Gauge<?>) metricValueProvider).value(config, now);
-            else
+            } else {
                 throw new IllegalStateException("Not a valid metric: " + this.metricValueProvider.getClass());
+            }
         }
     }
 
     public Measurable measurable() {
-        if (this.metricValueProvider instanceof Measurable)
+        if (this.metricValueProvider instanceof Measurable) {
             return (Measurable) metricValueProvider;
-        else
+        } else {
             throw new IllegalStateException("Not a measurable: " + this.metricValueProvider.getClass());
+        }
     }
 
     double measurableValue(long timeMs) {
-        if (this.metricValueProvider instanceof Measurable)
+        if (this.metricValueProvider instanceof Measurable) {
             return ((Measurable) metricValueProvider).measure(config, timeMs);
-        else
+        } else {
             return 0;
+        }
     }
 
     public void config(MetricConfig config) {

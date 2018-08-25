@@ -272,6 +272,7 @@ public class ThreadCache {
             this.cache = cache;
         }
 
+        @Override
         public Bytes peekNextKey() {
             if (!hasNext()) {
                 throw new NoSuchElementException();
@@ -280,6 +281,7 @@ public class ThreadCache {
         }
 
 
+        @Override
         public KeyValue<Bytes, LRUCacheEntry> peekNext() {
             if (!hasNext()) {
                 throw new NoSuchElementException();

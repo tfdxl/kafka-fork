@@ -63,15 +63,18 @@ public class SourceNode<K, V> extends ProcessorNode<K, V> {
         this.context = context;
 
         // if deserializers are null, get the default ones from the context
-        if (this.keyDeserializer == null)
+        if (this.keyDeserializer == null) {
             this.keyDeserializer = ensureExtended((Deserializer<K>) context.keySerde().deserializer());
-        if (this.valDeserializer == null)
+        }
+        if (this.valDeserializer == null) {
             this.valDeserializer = ensureExtended((Deserializer<V>) context.valueSerde().deserializer());
+        }
 
         // if value deserializers are for {@code Change} values, set the inner deserializer when necessary
         if (this.valDeserializer instanceof ChangedDeserializer &&
-                ((ChangedDeserializer) this.valDeserializer).inner() == null)
+                ((ChangedDeserializer) this.valDeserializer).inner() == null) {
             ((ChangedDeserializer) this.valDeserializer).setInner(context.valueSerde().deserializer());
+        }
     }
 
 
@@ -92,6 +95,7 @@ public class SourceNode<K, V> extends ProcessorNode<K, V> {
     /**
      * @return a string representation of this node starting with the given indent, useful for debugging.
      */
+    @Override
     public String toString(String indent) {
         final StringBuilder sb = new StringBuilder(super.toString(indent));
         sb.append(indent).append("\ttopics:\t\t[");

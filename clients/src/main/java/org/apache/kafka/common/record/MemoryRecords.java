@@ -75,8 +75,9 @@ public class MemoryRecords extends AbstractRecords {
             bytesRead += batch.sizeInBytes();
 
             BatchRetention batchRetention = filter.checkBatchRetention(batch);
-            if (batchRetention == BatchRetention.DELETE)
+            if (batchRetention == BatchRetention.DELETE) {
                 continue;
+            }
 
             // We use the absolute offset to decide whether to retain the message or not. Due to KAFKA-4298, we have to
             // allow for the possibility that a previous version corrupted the log by writing a compressed record batch
@@ -95,11 +96,13 @@ public class MemoryRecords extends AbstractRecords {
                     if (filter.shouldRetainRecord(batch, record)) {
                         // Check for log corruption due to KAFKA-4298. If we find it, make sure that we overwrite
                         // the corrupted batch with correct data.
-                        if (!record.hasMagic(batchMagic))
+                        if (!record.hasMagic(batchMagic)) {
                             writeOriginalBatch = false;
+                        }
 
-                        if (record.offset() > maxOffset)
+                        if (record.offset() > maxOffset) {
                             maxOffset = record.offset();
+                        }
 
                         retainedRecords.add(record);
                     } else {
@@ -125,11 +128,12 @@ public class MemoryRecords extends AbstractRecords {
                     messagesRetained += retainedRecords.size();
                     bytesRetained += filteredBatchSize;
 
-                    if (filteredBatchSize > batch.sizeInBytes() && filteredBatchSize > maxRecordBatchSize)
+                    if (filteredBatchSize > batch.sizeInBytes() && filteredBatchSize > maxRecordBatchSize) {
                         log.warn("Record batch from {} with last offset {} exceeded max record batch size {} after cleaning " +
                                         "(new size is {}). Consumers with version earlier than 0.10.1.0 may need to " +
                                         "increase their fetch sizes.",
                                 partition, batch.lastOffset(), maxRecordBatchSize, filteredBatchSize);
+                    }
 
                     MemoryRecordsBuilder.RecordsInfo info = builder.info();
                     if (info.maxTimestamp > maxTimestamp) {
@@ -138,8 +142,9 @@ public class MemoryRecords extends AbstractRecords {
                     }
                 }
             } else if (batchRetention == BatchRetention.RETAIN_EMPTY) {
-                if (batchMagic < RecordBatch.MAGIC_VALUE_V2)
+                if (batchMagic < RecordBatch.MAGIC_VALUE_V2) {
                     throw new IllegalStateException("Empty batches are only supported for magic v2 and above");
+                }
 
                 bufferOutputStream.ensureRemaining(DefaultRecordBatch.RECORD_BATCH_OVERHEAD);
                 DefaultRecordBatch.writeEmptyHeader(bufferOutputStream.buffer(), batchMagic, batch.producerId(),
@@ -151,9 +156,10 @@ public class MemoryRecords extends AbstractRecords {
             // If we had to allocate a new buffer to fit the filtered output (see KAFKA-5316), return early to
             // avoid the need for additional allocations.
             ByteBuffer outputBuffer = bufferOutputStream.buffer();
-            if (outputBuffer != destinationBuffer)
+            if (outputBuffer != destinationBuffer) {
                 return new FilterResult(outputBuffer, messagesRead, bytesRead, messagesRetained, bytesRetained,
                         maxOffset, maxTimestamp, shallowOffsetOfMaxTimestamp);
+            }
         }
 
         return new FilterResult(destinationBuffer, messagesRead, bytesRead, messagesRetained, bytesRetained,
@@ -175,14 +181,17 @@ public class MemoryRecords extends AbstractRecords {
                 originalBatch.producerEpoch(), originalBatch.baseSequence(), originalBatch.isTransactional(),
                 originalBatch.isControlBatch(), originalBatch.partitionLeaderEpoch(), bufferOutputStream.limit());
 
-        for (Record record : retainedRecords)
+        for (Record record : retainedRecords) {
             builder.append(record);
+        }
 
         if (magic >= RecordBatch.MAGIC_VALUE_V2)
             // we must preserve the last offset from the initial batch in order to ensure that the
             // last sequence number from the batch remains even after compaction. Otherwise, the producer
             // could incorrectly see an out of sequence error.
+        {
             builder.overrideLastOffset(originalBatch.lastOffset());
+        }
 
         return builder;
     }
@@ -225,8 +234,9 @@ public class MemoryRecords extends AbstractRecords {
                                                TimestampType timestampType,
                                                long baseOffset) {
         long logAppendTime = RecordBatch.NO_TIMESTAMP;
-        if (timestampType == TimestampType.LOG_APPEND_TIME)
+        if (timestampType == TimestampType.LOG_APPEND_TIME) {
             logAppendTime = System.currentTimeMillis();
+        }
         return builder(buffer, magic, compressionType, timestampType, baseOffset, logAppendTime,
                 RecordBatch.NO_PRODUCER_ID, RecordBatch.NO_PRODUCER_EPOCH, RecordBatch.NO_SEQUENCE, false,
                 RecordBatch.NO_PARTITION_LEADER_EPOCH);
@@ -375,18 +385,21 @@ public class MemoryRecords extends AbstractRecords {
                                             TimestampType timestampType, long producerId, short producerEpoch,
                                             int baseSequence, int partitionLeaderEpoch, boolean isTransactional,
                                             SimpleRecord... records) {
-        if (records.length == 0)
+        if (records.length == 0) {
             return MemoryRecords.EMPTY;
+        }
         int sizeEstimate = AbstractRecords.estimateSizeInBytes(magic, compressionType, Arrays.asList(records));
         ByteBufferOutputStream bufferStream = new ByteBufferOutputStream(sizeEstimate);
         long logAppendTime = RecordBatch.NO_TIMESTAMP;
-        if (timestampType == TimestampType.LOG_APPEND_TIME)
+        if (timestampType == TimestampType.LOG_APPEND_TIME) {
             logAppendTime = System.currentTimeMillis();
+        }
         MemoryRecordsBuilder builder = new MemoryRecordsBuilder(bufferStream, magic, compressionType, timestampType,
                 initialOffset, logAppendTime, producerId, producerEpoch, baseSequence, isTransactional, false,
                 partitionLeaderEpoch, sizeEstimate);
-        for (SimpleRecord record : records)
+        for (SimpleRecord record : records) {
             builder.append(record);
+        }
         return builder.build();
     }
 
@@ -433,11 +446,13 @@ public class MemoryRecords extends AbstractRecords {
 
     @Override
     public long writeTo(GatheringByteChannel channel, long position, int length) throws IOException {
-        if (position > Integer.MAX_VALUE)
+        if (position > Integer.MAX_VALUE) {
             throw new IllegalArgumentException("position should not be greater than Integer.MAX_VALUE: " + position);
-        if (position + length > buffer.limit())
+        }
+        if (position + length > buffer.limit()) {
             throw new IllegalArgumentException("position+length should not be greater than buffer.limit(), position: "
                     + position + ", length: " + length + ", buffer.limit(): " + buffer.limit());
+        }
 
         int pos = (int) position;
         ByteBuffer dup = buffer.duplicate();
@@ -456,8 +471,9 @@ public class MemoryRecords extends AbstractRecords {
     public int writeFullyTo(GatheringByteChannel channel) throws IOException {
         buffer.mark();
         int written = 0;
-        while (written < sizeInBytes())
+        while (written < sizeInBytes()) {
             written += channel.write(buffer);
+        }
         buffer.reset();
         return written;
     }
@@ -474,8 +490,9 @@ public class MemoryRecords extends AbstractRecords {
         }
 
         int bytes = 0;
-        for (RecordBatch batch : batches())
+        for (RecordBatch batch : batches()) {
             bytes += batch.sizeInBytes();
+        }
 
         this.validBytes = bytes;
         return bytes;
@@ -531,14 +548,16 @@ public class MemoryRecords extends AbstractRecords {
                 while (recordsIterator.hasNext()) {
                     Record record = recordsIterator.next();
                     appendRecordToStringBuilder(builder, record.toString());
-                    if (recordsIterator.hasNext())
+                    if (recordsIterator.hasNext()) {
                         builder.append(", ");
+                    }
                 }
             } catch (KafkaException e) {
                 appendRecordToStringBuilder(builder, "CORRUPTED");
             }
-            if (batchIterator.hasNext())
+            if (batchIterator.hasNext()) {
                 builder.append(", ");
+            }
         }
         builder.append(']');
         return builder.toString();
@@ -553,10 +572,12 @@ public class MemoryRecords extends AbstractRecords {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o)
+        if (this == o) {
             return true;
-        if (o == null || getClass() != o.getClass())
+        }
+        if (o == null || getClass() != o.getClass()) {
             return false;
+        }
 
         MemoryRecords that = (MemoryRecords) o;
 

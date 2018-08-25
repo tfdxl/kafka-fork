@@ -49,8 +49,12 @@ public class ErrorResponse {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         ErrorResponse that = (ErrorResponse) o;
         return Objects.equals(code, that.code) &&
             Objects.equals(message, that.message);

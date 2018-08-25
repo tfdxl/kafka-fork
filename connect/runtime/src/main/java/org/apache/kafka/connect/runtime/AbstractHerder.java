@@ -226,22 +226,25 @@ public abstract class AbstractHerder implements Herder, TaskStatus.Listener, Con
 
     @Override
     public void onDeletion(String connector) {
-        for (TaskStatus status : statusBackingStore.getAll(connector))
+        for (TaskStatus status : statusBackingStore.getAll(connector)) {
             statusBackingStore.put(new TaskStatus(status.id(), TaskStatus.State.DESTROYED, workerId, generation()));
+        }
         statusBackingStore.put(new ConnectorStatus(connector, ConnectorStatus.State.DESTROYED, workerId, generation()));
     }
 
     @Override
     public void pauseConnector(String connector) {
-        if (!configBackingStore.contains(connector))
+        if (!configBackingStore.contains(connector)) {
             throw new NotFoundException("Unknown connector " + connector);
+        }
         configBackingStore.putTargetState(connector, TargetState.PAUSED);
     }
 
     @Override
     public void resumeConnector(String connector) {
-        if (!configBackingStore.contains(connector))
+        if (!configBackingStore.contains(connector)) {
             throw new NotFoundException("Unknown connector " + connector);
+        }
         configBackingStore.putTargetState(connector, TargetState.STARTED);
     }
 
@@ -258,8 +261,9 @@ public abstract class AbstractHerder implements Herder, TaskStatus.Listener, Con
     @Override
     public ConnectorStateInfo connectorStatus(String connName) {
         ConnectorStatus connector = statusBackingStore.get(connName);
-        if (connector == null)
+        if (connector == null) {
             throw new NotFoundException("No status found for connector " + connName);
+        }
 
         Collection<TaskStatus> tasks = statusBackingStore.getAll(connName);
 
@@ -283,8 +287,9 @@ public abstract class AbstractHerder implements Herder, TaskStatus.Listener, Con
     public ConnectorStateInfo.TaskState taskStatus(ConnectorTaskId id) {
         TaskStatus status = statusBackingStore.get(id);
 
-        if (status == null)
+        if (status == null) {
             throw new NotFoundException("No status found for task " + id);
+        }
 
         return new ConnectorStateInfo.TaskState(id.task(), status.state().toString(),
                 status.workerId(), status.trace());
@@ -299,8 +304,9 @@ public abstract class AbstractHerder implements Herder, TaskStatus.Listener, Con
     @Override
     public ConfigInfos validateConnectorConfig(Map<String, String> connectorProps) {
         String connType = connectorProps.get(ConnectorConfig.CONNECTOR_CLASS_CONFIG);
-        if (connType == null)
+        if (connType == null) {
             throw new BadRequestException("Connector config " + connectorProps + " contains no connector type");
+        }
 
         List<ConfigValue> configValues = new ArrayList<>();
         Map<String, ConfigKey> configKeys = new LinkedHashMap<>();

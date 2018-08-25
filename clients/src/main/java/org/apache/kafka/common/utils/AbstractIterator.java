@@ -49,11 +49,13 @@ public abstract class AbstractIterator<T> implements Iterator<T> {
 
     @Override
     public T next() {
-        if (!hasNext())
+        if (!hasNext()) {
             throw new NoSuchElementException();
+        }
         state = State.NOT_READY;
-        if (next == null)
+        if (next == null) {
             throw new IllegalStateException("Expected item but none found.");
+        }
         return next;
     }
 

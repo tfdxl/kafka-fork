@@ -43,9 +43,9 @@ public class CompressionRatioEstimator {
         float[] compressionRatioForTopic = getAndCreateEstimationIfAbsent(topic);
         float currentEstimation = compressionRatioForTopic[type.id];
         synchronized (compressionRatioForTopic) {
-            if (observedRatio > currentEstimation)
+            if (observedRatio > currentEstimation) {
                 compressionRatioForTopic[type.id] = Math.max(currentEstimation + COMPRESSION_RATIO_DETERIORATE_STEP, observedRatio);
-            else if (observedRatio < currentEstimation) {
+            } else if (observedRatio < currentEstimation) {
                 compressionRatioForTopic[type.id] = currentEstimation - COMPRESSION_RATIO_IMPROVING_STEP;
             }
         }
@@ -95,8 +95,9 @@ public class CompressionRatioEstimator {
             compressionRatioForTopic = initialCompressionRatio();
             float[] existingCompressionRatio = COMPRESSION_RATIO.putIfAbsent(topic, compressionRatioForTopic);
             // Someone created the compression ratio array before us, use it.
-            if (existingCompressionRatio != null)
+            if (existingCompressionRatio != null) {
                 return existingCompressionRatio;
+            }
         }
         return compressionRatioForTopic;
     }

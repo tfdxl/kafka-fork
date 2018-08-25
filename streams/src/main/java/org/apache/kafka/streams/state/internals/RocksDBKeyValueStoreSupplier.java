@@ -53,6 +53,7 @@ public class RocksDBKeyValueStoreSupplier<K, V> extends AbstractStoreSupplier<K,
         }
     }
 
+    @Override
     public KeyValueStore get() {
         return builder.build();
     }

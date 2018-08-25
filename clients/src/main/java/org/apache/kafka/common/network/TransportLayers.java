@@ -27,8 +27,9 @@ public final class TransportLayers {
     // Once BlockingChannel is removed we can make Send and Receive work with TransportLayer rather than
     // GatheringByteChannel or ScatteringByteChannel.
     public static boolean hasPendingWrites(GatheringByteChannel channel) {
-        if (channel instanceof TransportLayer)
+        if (channel instanceof TransportLayer) {
             return ((TransportLayer) channel).hasPendingWrites();
+        }
         return false;
     }
 }

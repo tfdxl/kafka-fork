@@ -87,8 +87,9 @@ public class Resource {
 
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof Resource))
+        if (!(o instanceof Resource)) {
             return false;
+        }
         Resource other = (Resource) o;
         return resourceType.equals(other.resourceType) && Objects.equals(name, other.name);
     }

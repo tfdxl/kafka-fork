@@ -160,6 +160,7 @@ public class RocksDBStore implements KeyValueStore<Bytes, byte[]> {
         open = true;
     }
 
+    @Override
     public void init(final ProcessorContext context,
                      final StateStore root) {
         // open the DB dir
@@ -499,8 +500,9 @@ public class RocksDBStore implements KeyValueStore<Bytes, byte[]> {
          */
         @Override
         public synchronized KeyValue<Bytes, byte[]> next() {
-            if (!hasNext())
+            if (!hasNext()) {
                 throw new NoSuchElementException();
+            }
 
             final KeyValue<Bytes, byte[]> entry = this.getKeyValue();
             iter.next();

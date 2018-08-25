@@ -297,8 +297,9 @@ public class ConnectHeaders implements Headers {
             while (iter.hasPrevious()) {
                 String headerKey = iter.previous().key();
                 if (key.equals(headerKey)) {
-                    if (found)
+                    if (found) {
                         iter.remove();
+                    }
                     found = true;
                 }
             }
@@ -358,8 +359,9 @@ public class ConnectHeaders implements Headers {
             Iterator<Header> thisIter = this.iterator();
             Iterator<Header> thatIter = that.iterator();
             while (thisIter.hasNext() && thatIter.hasNext()) {
-                if (!Objects.equals(thisIter.next(), thatIter.next()))
+                if (!Objects.equals(thisIter.next(), thatIter.next())) {
                     return false;
+                }
             }
             return !thisIter.hasNext() && !thatIter.hasNext();
         }
@@ -409,8 +411,9 @@ public class ConnectHeaders implements Headers {
     void checkSchemaMatches(SchemaAndValue schemaAndValue) {
         if (schemaAndValue != null) {
             Schema schema = schemaAndValue.schema();
-            if (schema == null)
+            if (schema == null) {
                 return;
+            }
             schema = schema.schema(); // in case a SchemaBuilder is used
             Object value = schemaAndValue.value();
             if (value == null && !schema.isOptional()) {
@@ -419,62 +422,79 @@ public class ConnectHeaders implements Headers {
             if (value != null) {
                 switch (schema.type()) {
                     case BYTES:
-                        if (value instanceof ByteBuffer)
+                        if (value instanceof ByteBuffer) {
                             return;
-                        if (value instanceof byte[])
+                        }
+                        if (value instanceof byte[]) {
                             return;
-                        if (value instanceof BigDecimal && Decimal.LOGICAL_NAME.equals(schema.name()))
+                        }
+                        if (value instanceof BigDecimal && Decimal.LOGICAL_NAME.equals(schema.name())) {
                             return;
+                        }
                         break;
                     case STRING:
-                        if (value instanceof String)
+                        if (value instanceof String) {
                             return;
+                        }
                         break;
                     case BOOLEAN:
-                        if (value instanceof Boolean)
+                        if (value instanceof Boolean) {
                             return;
+                        }
                         break;
                     case INT8:
-                        if (value instanceof Byte)
+                        if (value instanceof Byte) {
                             return;
+                        }
                         break;
                     case INT16:
-                        if (value instanceof Short)
+                        if (value instanceof Short) {
                             return;
+                        }
                         break;
                     case INT32:
-                        if (value instanceof Integer)
+                        if (value instanceof Integer) {
                             return;
-                        if (value instanceof java.util.Date && Date.LOGICAL_NAME.equals(schema.name()))
+                        }
+                        if (value instanceof java.util.Date && Date.LOGICAL_NAME.equals(schema.name())) {
                             return;
-                        if (value instanceof java.util.Date && Time.LOGICAL_NAME.equals(schema.name()))
+                        }
+                        if (value instanceof java.util.Date && Time.LOGICAL_NAME.equals(schema.name())) {
                             return;
+                        }
                         break;
                     case INT64:
-                        if (value instanceof Long)
+                        if (value instanceof Long) {
                             return;
-                        if (value instanceof java.util.Date && Timestamp.LOGICAL_NAME.equals(schema.name()))
+                        }
+                        if (value instanceof java.util.Date && Timestamp.LOGICAL_NAME.equals(schema.name())) {
                             return;
+                        }
                         break;
                     case FLOAT32:
-                        if (value instanceof Float)
+                        if (value instanceof Float) {
                             return;
+                        }
                         break;
                     case FLOAT64:
-                        if (value instanceof Double)
+                        if (value instanceof Double) {
                             return;
+                        }
                         break;
                     case ARRAY:
-                        if (value instanceof List)
+                        if (value instanceof List) {
                             return;
+                        }
                         break;
                     case MAP:
-                        if (value instanceof Map)
+                        if (value instanceof Map) {
                             return;
+                        }
                         break;
                     case STRUCT:
-                        if (value instanceof Struct)
+                        if (value instanceof Struct) {
                             return;
+                        }
                         break;
                 }
                 throw new DataException("The value " + value + " is not compatible with the schema " + schema);
@@ -492,6 +512,7 @@ public class ConnectHeaders implements Headers {
             this.key = key;
         }
 
+        @Override
         protected Header makeNext() {
             while (original.hasNext()) {
                 Header header = original.next();

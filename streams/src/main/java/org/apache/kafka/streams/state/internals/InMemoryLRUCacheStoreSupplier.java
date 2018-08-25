@@ -43,6 +43,7 @@ public class InMemoryLRUCacheStoreSupplier<K, V> extends AbstractStoreSupplier<K
         this.capacity = capacity;
     }
 
+    @Override
     public KeyValueStore get() {
         MemoryNavigableLRUCache<K, V> cache = new MemoryNavigableLRUCache<>(name, capacity, keySerde, valueSerde);
         return new MeteredKeyValueStore<>(logged ? cache.enableLogging() : cache, "in-memory-lru-state", time);

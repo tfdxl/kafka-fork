@@ -134,8 +134,9 @@ class WorkerSinkTask extends WorkerTask {
         // FIXME Kafka needs to add a timeout parameter here for us to properly obey the timeout
         // passed in
         task.stop();
-        if (consumer != null)
+        if (consumer != null) {
             consumer.close();
+        }
         transformationChain.close();
     }
 
@@ -154,8 +155,9 @@ class WorkerSinkTask extends WorkerTask {
     public void execute() {
         initializeAndStart();
         try {
-            while (!isStopping())
+            while (!isStopping()) {
                 iteration();
+            }
         } finally {
             // Make sure any uncommitted data has been committed and the task has
             // a chance to clean up its state
@@ -191,8 +193,9 @@ class WorkerSinkTask extends WorkerTask {
         } catch (WakeupException we) {
             log.trace("{} Consumer woken up", this);
 
-            if (isStopping())
+            if (isStopping()) {
                 return;
+            }
 
             if (shouldPause()) {
                 pauseAll();
@@ -330,8 +333,9 @@ class WorkerSinkTask extends WorkerTask {
     }
 
     private void commitOffsets(long now, boolean closing) {
-        if (currentOffsets.isEmpty())
+        if (currentOffsets.isEmpty()) {
             return;
+        }
 
         committing = true;
         commitSeqno += 1;
@@ -491,9 +495,11 @@ class WorkerSinkTask extends WorkerTask {
     }
 
     private void resumeAll() {
-        for (TopicPartition tp : consumer.assignment())
-            if (!context.pausedPartitions().contains(tp))
+        for (TopicPartition tp : consumer.assignment()) {
+            if (!context.pausedPartitions().contains(tp)) {
                 consumer.resume(singleton(tp));
+            }
+        }
     }
 
     private void pauseAll() {
@@ -514,8 +520,9 @@ class WorkerSinkTask extends WorkerTask {
             // If we had paused all consumer topic partitions to try to redeliver data, then we should resume any that
             // the task had not explicitly paused
             if (pausedForRedelivery) {
-                if (!shouldPause())
+                if (!shouldPause()) {
                     resumeAll();
+                }
                 pausedForRedelivery = false;
             }
         } catch (RetriableException e) {
@@ -741,10 +748,11 @@ class WorkerSinkTask extends WorkerTask {
 
             // Ensure that the paused partitions contains only assigned partitions and repause as necessary
             context.pausedPartitions().retainAll(partitions);
-            if (shouldPause())
+            if (shouldPause()) {
                 pauseAll();
-            else if (!context.pausedPartitions().isEmpty())
+            } else if (!context.pausedPartitions().isEmpty()) {
                 consumer.pause(context.pausedPartitions());
+            }
 
             // Instead of invoking the assignment callback on initialization, we guarantee the consumer is ready upon
             // task start. Since this callback gets invoked during that initial setup before we've started the task, we

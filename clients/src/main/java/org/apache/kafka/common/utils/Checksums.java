@@ -42,8 +42,9 @@ public final class Checksums {
             checksum.update(buffer.array(), buffer.position() + buffer.arrayOffset() + offset, length);
         } else {
             int start = buffer.position() + offset;
-            for (int i = start; i < start + length; i++)
+            for (int i = start; i < start + length; i++) {
                 checksum.update(buffer.get(i));
+            }
         }
     }
 

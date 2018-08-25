@@ -54,6 +54,7 @@ class KTableKTableJoinMerger<K, V> implements KTableProcessorSupplier<K, V, V> {
         } else {
             return new KTableValueGetterSupplier<K, V>() {
 
+                @Override
                 public KTableValueGetter<K, V> get() {
                     return parent1.valueGetterSupplier().get();
                 }

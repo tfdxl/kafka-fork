@@ -82,8 +82,9 @@ public class FileStreamSourceTask extends SourceTask {
                 Map<String, Object> offset = context.offsetStorageReader().offset(Collections.singletonMap(FILENAME_FIELD, filename));
                 if (offset != null) {
                     Object lastRecordedOffset = offset.get(POSITION_FIELD);
-                    if (lastRecordedOffset != null && !(lastRecordedOffset instanceof Long))
+                    if (lastRecordedOffset != null && !(lastRecordedOffset instanceof Long)) {
                         throw new ConnectException("Offset position is the incorrect type");
+                    }
                     if (lastRecordedOffset != null) {
                         log.debug("Found previous offset, trying to skip to file offset {}", lastRecordedOffset);
                         long skipLeft = (Long) lastRecordedOffset;
@@ -121,8 +122,9 @@ public class FileStreamSourceTask extends SourceTask {
             synchronized (this) {
                 readerCopy = reader;
             }
-            if (readerCopy == null)
+            if (readerCopy == null) {
                 return null;
+            }
 
             ArrayList<SourceRecord> records = null;
 
@@ -144,8 +146,9 @@ public class FileStreamSourceTask extends SourceTask {
                         line = extractLine();
                         if (line != null) {
                             log.trace("Read a line from {}", logFilename());
-                            if (records == null)
+                            if (records == null) {
                                 records = new ArrayList<>();
+                            }
                             records.add(new SourceRecord(offsetKey(filename), offsetValue(streamOffset), topic, null,
                                     null, null, VALUE_SCHEMA, line, System.currentTimeMillis()));
 
@@ -157,10 +160,11 @@ public class FileStreamSourceTask extends SourceTask {
                 }
             }
 
-            if (nread <= 0)
+            if (nread <= 0) {
                 synchronized (this) {
                     this.wait(1000);
                 }
+            }
 
             return records;
         } catch (IOException e) {
@@ -179,8 +183,9 @@ public class FileStreamSourceTask extends SourceTask {
                 break;
             } else if (buffer[i] == '\r') {
                 // We need to check for \r\n, so we must skip this if we can't check the next char
-                if (i + 1 >= offset)
+                if (i + 1 >= offset) {
                     return null;
+                }
 
                 until = i;
                 newStart = (buffer[i + 1] == '\n') ? i + 2 : i + 1;
@@ -192,8 +197,9 @@ public class FileStreamSourceTask extends SourceTask {
             String result = new String(buffer, 0, until);
             System.arraycopy(buffer, newStart, buffer, 0, buffer.length - newStart);
             offset = offset - newStart;
-            if (streamOffset != null)
+            if (streamOffset != null) {
                 streamOffset += newStart;
+            }
             return result;
         } else {
             return null;

@@ -125,8 +125,9 @@ public class DescribeGroupsResponse extends AbstractResponse {
     public static DescribeGroupsResponse fromError(int throttleTimeMs, Errors error, List<String> groupIds) {
         GroupMetadata errorMetadata = GroupMetadata.forError(error);
         Map<String, GroupMetadata> groups = new HashMap<>();
-        for (String groupId : groupIds)
+        for (String groupId : groupIds) {
             groups.put(groupId, errorMetadata);
+        }
         return new DescribeGroupsResponse(throttleTimeMs, groups);
     }
 
@@ -145,8 +146,9 @@ public class DescribeGroupsResponse extends AbstractResponse {
     @Override
     public Map<Errors, Integer> errorCounts() {
         Map<Errors, Integer> errorCounts = new HashMap<>();
-        for (GroupMetadata response : groups.values())
+        for (GroupMetadata response : groups.values()) {
             updateErrorCounts(errorCounts, response.error);
+        }
         return errorCounts;
     }
 

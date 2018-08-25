@@ -137,8 +137,9 @@ public class AlterConfigsRequest extends AbstractRequest {
             case 0:
                 ApiError error = ApiError.fromThrowable(e);
                 Map<Resource, ApiError> errors = new HashMap<>(configs.size());
-                for (Resource resource : configs.keySet())
+                for (Resource resource : configs.keySet()) {
                     errors.put(resource, error);
+                }
                 return new AlterConfigsResponse(throttleTimeMs, errors);
             default:
                 throw new IllegalArgumentException(String.format("Version %d is not valid. Valid versions for %s are 0 to %d",

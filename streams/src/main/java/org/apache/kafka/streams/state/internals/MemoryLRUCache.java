@@ -168,8 +168,9 @@ public class MemoryLRUCache<K, V> implements KeyValueStore<K, V> {
 
     @Override
     public void putAll(final List<KeyValue<K, V>> entries) {
-        for (KeyValue<K, V> entry : entries)
+        for (KeyValue<K, V> entry : entries) {
             put(entry.key, entry.value);
+        }
     }
 
     @Override

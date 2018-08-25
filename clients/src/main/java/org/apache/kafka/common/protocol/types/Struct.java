@@ -58,14 +58,15 @@ public class Struct {
      */
     private Object getFieldOrDefault(BoundField field) {
         Object value = this.values[field.index];
-        if (value != null)
+        if (value != null) {
             return value;
-        else if (field.def.hasDefaultValue)
+        } else if (field.def.hasDefaultValue) {
             return field.def.defaultValue;
-        else if (field.def.type.isNullable())
+        } else if (field.def.type.isNullable()) {
             return null;
-        else
+        } else {
             throw new SchemaException("Missing value for field '" + field.def.name + "' which has no default value.");
+        }
     }
 
     /**
@@ -105,32 +106,37 @@ public class Struct {
     }
 
     public Long getOrElse(Field.Int64 field, long alternative) {
-        if (hasField(field.name))
+        if (hasField(field.name)) {
             return getLong(field.name);
+        }
         return alternative;
     }
 
     public Short getOrElse(Field.Int16 field, short alternative) {
-        if (hasField(field.name))
+        if (hasField(field.name)) {
             return getShort(field.name);
+        }
         return alternative;
     }
 
     public Integer getOrElse(Field.Int32 field, int alternative) {
-        if (hasField(field.name))
+        if (hasField(field.name)) {
             return getInt(field.name);
+        }
         return alternative;
     }
 
     public String getOrElse(Field.NullableStr field, String alternative) {
-        if (hasField(field.name))
+        if (hasField(field.name)) {
             return getString(field.name);
+        }
         return alternative;
     }
 
     public String getOrElse(Field.Str field, String alternative) {
-        if (hasField(field.name))
+        if (hasField(field.name)) {
             return getString(field.name);
+        }
         return alternative;
     }
 
@@ -143,8 +149,9 @@ public class Struct {
      */
     public Object get(String name) {
         BoundField field = schema.get(name);
-        if (field == null)
+        if (field == null) {
             throw new SchemaException("No such field: " + name);
+        }
         return getFieldOrDefault(field);
     }
 
@@ -236,15 +243,17 @@ public class Struct {
 
     public ByteBuffer getBytes(BoundField field) {
         Object result = get(field);
-        if (result instanceof byte[])
+        if (result instanceof byte[]) {
             return ByteBuffer.wrap((byte[]) result);
+        }
         return (ByteBuffer) result;
     }
 
     public ByteBuffer getBytes(String name) {
         Object result = get(name);
-        if (result instanceof byte[])
+        if (result instanceof byte[]) {
             return ByteBuffer.wrap((byte[]) result);
+        }
         return (ByteBuffer) result;
     }
 
@@ -270,8 +279,9 @@ public class Struct {
      */
     public Struct set(String name, Object value) {
         BoundField field = this.schema.get(name);
-        if (field == null)
+        if (field == null) {
             throw new SchemaException("Unknown field: " + name);
+        }
         this.values[field.index] = value;
         return this;
     }
@@ -306,8 +316,9 @@ public class Struct {
 
     public Struct setIfExists(String fieldName, Object value) {
         BoundField field = this.schema.get(fieldName);
-        if (field != null)
+        if (field != null) {
             this.values[field.index] = value;
+        }
         return this;
     }
 
@@ -370,10 +381,12 @@ public class Struct {
      * @throws SchemaException If validation fails
      */
     private void validateField(BoundField field) {
-        if (this.schema != field.schema)
+        if (this.schema != field.schema) {
             throw new SchemaException("Attempt to access field '" + field.def.name + "' from a different schema instance.");
-        if (field.index > values.length)
+        }
+        if (field.index > values.length) {
             throw new SchemaException("Invalid field index: " + field.index);
+        }
     }
 
     /**
@@ -398,14 +411,17 @@ public class Struct {
                 b.append('[');
                 for (int j = 0; j < arrayValue.length; j++) {
                     b.append(arrayValue[j]);
-                    if (j < arrayValue.length - 1)
+                    if (j < arrayValue.length - 1) {
                         b.append(',');
+                    }
                 }
                 b.append(']');
-            } else
+            } else {
                 b.append(this.values[i]);
-            if (i < this.values.length - 1)
+            }
+            if (i < this.values.length - 1) {
                 b.append(',');
+            }
         }
         b.append('}');
         return b.toString();
@@ -420,8 +436,9 @@ public class Struct {
             if (f.def.type instanceof ArrayOf) {
                 if (this.get(f) != null) {
                     Object[] arrayObject = (Object[]) this.get(f);
-                    for (Object arrayItem : arrayObject)
+                    for (Object arrayItem : arrayObject) {
                         result = prime * result + arrayItem.hashCode();
+                    }
                 }
             } else {
                 Object field = this.get(f);
@@ -435,15 +452,19 @@ public class Struct {
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj)
+        if (this == obj) {
             return true;
-        if (obj == null)
+        }
+        if (obj == null) {
             return false;
-        if (getClass() != obj.getClass())
+        }
+        if (getClass() != obj.getClass()) {
             return false;
+        }
         Struct other = (Struct) obj;
-        if (schema != other.schema)
+        if (schema != other.schema) {
             return false;
+        }
         for (int i = 0; i < this.values.length; i++) {
             BoundField f = this.schema.get(i);
             boolean result;
@@ -454,8 +475,9 @@ public class Struct {
                 Object otherField = other.get(f);
                 return (thisField == null) ? (otherField == null) : thisField.equals(otherField);
             }
-            if (!result)
+            if (!result) {
                 return false;
+            }
         }
         return true;
     }

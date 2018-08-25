@@ -50,10 +50,11 @@ public class MemoryStatusBackingStore implements StatusBackingStore {
 
     @Override
     public synchronized void put(ConnectorStatus status) {
-        if (status.state() == ConnectorStatus.State.DESTROYED)
+        if (status.state() == ConnectorStatus.State.DESTROYED) {
             connectors.remove(status.id());
-        else
+        } else {
             connectors.put(status.id(), status);
+        }
     }
 
     @Override
@@ -63,10 +64,11 @@ public class MemoryStatusBackingStore implements StatusBackingStore {
 
     @Override
     public synchronized void put(TaskStatus status) {
-        if (status.state() == TaskStatus.State.DESTROYED)
+        if (status.state() == TaskStatus.State.DESTROYED) {
             tasks.remove(status.id().connector(), status.id().task());
-        else
+        } else {
             tasks.put(status.id().connector(), status.id().task(), status);
+        }
     }
 
     @Override

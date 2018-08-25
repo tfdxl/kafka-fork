@@ -70,8 +70,9 @@ public class KafkaOffsetBackingStore implements OffsetBackingStore {
     @Override
     public void configure(final WorkerConfig config) {
         String topic = config.getString(DistributedConfig.OFFSET_STORAGE_TOPIC_CONFIG);
-        if (topic.equals(""))
+        if (topic.equals("")) {
             throw new ConfigException("Offset storage topic must be specified");
+        }
 
         data = new HashMap<>();
 
@@ -133,8 +134,9 @@ public class KafkaOffsetBackingStore implements OffsetBackingStore {
             @Override
             public Map<ByteBuffer, ByteBuffer> convert(Void result) {
                 Map<ByteBuffer, ByteBuffer> values = new HashMap<>();
-                for (ByteBuffer key : keys)
+                for (ByteBuffer key : keys) {
                     values.put(key, data.get(key));
+                }
                 return values;
             }
         };
@@ -210,8 +212,9 @@ public class KafkaOffsetBackingStore implements OffsetBackingStore {
             while (!completed) {
                 this.wait();
             }
-            if (exception != null)
+            if (exception != null) {
                 throw new ExecutionException(exception);
+            }
             return null;
         }
 
@@ -221,12 +224,14 @@ public class KafkaOffsetBackingStore implements OffsetBackingStore {
             long limit = started + unit.toMillis(timeout);
             while (!completed) {
                 long leftMs = limit - System.currentTimeMillis();
-                if (leftMs < 0)
+                if (leftMs < 0) {
                     throw new TimeoutException("KafkaOffsetBackingStore Future timed out.");
+                }
                 this.wait(leftMs);
             }
-            if (exception != null)
+            if (exception != null) {
                 throw new ExecutionException(exception);
+            }
             return null;
         }
     }

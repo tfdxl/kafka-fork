@@ -119,10 +119,12 @@ public class Node {
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj)
+        if (this == obj) {
             return true;
-        if (obj == null || getClass() != obj.getClass())
+        }
+        if (obj == null || getClass() != obj.getClass()) {
             return false;
+        }
         Node other = (Node) obj;
         return (host == null ? other.host == null : host.equals(other.host)) &&
                 id == other.id &&

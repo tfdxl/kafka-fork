@@ -189,8 +189,9 @@ public abstract class KafkaFuture<T> implements Future<T> {
 
         @Override
         public synchronized void accept(R newValue, Throwable exception) {
-            if (remainingResponses <= 0)
+            if (remainingResponses <= 0) {
                 return;
+            }
             if (exception != null) {
                 remainingResponses = 0;
                 future.completeExceptionally(exception);
@@ -201,8 +202,9 @@ public abstract class KafkaFuture<T> implements Future<T> {
         }
 
         private void maybeComplete() {
-            if (remainingResponses <= 0)
+            if (remainingResponses <= 0) {
                 future.complete(null);
+            }
         }
     }
 }

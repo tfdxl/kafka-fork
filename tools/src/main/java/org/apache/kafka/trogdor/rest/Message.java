@@ -24,8 +24,12 @@ import java.util.Objects;
 public abstract class Message {
     @Override
     public final boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         return Objects.equals(toString(), o.toString());
     }
 

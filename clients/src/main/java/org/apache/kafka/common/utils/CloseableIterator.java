@@ -26,5 +26,6 @@ import java.util.Iterator;
  * a bit high since people are used to iterating without closing.
  */
 public interface CloseableIterator<T> extends Iterator<T>, Closeable {
+    @Override
     void close();
 }

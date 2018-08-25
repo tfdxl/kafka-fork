@@ -37,8 +37,9 @@ public class Sum extends SampledStat {
     @Override
     public double combine(List<Sample> samples, MetricConfig config, long now) {
         double total = 0.0;
-        for (Sample sample : samples)
+        for (Sample sample : samples) {
             total += sample.value;
+        }
         return total;
     }
 

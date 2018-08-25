@@ -78,47 +78,54 @@ public class MemoryConfigBackingStore implements ConfigBackingStore {
     @Override
     public synchronized void putConnectorConfig(String connector, Map<String, String> properties) {
         ConnectorState state = connectors.get(connector);
-        if (state == null)
+        if (state == null) {
             connectors.put(connector, new ConnectorState(properties));
-        else
+        } else {
             state.connConfig = properties;
+        }
 
-        if (updateListener != null)
+        if (updateListener != null) {
             updateListener.onConnectorConfigUpdate(connector);
+        }
     }
 
     @Override
     public synchronized void removeConnectorConfig(String connector) {
         ConnectorState state = connectors.remove(connector);
 
-        if (updateListener != null && state != null)
+        if (updateListener != null && state != null) {
             updateListener.onConnectorConfigRemove(connector);
+        }
     }
 
     @Override
     public synchronized void removeTaskConfigs(String connector) {
         ConnectorState state = connectors.get(connector);
-        if (state == null)
+        if (state == null) {
             throw new IllegalArgumentException("Cannot remove tasks for non-existing connector");
+        }
 
         HashSet<ConnectorTaskId> taskIds = new HashSet<>(state.taskConfigs.keySet());
         state.taskConfigs.clear();
 
-        if (updateListener != null)
+        if (updateListener != null) {
             updateListener.onTaskConfigUpdate(taskIds);
+        }
     }
 
     @Override
     public synchronized void putTaskConfigs(String connector, List<Map<String, String>> configs) {
         ConnectorState state = connectors.get(connector);
-        if (state == null)
+        if (state == null) {
             throw new IllegalArgumentException("Cannot put tasks for non-existing connector");
+        }
 
         Map<ConnectorTaskId, Map<String, String>> taskConfigsMap = taskConfigListAsMap(connector, configs);
         state.taskConfigs = taskConfigsMap;
 
-        if (updateListener != null)
+        if (updateListener != null) {
             updateListener.onTaskConfigUpdate(taskConfigsMap.keySet());
+        }
     }
 
     @Override
@@ -128,13 +135,15 @@ public class MemoryConfigBackingStore implements ConfigBackingStore {
     @Override
     public synchronized void putTargetState(String connector, TargetState state) {
         ConnectorState connectorState = connectors.get(connector);
-        if (connectorState == null)
+        if (connectorState == null) {
             throw new IllegalArgumentException("No connector `" + connector + "` configured");
+        }
 
         connectorState.targetState = state;
 
-        if (updateListener != null)
+        if (updateListener != null) {
             updateListener.onConnectorTargetStateChange(connector);
+        }
     }
 
     @Override

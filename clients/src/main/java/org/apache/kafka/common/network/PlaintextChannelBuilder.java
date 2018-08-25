@@ -35,6 +35,7 @@ public class PlaintextChannelBuilder implements ChannelBuilder {
     private static final Logger log = LoggerFactory.getLogger(PlaintextChannelBuilder.class);
     private Map<String, ?> configs;
 
+    @Override
     public void configure(Map<String, ?> configs) throws KafkaException {
         this.configs = configs;
     }
@@ -82,8 +83,9 @@ public class PlaintextChannelBuilder implements ChannelBuilder {
 
         @Override
         public void close() {
-            if (principalBuilder instanceof Closeable)
+            if (principalBuilder instanceof Closeable) {
                 Utils.closeQuietly((Closeable) principalBuilder, "principal builder");
+            }
         }
     }
 

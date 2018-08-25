@@ -29,8 +29,9 @@ public class DoubleDeserializer implements Deserializer<Double> {
 
     @Override
     public Double deserialize(String topic, byte[] data) {
-        if (data == null)
+        if (data == null) {
             return null;
+        }
         if (data.length != 8) {
             throw new SerializationException("Size of data received by Deserializer is not 8");
         }

@@ -43,8 +43,9 @@ public class JaasContext {
         this.type = type;
         this.configuration = configuration;
         AppConfigurationEntry[] entries = configuration.getAppConfigurationEntry(name);
-        if (entries == null)
+        if (entries == null) {
             throw new IllegalArgumentException("Could not find a '" + name + "' entry in this JAAS configuration.");
+        }
         this.configurationEntries = Collections.unmodifiableList(new ArrayList<>(Arrays.asList(entries)));
         this.dynamicJaasConfig = dynamicJaasConfig;
     }
@@ -69,15 +70,18 @@ public class JaasContext {
      * @throws IllegalArgumentException if listenerName or mechanism is not defined.
      */
     public static JaasContext loadServerContext(ListenerName listenerName, String mechanism, Map<String, ?> configs) {
-        if (listenerName == null)
+        if (listenerName == null) {
             throw new IllegalArgumentException("listenerName should not be null for SERVER");
-        if (mechanism == null)
+        }
+        if (mechanism == null) {
             throw new IllegalArgumentException("mechanism should not be null for SERVER");
+        }
         String globalContextName = GLOBAL_CONTEXT_NAME_SERVER;
         String listenerContextName = listenerName.value().toLowerCase(Locale.ROOT) + "." + GLOBAL_CONTEXT_NAME_SERVER;
         Password dynamicJaasConfig = (Password) configs.get(mechanism.toLowerCase(Locale.ROOT) + "." + SaslConfigs.SASL_JAAS_CONFIG);
-        if (dynamicJaasConfig == null && configs.get(SaslConfigs.SASL_JAAS_CONFIG) != null)
+        if (dynamicJaasConfig == null && configs.get(SaslConfigs.SASL_JAAS_CONFIG) != null) {
             LOG.warn("Server config {} should be prefixed with SASL mechanism name, ignoring config", SaslConfigs.SASL_JAAS_CONFIG);
+        }
         return load(Type.SERVER, listenerContextName, globalContextName, dynamicJaasConfig);
     }
 
@@ -99,13 +103,15 @@ public class JaasContext {
         if (dynamicJaasConfig != null) {
             JaasConfig jaasConfig = new JaasConfig(globalContextName, dynamicJaasConfig.value());
             AppConfigurationEntry[] contextModules = jaasConfig.getAppConfigurationEntry(globalContextName);
-            if (contextModules == null || contextModules.length == 0)
+            if (contextModules == null || contextModules.length == 0) {
                 throw new IllegalArgumentException("JAAS config property does not contain any login modules");
-            else if (contextModules.length != 1)
+            } else if (contextModules.length != 1) {
                 throw new IllegalArgumentException("JAAS config property contains " + contextModules.length + " login modules, should be 1 module");
+            }
             return new JaasContext(globalContextName, contextType, jaasConfig, dynamicJaasConfig);
-        } else
+        } else {
             return defaultContext(contextType, listenerContextName, globalContextName);
+        }
     }
 
     private static JaasContext defaultContext(JaasContext.Type contextType, String listenerContextName,
@@ -128,12 +134,14 @@ public class JaasContext {
 
         if (listenerContextName != null) {
             configEntries = jaasConfig.getAppConfigurationEntry(listenerContextName);
-            if (configEntries != null)
+            if (configEntries != null) {
                 contextName = listenerContextName;
+            }
         }
 
-        if (configEntries == null)
+        if (configEntries == null) {
             configEntries = jaasConfig.getAppConfigurationEntry(globalContextName);
+        }
 
         if (configEntries == null) {
             String listenerNameText = listenerContextName == null ? "" : " or '" + listenerContextName + "'";
@@ -172,11 +180,13 @@ public class JaasContext {
      */
     public String configEntryOption(String key, String loginModuleName) {
         for (AppConfigurationEntry entry : configurationEntries) {
-            if (loginModuleName != null && !loginModuleName.equals(entry.getLoginModuleName()))
+            if (loginModuleName != null && !loginModuleName.equals(entry.getLoginModuleName())) {
                 continue;
+            }
             Object val = entry.getOptions().get(key);
-            if (val != null)
+            if (val != null) {
                 return (String) val;
+            }
         }
         return null;
     }

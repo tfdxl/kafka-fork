@@ -95,13 +95,16 @@ public class MemoryRecordsBuilder {
                                 boolean isControlBatch,
                                 int partitionLeaderEpoch,
                                 int writeLimit) {
-        if (magic > RecordBatch.MAGIC_VALUE_V0 && timestampType == TimestampType.NO_TIMESTAMP_TYPE)
+        if (magic > RecordBatch.MAGIC_VALUE_V0 && timestampType == TimestampType.NO_TIMESTAMP_TYPE) {
             throw new IllegalArgumentException("TimestampType must be set for magic >= 0");
+        }
         if (magic < RecordBatch.MAGIC_VALUE_V2) {
-            if (isTransactional)
+            if (isTransactional) {
                 throw new IllegalArgumentException("Transactional records are not supported for magic " + magic);
-            if (isControlBatch)
+            }
+            if (isControlBatch) {
                 throw new IllegalArgumentException("Control records are not supported for magic " + magic);
+            }
         }
 
         this.magic = magic;
@@ -218,20 +221,22 @@ public class MemoryRecordsBuilder {
         if (timestampType == TimestampType.LOG_APPEND_TIME) {
             long shallowOffsetOfMaxTimestamp;
             // Use the last offset when dealing with record batches
-            if (compressionType != CompressionType.NONE || magic >= RecordBatch.MAGIC_VALUE_V2)
+            if (compressionType != CompressionType.NONE || magic >= RecordBatch.MAGIC_VALUE_V2) {
                 shallowOffsetOfMaxTimestamp = lastOffset;
-            else
+            } else {
                 shallowOffsetOfMaxTimestamp = baseOffset;
+            }
             return new RecordsInfo(logAppendTime, shallowOffsetOfMaxTimestamp);
         } else if (maxTimestamp == RecordBatch.NO_TIMESTAMP) {
             return new RecordsInfo(RecordBatch.NO_TIMESTAMP, lastOffset);
         } else {
             long shallowOffsetOfMaxTimestamp;
             // Use the last offset when dealing with record batches
-            if (compressionType != CompressionType.NONE || magic >= RecordBatch.MAGIC_VALUE_V2)
+            if (compressionType != CompressionType.NONE || magic >= RecordBatch.MAGIC_VALUE_V2) {
                 shallowOffsetOfMaxTimestamp = lastOffset;
-            else
+            } else {
                 shallowOffsetOfMaxTimestamp = offsetOfMaxTimestamp;
+            }
             return new RecordsInfo(maxTimestamp, shallowOffsetOfMaxTimestamp);
         }
     }
@@ -262,8 +267,9 @@ public class MemoryRecordsBuilder {
     }
 
     public void overrideLastOffset(long lastOffset) {
-        if (builtRecords != null)
+        if (builtRecords != null) {
             throw new IllegalStateException("Cannot override the last offset after the records have been built");
+        }
         this.lastOffset = lastOffset;
     }
 
@@ -290,8 +296,9 @@ public class MemoryRecordsBuilder {
     }
 
     public void reopenAndRewriteProducerState(long producerId, short producerEpoch, int baseSequence, boolean isTransactional) {
-        if (aborted)
+        if (aborted) {
             throw new IllegalStateException("Should not reopen a batch which is already aborted.");
+        }
         builtRecords = null;
         this.producerId = producerId;
         this.producerEpoch = producerEpoch;
@@ -301,11 +308,13 @@ public class MemoryRecordsBuilder {
 
 
     public void close() {
-        if (aborted)
+        if (aborted) {
             throw new IllegalStateException("Cannot close MemoryRecordsBuilder as it has already been aborted");
+        }
 
-        if (builtRecords != null)
+        if (builtRecords != null) {
             return;
+        }
 
         validateProducerState();
 
@@ -315,10 +324,11 @@ public class MemoryRecordsBuilder {
             buffer().position(initialPosition);
             builtRecords = MemoryRecords.EMPTY;
         } else {
-            if (magic > RecordBatch.MAGIC_VALUE_V1)
+            if (magic > RecordBatch.MAGIC_VALUE_V1) {
                 this.actualCompressionRatio = (float) writeDefaultBatchHeader() / this.uncompressedRecordsSizeInBytes;
-            else if (compressionType != CompressionType.NONE)
+            } else if (compressionType != CompressionType.NONE) {
                 this.actualCompressionRatio = (float) writeLegacyCompressedWrapperHeader() / this.uncompressedRecordsSizeInBytes;
+            }
 
             ByteBuffer buffer = buffer().duplicate();
             buffer.flip();
@@ -328,18 +338,22 @@ public class MemoryRecordsBuilder {
     }
 
     private void validateProducerState() {
-        if (isTransactional && producerId == RecordBatch.NO_PRODUCER_ID)
+        if (isTransactional && producerId == RecordBatch.NO_PRODUCER_ID) {
             throw new IllegalArgumentException("Cannot write transactional messages without a valid producer ID");
+        }
 
         if (producerId != RecordBatch.NO_PRODUCER_ID) {
-            if (producerEpoch == RecordBatch.NO_PRODUCER_EPOCH)
+            if (producerEpoch == RecordBatch.NO_PRODUCER_EPOCH) {
                 throw new IllegalArgumentException("Invalid negative producer epoch");
+            }
 
-            if (baseSequence < 0 && !isControlBatch)
+            if (baseSequence < 0 && !isControlBatch) {
                 throw new IllegalArgumentException("Invalid negative sequence number used");
+            }
 
-            if (magic < RecordBatch.MAGIC_VALUE_V2)
+            if (magic < RecordBatch.MAGIC_VALUE_V2) {
                 throw new IllegalArgumentException("Idempotent messages are not supported for magic " + magic);
+            }
         }
     }
 
@@ -358,10 +372,11 @@ public class MemoryRecordsBuilder {
         int offsetDelta = (int) (lastOffset - baseOffset);
 
         final long maxTimestamp;
-        if (timestampType == TimestampType.LOG_APPEND_TIME)
+        if (timestampType == TimestampType.LOG_APPEND_TIME) {
             maxTimestamp = logAppendTime;
-        else
+        } else {
             maxTimestamp = this.maxTimestamp;
+        }
 
         DefaultRecordBatch.writeHeader(buffer, baseOffset, offsetDelta, size, magic, compressionType, timestampType,
                 firstTimestamp, maxTimestamp, producerId, producerEpoch, baseSequence, isTransactional, isControlBatch,
@@ -399,21 +414,26 @@ public class MemoryRecordsBuilder {
     private Long appendWithOffset(long offset, boolean isControlRecord, long timestamp, ByteBuffer key,
                                   ByteBuffer value, Header[] headers) {
         try {
-            if (isControlRecord != isControlBatch)
+            if (isControlRecord != isControlBatch) {
                 throw new IllegalArgumentException("Control records can only be appended to control batches");
+            }
 
-            if (lastOffset != null && offset <= lastOffset)
+            if (lastOffset != null && offset <= lastOffset) {
                 throw new IllegalArgumentException(String.format("Illegal offset %s following previous offset %s " +
                         "(Offsets must increase monotonically).", offset, lastOffset));
+            }
 
-            if (timestamp < 0 && timestamp != RecordBatch.NO_TIMESTAMP)
+            if (timestamp < 0 && timestamp != RecordBatch.NO_TIMESTAMP) {
                 throw new IllegalArgumentException("Invalid negative timestamp " + timestamp);
+            }
 
-            if (magic < RecordBatch.MAGIC_VALUE_V2 && headers != null && headers.length > 0)
+            if (magic < RecordBatch.MAGIC_VALUE_V2 && headers != null && headers.length > 0) {
                 throw new IllegalArgumentException("Magic v" + magic + " does not support record headers");
+            }
 
-            if (firstTimestamp == null)
+            if (firstTimestamp == null) {
                 firstTimestamp = timestamp;
+            }
 
             if (magic > RecordBatch.MAGIC_VALUE_V1) {
                 appendDefaultRecord(offset, timestamp, key, value, headers);
@@ -571,10 +591,12 @@ public class MemoryRecordsBuilder {
      * Return CRC of the record or null if record-level CRC is not supported for the message format
      */
     public Long appendEndTxnMarker(long timestamp, EndTransactionMarker marker) {
-        if (producerId == RecordBatch.NO_PRODUCER_ID)
+        if (producerId == RecordBatch.NO_PRODUCER_ID) {
             throw new IllegalArgumentException("End transaction marker requires a valid producerId");
-        if (!isTransactional)
+        }
+        if (!isTransactional) {
             throw new IllegalArgumentException("End transaction marker depends on batch transactional flag being enabled");
+        }
         ByteBuffer value = marker.serializeValue();
         return appendControlRecord(timestamp, marker.controlType(), value);
     }
@@ -651,14 +673,16 @@ public class MemoryRecordsBuilder {
 
     private long appendLegacyRecord(long offset, long timestamp, ByteBuffer key, ByteBuffer value) throws IOException {
         ensureOpenForRecordAppend();
-        if (compressionType == CompressionType.NONE && timestampType == TimestampType.LOG_APPEND_TIME)
+        if (compressionType == CompressionType.NONE && timestampType == TimestampType.LOG_APPEND_TIME) {
             timestamp = logAppendTime;
+        }
 
         int size = LegacyRecord.recordSize(magic, key, value);
         AbstractLegacyRecordBatch.writeHeader(appendStream, toInnerOffset(offset), size);
 
-        if (timestampType == TimestampType.LOG_APPEND_TIME)
+        if (timestampType == TimestampType.LOG_APPEND_TIME) {
             timestamp = logAppendTime;
+        }
         long crc = LegacyRecord.write(appendStream, magic, timestamp, key, value, CompressionType.NONE, timestampType);
         recordWritten(offset, timestamp, size + Records.LOG_OVERHEAD);
         return crc;
@@ -666,17 +690,20 @@ public class MemoryRecordsBuilder {
 
     private long toInnerOffset(long offset) {
         // use relative offsets for compressed messages with magic v1
-        if (magic > 0 && compressionType != CompressionType.NONE)
+        if (magic > 0 && compressionType != CompressionType.NONE) {
             return offset - baseOffset;
+        }
         return offset;
     }
 
     private void recordWritten(long offset, long timestamp, int size) {
-        if (numRecords == Integer.MAX_VALUE)
+        if (numRecords == Integer.MAX_VALUE) {
             throw new IllegalArgumentException("Maximum number of records per batch exceeded, max records: " + Integer.MAX_VALUE);
-        if (offset - baseOffset > Integer.MAX_VALUE)
+        }
+        if (offset - baseOffset > Integer.MAX_VALUE) {
             throw new IllegalArgumentException("Maximum offset delta exceeded, base offset: " + baseOffset +
                     ", last offset: " + offset);
+        }
 
         numRecords += 1;
         uncompressedRecordsSizeInBytes += size;
@@ -689,15 +716,18 @@ public class MemoryRecordsBuilder {
     }
 
     private void ensureOpenForRecordAppend() {
-        if (appendStream == CLOSED_STREAM)
+        if (appendStream == CLOSED_STREAM) {
             throw new IllegalStateException("Tried to append a record, but MemoryRecordsBuilder is closed for record appends");
+        }
     }
 
     private void ensureOpenForRecordBatchWrite() {
-        if (isClosed())
+        if (isClosed()) {
             throw new IllegalStateException("Tried to write record batch header, but MemoryRecordsBuilder is closed");
-        if (aborted)
+        }
+        if (aborted) {
             throw new IllegalStateException("Tried to write record batch header, but MemoryRecordsBuilder is aborted");
+        }
     }
 
     /**
@@ -738,12 +768,14 @@ public class MemoryRecordsBuilder {
      * re-allocation in the underlying byte buffer stream.
      */
     public boolean hasRoomFor(long timestamp, ByteBuffer key, ByteBuffer value, Header[] headers) {
-        if (isFull())
+        if (isFull()) {
             return false;
+        }
 
         // We always allow at least one record to be appended (the ByteBufferOutputStream will grow as needed)
-        if (numRecords == 0)
+        if (numRecords == 0) {
             return true;
+        }
 
         final int recordSize;
         if (magic < RecordBatch.MAGIC_VALUE_V2) {

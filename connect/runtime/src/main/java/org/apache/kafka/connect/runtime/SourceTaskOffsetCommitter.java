@@ -80,13 +80,15 @@ class SourceTaskOffsetCommitter {
 
     public void remove(ConnectorTaskId id) {
         final ScheduledFuture<?> task = committers.remove(id);
-        if (task == null)
+        if (task == null) {
             return;
+        }
 
         try {
             task.cancel(false);
-            if (!task.isDone())
+            if (!task.isDone()) {
                 task.get();
+            }
         } catch (CancellationException e) {
             // ignore
             log.trace("Offset commit thread was cancelled by another thread while removing connector task with id: {}", id);

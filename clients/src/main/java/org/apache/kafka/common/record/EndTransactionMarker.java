@@ -51,8 +51,9 @@ public class EndTransactionMarker {
     }
 
     private static void ensureTransactionMarkerControlType(ControlRecordType type) {
-        if (type != ControlRecordType.COMMIT && type != ControlRecordType.ABORT)
+        if (type != ControlRecordType.COMMIT && type != ControlRecordType.ABORT) {
             throw new IllegalArgumentException("Invalid control record type for end transaction marker" + type);
+        }
     }
 
     public static EndTransactionMarker deserialize(Record record) {
@@ -63,18 +64,21 @@ public class EndTransactionMarker {
     static EndTransactionMarker deserializeValue(ControlRecordType type, ByteBuffer value) {
         ensureTransactionMarkerControlType(type);
 
-        if (value.remaining() < CURRENT_END_TXN_MARKER_VALUE_SIZE)
+        if (value.remaining() < CURRENT_END_TXN_MARKER_VALUE_SIZE) {
             throw new InvalidRecordException("Invalid value size found for end transaction marker. Must have " +
                     "at least " + CURRENT_END_TXN_MARKER_VALUE_SIZE + " bytes, but found only " + value.remaining());
+        }
 
         short version = value.getShort(0);
-        if (version < 0)
+        if (version < 0) {
             throw new InvalidRecordException("Invalid version found for end transaction marker: " + version +
                     ". May indicate data corruption");
+        }
 
-        if (version > CURRENT_END_TXN_MARKER_VERSION)
+        if (version > CURRENT_END_TXN_MARKER_VERSION) {
             log.debug("Received end transaction marker value version {}. Parsing as version {}", version,
                     CURRENT_END_TXN_MARKER_VERSION);
+        }
 
         int coordinatorEpoch = value.getInt(2);
         return new EndTransactionMarker(type, coordinatorEpoch);
@@ -105,8 +109,12 @@ public class EndTransactionMarker {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         EndTransactionMarker that = (EndTransactionMarker) o;
         return coordinatorEpoch == that.coordinatorEpoch && type == that.type;

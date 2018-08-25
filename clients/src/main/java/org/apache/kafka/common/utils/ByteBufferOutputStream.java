@@ -61,11 +61,13 @@ public class ByteBufferOutputStream extends OutputStream {
         this(directBuffer ? ByteBuffer.allocateDirect(initialCapacity) : ByteBuffer.allocate(initialCapacity));
     }
 
+    @Override
     public void write(int b) {
         ensureRemaining(1);
         buffer.put((byte) b);
     }
 
+    @Override
     public void write(byte[] bytes, int off, int len) {
         ensureRemaining(len);
         buffer.put(bytes, off, len);
@@ -113,8 +115,9 @@ public class ByteBufferOutputStream extends OutputStream {
      * @param remainingBytesRequired The number of bytes required
      */
     public void ensureRemaining(int remainingBytesRequired) {
-        if (remainingBytesRequired > buffer.remaining())
+        if (remainingBytesRequired > buffer.remaining()) {
             expandBuffer(remainingBytesRequired);
+        }
     }
 
     private void expandBuffer(int remainingRequired) {

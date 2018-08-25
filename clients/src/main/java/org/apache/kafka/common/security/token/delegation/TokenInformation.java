@@ -81,8 +81,9 @@ public class TokenInformation {
     }
 
     public boolean ownerOrRenewer(KafkaPrincipal principal) {
-        if (owner.equals(principal) || renewers.contains(principal))
+        if (owner.equals(principal) || renewers.contains(principal)) {
             return true;
+        }
         return false;
     }
 

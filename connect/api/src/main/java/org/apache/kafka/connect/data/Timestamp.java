@@ -47,14 +47,16 @@ public class Timestamp {
      * @return the encoded value
      */
     public static long fromLogical(Schema schema, java.util.Date value) {
-        if (!(LOGICAL_NAME.equals(schema.name())))
+        if (!(LOGICAL_NAME.equals(schema.name()))) {
             throw new DataException("Requested conversion of Timestamp object but the schema does not match.");
+        }
         return value.getTime();
     }
 
     public static java.util.Date toLogical(Schema schema, long value) {
-        if (!(LOGICAL_NAME.equals(schema.name())))
+        if (!(LOGICAL_NAME.equals(schema.name()))) {
             throw new DataException("Requested conversion of Timestamp object but the schema does not match.");
+        }
         return new java.util.Date(value);
     }
 }

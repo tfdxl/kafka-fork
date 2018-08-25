@@ -41,8 +41,9 @@ public abstract class AbstractRecords implements Records {
                                           Iterable<Record> records) {
         int size = 0;
         if (magic <= RecordBatch.MAGIC_VALUE_V1) {
-            for (Record record : records)
+            for (Record record : records) {
                 size += Records.LOG_OVERHEAD + LegacyRecord.recordSize(magic, record.key(), record.value());
+            }
         } else {
             size = DefaultRecordBatch.sizeInBytes(baseOffset, records);
         }
@@ -54,8 +55,9 @@ public abstract class AbstractRecords implements Records {
                                           Iterable<SimpleRecord> records) {
         int size = 0;
         if (magic <= RecordBatch.MAGIC_VALUE_V1) {
-            for (SimpleRecord record : records)
+            for (SimpleRecord record : records) {
                 size += Records.LOG_OVERHEAD + LegacyRecord.recordSize(magic, record.key(), record.value());
+            }
         } else {
             size = DefaultRecordBatch.sizeInBytes(records);
         }
@@ -80,12 +82,13 @@ public abstract class AbstractRecords implements Records {
      */
     public static int estimateSizeInBytesUpperBound(byte magic, CompressionType compressionType, ByteBuffer key,
                                                     ByteBuffer value, Header[] headers) {
-        if (magic >= RecordBatch.MAGIC_VALUE_V2)
+        if (magic >= RecordBatch.MAGIC_VALUE_V2) {
             return DefaultRecordBatch.estimateBatchSizeUpperBound(key, value, headers);
-        else if (compressionType != CompressionType.NONE)
+        } else if (compressionType != CompressionType.NONE) {
             return Records.LOG_OVERHEAD + LegacyRecord.recordOverhead(magic) + LegacyRecord.recordSize(magic, key, value);
-        else
+        } else {
             return Records.LOG_OVERHEAD + LegacyRecord.recordSize(magic, key, value);
+        }
     }
 
     /**
@@ -107,17 +110,21 @@ public abstract class AbstractRecords implements Records {
 
     @Override
     public boolean hasMatchingMagic(byte magic) {
-        for (RecordBatch batch : batches())
-            if (batch.magic() != magic)
+        for (RecordBatch batch : batches()) {
+            if (batch.magic() != magic) {
                 return false;
+            }
+        }
         return true;
     }
 
     @Override
     public boolean hasCompatibleMagic(byte magic) {
-        for (RecordBatch batch : batches())
-            if (batch.magic() > magic)
+        for (RecordBatch batch : batches()) {
+            if (batch.magic() > magic) {
                 return false;
+            }
+        }
         return true;
     }
 
@@ -143,8 +150,9 @@ public abstract class AbstractRecords implements Records {
         long startNanos = time.nanoseconds();
 
         for (RecordBatch batch : batches) {
-            if (toMagic < RecordBatch.MAGIC_VALUE_V2 && batch.isControlBatch())
+            if (toMagic < RecordBatch.MAGIC_VALUE_V2 && batch.isControlBatch()) {
                 continue;
+            }
 
             if (batch.magic() <= toMagic) {
                 totalSizeEstimate += batch.sizeInBytes();
@@ -153,16 +161,19 @@ public abstract class AbstractRecords implements Records {
                 List<Record> records = new ArrayList<>();
                 for (Record record : batch) {
                     // See the method javadoc for an explanation
-                    if (toMagic > RecordBatch.MAGIC_VALUE_V1 || batch.isCompressed() || record.offset() >= firstOffset)
+                    if (toMagic > RecordBatch.MAGIC_VALUE_V1 || batch.isCompressed() || record.offset() >= firstOffset) {
                         records.add(record);
+                    }
                 }
-                if (records.isEmpty())
+                if (records.isEmpty()) {
                     continue;
+                }
                 final long baseOffset;
-                if (batch.magic() >= RecordBatch.MAGIC_VALUE_V2 && toMagic >= RecordBatch.MAGIC_VALUE_V2)
+                if (batch.magic() >= RecordBatch.MAGIC_VALUE_V2 && toMagic >= RecordBatch.MAGIC_VALUE_V2) {
                     baseOffset = batch.baseOffset();
-                else
+                } else {
                     baseOffset = records.get(0).offset();
+                }
                 totalSizeEstimate += estimateSizeInBytes(toMagic, baseOffset, batch.compressionType(), records);
                 recordBatchAndRecordsList.add(new RecordBatchAndRecords(batch, records, baseOffset));
             }
@@ -200,8 +211,9 @@ public abstract class AbstractRecords implements Records {
 
         MemoryRecordsBuilder builder = MemoryRecords.builder(buffer, magic, batch.compressionType(),
                 timestampType, recordBatchAndRecords.baseOffset, logAppendTime);
-        for (Record record : recordBatchAndRecords.records)
+        for (Record record : recordBatchAndRecords.records) {
             builder.append(record);
+        }
 
         builder.close();
         return builder;
@@ -225,8 +237,9 @@ public abstract class AbstractRecords implements Records {
             @Override
             protected Record makeNext() {
                 //先从本地获取下一个
-                if (records != null && records.hasNext())
+                if (records != null && records.hasNext()) {
                     return records.next();
+                }
 
                 //本地没有从所有的batch中继续获取
                 if (batches.hasNext()) {

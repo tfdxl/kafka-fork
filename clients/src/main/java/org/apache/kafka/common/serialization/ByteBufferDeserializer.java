@@ -21,17 +21,21 @@ import java.util.Map;
 
 public class ByteBufferDeserializer implements Deserializer<ByteBuffer> {
 
+    @Override
     public void configure(Map<String, ?> configs, boolean isKey) {
         // nothing to do
     }
 
+    @Override
     public ByteBuffer deserialize(String topic, byte[] data) {
-        if (data == null)
+        if (data == null) {
             return null;
+        }
 
         return ByteBuffer.wrap(data);
     }
 
+    @Override
     public void close() {
         // nothing to do
     }

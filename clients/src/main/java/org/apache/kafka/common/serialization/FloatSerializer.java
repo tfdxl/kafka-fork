@@ -27,8 +27,9 @@ public class FloatSerializer implements Serializer<Float> {
 
     @Override
     public byte[] serialize(final String topic, final Float data) {
-        if (data == null)
+        if (data == null) {
             return null;
+        }
 
         long bits = Float.floatToRawIntBits(data);
         return new byte[]{

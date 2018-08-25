@@ -35,8 +35,11 @@ public class MinTimestampTracker<E> implements TimestampTracker<E> {
     /**
      * @throws NullPointerException if the element is null
      */
+    @Override
     public void addElement(final Stamped<E> elem) {
-        if (elem == null) throw new NullPointerException();
+        if (elem == null) {
+            throw new NullPointerException();
+        }
 
         Stamped<E> maxElem = ascendingSubsequence.peekLast();
         while (maxElem != null && maxElem.timestamp >= elem.timestamp) {
@@ -46,6 +49,7 @@ public class MinTimestampTracker<E> implements TimestampTracker<E> {
         ascendingSubsequence.offerLast(elem); //lower timestamps have been retained and all greater/equal removed
     }
 
+    @Override
     public void removeElement(final Stamped<E> elem) {
         if (elem == null) {
             return;
@@ -61,6 +65,7 @@ public class MinTimestampTracker<E> implements TimestampTracker<E> {
 
     }
 
+    @Override
     public int size() {
         return ascendingSubsequence.size();
     }
@@ -68,15 +73,18 @@ public class MinTimestampTracker<E> implements TimestampTracker<E> {
     /**
      * @return the lowest tracked timestamp
      */
+    @Override
     public long get() {
         Stamped<E> stamped = ascendingSubsequence.peekFirst();
 
-        if (stamped == null)
+        if (stamped == null) {
             return lastKnownTime;
-        else
+        } else {
             return stamped.timestamp;
+        }
     }
 
+    @Override
     public void clear() {
         lastKnownTime = NOT_KNOWN;
         ascendingSubsequence.clear();

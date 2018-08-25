@@ -55,11 +55,13 @@ public class ScramFormatter {
     }
 
     public byte[] xor(byte[] first, byte[] second) {
-        if (first.length != second.length)
+        if (first.length != second.length) {
             throw new IllegalArgumentException("Argument arrays must be of the same length");
+        }
         byte[] result = new byte[first.length];
-        for (int i = 0; i < result.length; i++)
+        for (int i = 0; i < result.length; i++) {
             result[i] = (byte) (first[i] ^ second[i]);
+        }
         return result;
     }
 
@@ -99,8 +101,9 @@ public class ScramFormatter {
 
     public String username(String saslName) {
         String username = saslName.replace("=2C", ",");
-        if (username.replace("=3D", "").indexOf('=') >= 0)
+        if (username.replace("=3D", "").indexOf('=') >= 0) {
             throw new IllegalArgumentException("Invalid username: " + saslName);
+        }
         return username.replace("=3D", "=");
     }
 

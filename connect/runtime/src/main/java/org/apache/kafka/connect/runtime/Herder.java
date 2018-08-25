@@ -215,8 +215,12 @@ public interface Herder {
 
         @Override
         public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
             Created<?> created1 = (Created<?>) o;
             return Objects.equals(created, created1.created) &&
                     Objects.equals(result, created1.result);

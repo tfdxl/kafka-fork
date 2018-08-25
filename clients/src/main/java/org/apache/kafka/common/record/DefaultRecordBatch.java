@@ -132,17 +132,21 @@ public class DefaultRecordBatch extends AbstractRecordBatch implements MutableRe
 
     private static byte computeAttributes(CompressionType type, TimestampType timestampType,
                                           boolean isTransactional, boolean isControl) {
-        if (timestampType == TimestampType.NO_TIMESTAMP_TYPE)
+        if (timestampType == TimestampType.NO_TIMESTAMP_TYPE) {
             throw new IllegalArgumentException("Timestamp type must be provided to compute attributes for message " +
                     "format v2 and above");
+        }
 
         byte attributes = isTransactional ? TRANSACTIONAL_FLAG_MASK : 0;
-        if (isControl)
+        if (isControl) {
             attributes |= CONTROL_FLAG_MASK;
-        if (type.id > 0)
+        }
+        if (type.id > 0) {
             attributes |= COMPRESSION_CODEC_MASK & type.id;
-        if (timestampType == TimestampType.LOG_APPEND_TIME)
+        }
+        if (timestampType == TimestampType.LOG_APPEND_TIME) {
             attributes |= TIMESTAMP_TYPE_MASK;
+        }
         return attributes;
     }
 
@@ -180,10 +184,12 @@ public class DefaultRecordBatch extends AbstractRecordBatch implements MutableRe
                             boolean isControlBatch,
                             int partitionLeaderEpoch,
                             int numRecords) {
-        if (magic < RecordBatch.CURRENT_MAGIC_VALUE)
+        if (magic < RecordBatch.CURRENT_MAGIC_VALUE) {
             throw new IllegalArgumentException("Invalid magic value " + magic);
-        if (firstTimestamp < 0 && firstTimestamp != NO_TIMESTAMP)
+        }
+        if (firstTimestamp < 0 && firstTimestamp != NO_TIMESTAMP) {
             throw new IllegalArgumentException("Invalid message timestamp " + firstTimestamp);
+        }
 
         short attributes = computeAttributes(compressionType, timestampType, isTransactional, isControlBatch);
 
@@ -207,16 +213,18 @@ public class DefaultRecordBatch extends AbstractRecordBatch implements MutableRe
 
     public static int sizeInBytes(long baseOffset, Iterable<Record> records) {
         Iterator<Record> iterator = records.iterator();
-        if (!iterator.hasNext())
+        if (!iterator.hasNext()) {
             return 0;
+        }
 
         int size = RECORD_BATCH_OVERHEAD;
         Long firstTimestamp = null;
         while (iterator.hasNext()) {
             Record record = iterator.next();
             int offsetDelta = (int) (record.offset() - baseOffset);
-            if (firstTimestamp == null)
+            if (firstTimestamp == null) {
                 firstTimestamp = record.timestamp();
+            }
             long timestampDelta = record.timestamp() - firstTimestamp;
             size += DefaultRecord.sizeInBytes(offsetDelta, timestampDelta, record.key(), record.value(),
                     record.headers());
@@ -226,16 +234,18 @@ public class DefaultRecordBatch extends AbstractRecordBatch implements MutableRe
 
     public static int sizeInBytes(Iterable<SimpleRecord> records) {
         Iterator<SimpleRecord> iterator = records.iterator();
-        if (!iterator.hasNext())
+        if (!iterator.hasNext()) {
             return 0;
+        }
 
         int size = RECORD_BATCH_OVERHEAD;
         int offsetDelta = 0;
         Long firstTimestamp = null;
         while (iterator.hasNext()) {
             SimpleRecord record = iterator.next();
-            if (firstTimestamp == null)
+            if (firstTimestamp == null) {
                 firstTimestamp = record.timestamp();
+            }
             long timestampDelta = record.timestamp() - firstTimestamp;
             size += DefaultRecord.sizeInBytes(offsetDelta++, timestampDelta, record.key(), record.value(),
                     record.headers());
@@ -253,8 +263,9 @@ public class DefaultRecordBatch extends AbstractRecordBatch implements MutableRe
     }
 
     static int incrementSequence(int baseSequence, int increment) {
-        if (baseSequence > Integer.MAX_VALUE - increment)
+        if (baseSequence > Integer.MAX_VALUE - increment) {
             return increment - (Integer.MAX_VALUE - baseSequence) - 1;
+        }
         return baseSequence + increment;
     }
 
@@ -265,13 +276,15 @@ public class DefaultRecordBatch extends AbstractRecordBatch implements MutableRe
 
     @Override
     public void ensureValid() {
-        if (sizeInBytes() < RECORD_BATCH_OVERHEAD)
+        if (sizeInBytes() < RECORD_BATCH_OVERHEAD) {
             throw new InvalidRecordException("Record batch is corrupt (the size " + sizeInBytes() +
                     " is smaller than the minimum allowed overhead " + RECORD_BATCH_OVERHEAD + ")");
+        }
 
-        if (!isValid())
+        if (!isValid()) {
             throw new InvalidRecordException("Record is corrupt (stored crc = " + checksum()
                     + ", computed crc = " + computeChecksum() + ")");
+        }
     }
 
     /**
@@ -326,8 +339,9 @@ public class DefaultRecordBatch extends AbstractRecordBatch implements MutableRe
     @Override
     public int lastSequence() {
         int baseSequence = baseSequence();
-        if (baseSequence == RecordBatch.NO_SEQUENCE)
+        if (baseSequence == RecordBatch.NO_SEQUENCE) {
             return RecordBatch.NO_SEQUENCE;
+        }
         return incrementSequence(baseSequence, lastOffsetDelta());
     }
 
@@ -439,29 +453,33 @@ public class DefaultRecordBatch extends AbstractRecordBatch implements MutableRe
 
     @Override
     public Iterator<Record> iterator() {
-        if (count() == 0)
+        if (count() == 0) {
             return Collections.emptyIterator();
+        }
 
-        if (!isCompressed())
+        if (!isCompressed()) {
             return uncompressedIterator();
+        }
 
         // for a normal iterator, we cannot ensure that the underlying compression stream is closed,
         // so we decompress the full record set here. Use cases which call for a lower memory footprint
         // can use `streamingIterator` at the cost of additional complexity
         try (CloseableIterator<Record> iterator = compressedIterator(BufferSupplier.NO_CACHING)) {
             List<Record> records = new ArrayList<>(count());
-            while (iterator.hasNext())
+            while (iterator.hasNext()) {
                 records.add(iterator.next());
+            }
             return records.iterator();
         }
     }
 
     @Override
     public CloseableIterator<Record> streamingIterator(BufferSupplier bufferSupplier) {
-        if (isCompressed())
+        if (isCompressed()) {
             return compressedIterator(bufferSupplier);
-        else
+        } else {
             return uncompressedIterator();
+        }
     }
 
     @Override
@@ -473,8 +491,9 @@ public class DefaultRecordBatch extends AbstractRecordBatch implements MutableRe
     public void setMaxTimestamp(TimestampType timestampType, long maxTimestamp) {
         long currentMaxTimestamp = maxTimestamp();
         // We don't need to recompute crc if the timestamp is not updated.
-        if (timestampType() == timestampType && currentMaxTimestamp == maxTimestamp)
+        if (timestampType() == timestampType && currentMaxTimestamp == maxTimestamp) {
             return;
+        }
 
         byte attributes = computeAttributes(compressionType(), timestampType, isTransactional(), isControlBatch());
         buffer.putShort(ATTRIBUTES_OFFSET, attributes);
@@ -493,6 +512,7 @@ public class DefaultRecordBatch extends AbstractRecordBatch implements MutableRe
         return ByteUtils.readUnsignedInt(buffer, CRC_OFFSET);
     }
 
+    @Override
     public boolean isValid() {
         return sizeInBytes() >= RECORD_BATCH_OVERHEAD && checksum() == computeChecksum();
     }
@@ -508,10 +528,12 @@ public class DefaultRecordBatch extends AbstractRecordBatch implements MutableRe
 
     @Override
     public boolean equals(Object o) {
-        if (this == o)
+        if (this == o) {
             return true;
-        if (o == null || getClass() != o.getClass())
+        }
+        if (o == null || getClass() != o.getClass()) {
             return false;
+        }
 
         DefaultRecordBatch that = (DefaultRecordBatch) o;
         return buffer != null ? buffer.equals(that.buffer) : that.buffer == null;
@@ -618,9 +640,10 @@ public class DefaultRecordBatch extends AbstractRecordBatch implements MutableRe
             this.firstTimestamp = firstTimestamp();
             this.baseSequence = baseSequence();
             int numRecords = count();
-            if (numRecords < 0)
+            if (numRecords < 0) {
                 throw new InvalidRecordException("Found invalid record count " + numRecords + " in magic v" +
                         magic() + " batch");
+            }
             this.numRecords = numRecords;
         }
 
@@ -631,8 +654,9 @@ public class DefaultRecordBatch extends AbstractRecordBatch implements MutableRe
 
         @Override
         public Record next() {
-            if (readRecords >= numRecords)
+            if (readRecords >= numRecords) {
                 throw new NoSuchElementException();
+            }
 
             readRecords++;
             Record rec = readNext(baseOffset, firstTimestamp, baseSequence, logAppendTime);
@@ -640,8 +664,9 @@ public class DefaultRecordBatch extends AbstractRecordBatch implements MutableRe
                 // Validate that the actual size of the batch is equal to declared size
                 // by checking that after reading declared number of items, there no items left
                 // (overflow case, i.e. reading past buffer end is checked elsewhere).
-                if (!ensureNoneRemaining())
+                if (!ensureNoneRemaining()) {
                     throw new InvalidRecordException("Incorrect declared batch size, records still remaining in file");
+                }
             }
             return rec;
         }

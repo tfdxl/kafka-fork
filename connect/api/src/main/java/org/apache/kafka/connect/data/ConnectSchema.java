@@ -55,8 +55,9 @@ public class ConnectSchema implements Schema {
         SCHEMA_TYPE_CLASSES.put(Type.STRUCT, Collections.singletonList((Class) Struct.class));
 
         for (Map.Entry<Type, List<Class>> schemaClasses : SCHEMA_TYPE_CLASSES.entrySet()) {
-            for (Class<?> schemaClass : schemaClasses.getValue())
+            for (Class<?> schemaClass : schemaClasses.getValue()) {
                 JAVA_CLASS_SCHEMA_TYPES.put(schemaClass, schemaClasses.getKey());
+            }
         }
 
         LOGICAL_TYPE_CLASSES.put(Decimal.LOGICAL_NAME, Collections.singletonList((Class) BigDecimal.class));
@@ -106,8 +107,9 @@ public class ConnectSchema implements Schema {
         if (this.type == Type.STRUCT) {
             this.fields = fields == null ? Collections.<Field>emptyList() : fields;
             this.fieldsByName = new HashMap<>(this.fields.size());
-            for (Field field : this.fields)
+            for (Field field : this.fields) {
                 fieldsByName.put(field.name(), field);
+            }
         } else {
             this.fields = null;
             this.fieldsByName = null;
@@ -145,22 +147,25 @@ public class ConnectSchema implements Schema {
 
     public static void validateValue(String name, Schema schema, Object value) {
         if (value == null) {
-            if (!schema.isOptional())
+            if (!schema.isOptional()) {
                 throw new DataException("Invalid value: null used for required field: \"" + name
                         + "\", schema type: " + schema.type());
-            else
+            } else {
                 return;
+            }
         }
 
         List<Class> expectedClasses = LOGICAL_TYPE_CLASSES.get(schema.name());
 
-        if (expectedClasses == null)
+        if (expectedClasses == null) {
             expectedClasses = SCHEMA_TYPE_CLASSES.get(schema.type());
+        }
 
-        if (expectedClasses == null)
+        if (expectedClasses == null) {
             throw new DataException("Invalid Java object for schema type " + schema.type()
                     + ": " + value.getClass()
                     + " for field: \"" + name + "\"");
+        }
 
         boolean foundMatch = false;
         for (Class<?> expectedClass : expectedClasses) {
@@ -169,22 +174,25 @@ public class ConnectSchema implements Schema {
                 break;
             }
         }
-        if (!foundMatch)
+        if (!foundMatch) {
             throw new DataException("Invalid Java object for schema type " + schema.type()
                     + ": " + value.getClass()
                     + " for field: \"" + name + "\"");
+        }
 
         switch (schema.type()) {
             case STRUCT:
                 Struct struct = (Struct) value;
-                if (!struct.schema().equals(schema))
+                if (!struct.schema().equals(schema)) {
                     throw new DataException("Struct schemas do not match.");
+                }
                 struct.validate();
                 break;
             case ARRAY:
                 List<?> array = (List<?>) value;
-                for (Object entry : array)
+                for (Object entry : array) {
                     validateValue(schema.valueSchema(), entry);
+                }
                 break;
             case MAP:
                 Map<?, ?> map = (Map<?, ?>) value;
@@ -205,8 +213,9 @@ public class ConnectSchema implements Schema {
     public static Type schemaType(Class<?> klass) {
         synchronized (JAVA_CLASS_SCHEMA_TYPES) {
             Type schemaType = JAVA_CLASS_SCHEMA_TYPES.get(klass);
-            if (schemaType != null)
+            if (schemaType != null) {
                 return schemaType;
+            }
 
             // Since the lookup only checks the class, we need to also try
             for (Map.Entry<Class<?>, Type> entry : JAVA_CLASS_SCHEMA_TYPES.entrySet()) {
@@ -260,28 +269,33 @@ public class ConnectSchema implements Schema {
 
     @Override
     public List<Field> fields() {
-        if (type != Type.STRUCT)
+        if (type != Type.STRUCT) {
             throw new DataException("Cannot list fields on non-struct type");
+        }
         return fields;
     }
 
+    @Override
     public Field field(String fieldName) {
-        if (type != Type.STRUCT)
+        if (type != Type.STRUCT) {
             throw new DataException("Cannot look up fields on non-struct type");
+        }
         return fieldsByName.get(fieldName);
     }
 
     @Override
     public Schema keySchema() {
-        if (type != Type.MAP)
+        if (type != Type.MAP) {
             throw new DataException("Cannot look up key schema on non-map type");
+        }
         return keySchema;
     }
 
     @Override
     public Schema valueSchema() {
-        if (type != Type.MAP && type != Type.ARRAY)
+        if (type != Type.MAP && type != Type.ARRAY) {
             throw new DataException("Cannot look up value schema on non-array and non-map type");
+        }
         return valueSchema;
     }
 
@@ -302,8 +316,12 @@ public class ConnectSchema implements Schema {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         ConnectSchema schema = (ConnectSchema) o;
         return Objects.equals(optional, schema.optional) &&
                 Objects.equals(version, schema.version) &&
@@ -328,9 +346,10 @@ public class ConnectSchema implements Schema {
 
     @Override
     public String toString() {
-        if (name != null)
+        if (name != null) {
             return "Schema{" + name + ":" + type + "}";
-        else
+        } else {
             return "Schema{" + type + "}";
+        }
     }
 }

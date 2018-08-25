@@ -387,6 +387,7 @@ class KGroupedStreamImpl<K, V> extends AbstractStream<K> implements KGroupedStre
                                                 aggregateBuilder);
     }
 
+    @Override
     @SuppressWarnings({"unchecked", "deprecation"})
     public KTable<Windowed<K>, Long> count(final SessionWindows sessionWindows, final String queryableStoreName) {
         Materialized<K, Long, SessionStore<Bytes, byte[]>> materialized = Materialized.<K, Long, SessionStore<Bytes, byte[]>>as(getOrCreateName(queryableStoreName, AGGREGATE_NAME))
@@ -395,6 +396,7 @@ class KGroupedStreamImpl<K, V> extends AbstractStream<K> implements KGroupedStre
         return windowedBy(sessionWindows).count(materialized);
     }
 
+    @Override
     @SuppressWarnings("deprecation")
     public KTable<Windowed<K>, Long> count(final SessionWindows sessionWindows) {
         return windowedBy(sessionWindows).count();

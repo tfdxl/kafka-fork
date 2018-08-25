@@ -55,11 +55,12 @@ final class ClusterConnectionStates {
      */
     public boolean canConnect(String id, long now) {
         NodeConnectionState state = nodeState.get(id);
-        if (state == null)
+        if (state == null) {
             return true;
-        else
+        } else {
             return state.state.isDisconnected() &&
                     now - state.lastConnectAttemptMs >= state.reconnectBackoffMs;
+        }
     }
 
     /**
@@ -70,11 +71,12 @@ final class ClusterConnectionStates {
      */
     public boolean isBlackedOut(String id, long now) {
         NodeConnectionState state = nodeState.get(id);
-        if (state == null)
+        if (state == null) {
             return false;
-        else
+        } else {
             return state.state.isDisconnected() &&
                     now - state.lastConnectAttemptMs < state.reconnectBackoffMs;
+        }
     }
 
     /**
@@ -87,7 +89,9 @@ final class ClusterConnectionStates {
      */
     public long connectionDelay(String id, long now) {
         NodeConnectionState state = nodeState.get(id);
-        if (state == null) return 0;
+        if (state == null) {
+            return 0;
+        }
         long timeWaited = now - state.lastConnectAttemptMs;
         if (state.state.isDisconnected()) {
             return Math.max(state.reconnectBackoffMs - timeWaited, 0);
@@ -193,8 +197,9 @@ final class ClusterConnectionStates {
     public boolean hasReadyNodes() {
         for (Map.Entry<String, NodeConnectionState> entry : nodeState.entrySet()) {
             NodeConnectionState state = entry.getValue();
-            if (state != null && state.state == ConnectionState.READY)
+            if (state != null && state.state == ConnectionState.READY) {
                 return true;
+            }
         }
         return false;
     }
@@ -277,8 +282,9 @@ final class ClusterConnectionStates {
      */
     private NodeConnectionState nodeState(String id) {
         NodeConnectionState state = this.nodeState.get(id);
-        if (state == null)
+        if (state == null) {
             throw new IllegalStateException("No entry found for connection " + id);
+        }
         return state;
     }
 
@@ -304,6 +310,7 @@ final class ClusterConnectionStates {
             this.reconnectBackoffMs = reconnectBackoffMs;
         }
 
+        @Override
         public String toString() {
             return "NodeState(" + state + ", " + lastConnectAttemptMs + ", " + failedAttempts + ")";
         }

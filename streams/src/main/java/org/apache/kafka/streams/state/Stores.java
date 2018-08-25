@@ -277,7 +277,9 @@ public class Stores {
                                      */
                                     @Override
                                     public InMemoryKeyValueFactory<K, V> maxEntries(int capacity) {
-                                        if (capacity < 1) throw new IllegalArgumentException("The capacity must be positive");
+                                        if (capacity < 1) {
+                                            throw new IllegalArgumentException("The capacity must be positive");
+                                        }
                                         this.capacity = capacity;
                                         return this;
                                     }

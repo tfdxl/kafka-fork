@@ -97,8 +97,9 @@ public class ClientResponse {
     }
 
     public void onComplete() {
-        if (callback != null)
+        if (callback != null) {
             callback.onComplete(this);
+        }
     }
 
     @Override

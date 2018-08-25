@@ -198,14 +198,16 @@ public class FetchRequest extends AbstractRequest {
         replicaId = struct.getInt(REPLICA_ID_KEY_NAME);
         maxWait = struct.getInt(MAX_WAIT_KEY_NAME);
         minBytes = struct.getInt(MIN_BYTES_KEY_NAME);
-        if (struct.hasField(MAX_BYTES_KEY_NAME))
+        if (struct.hasField(MAX_BYTES_KEY_NAME)) {
             maxBytes = struct.getInt(MAX_BYTES_KEY_NAME);
-        else
+        } else {
             maxBytes = DEFAULT_RESPONSE_MAX_BYTES;
-        if (struct.hasField(ISOLATION_LEVEL_KEY_NAME))
+        }
+        if (struct.hasField(ISOLATION_LEVEL_KEY_NAME)) {
             isolationLevel = IsolationLevel.forId(struct.getByte(ISOLATION_LEVEL_KEY_NAME));
-        else
+        } else {
             isolationLevel = IsolationLevel.READ_UNCOMMITTED;
+        }
         toForget = new ArrayList<>(0);
         if (struct.hasField(FORGOTTEN_TOPICS_DATA)) {
             for (Object forgottenTopicObj : struct.getArray(FORGOTTEN_TOPICS_DATA)) {
@@ -310,10 +312,12 @@ public class FetchRequest extends AbstractRequest {
         struct.set(REPLICA_ID_KEY_NAME, replicaId);
         struct.set(MAX_WAIT_KEY_NAME, maxWait);
         struct.set(MIN_BYTES_KEY_NAME, minBytes);
-        if (struct.hasField(MAX_BYTES_KEY_NAME))
+        if (struct.hasField(MAX_BYTES_KEY_NAME)) {
             struct.set(MAX_BYTES_KEY_NAME, maxBytes);
-        if (struct.hasField(ISOLATION_LEVEL_KEY_NAME))
+        }
+        if (struct.hasField(ISOLATION_LEVEL_KEY_NAME)) {
             struct.set(ISOLATION_LEVEL_KEY_NAME, isolationLevel.id());
+        }
         struct.setIfExists(SESSION_ID, metadata.sessionId());
         struct.setIfExists(EPOCH, metadata.epoch());
 
@@ -327,8 +331,9 @@ public class FetchRequest extends AbstractRequest {
                 Struct partitionData = topicData.instance(PARTITIONS_KEY_NAME);
                 partitionData.set(PARTITION_ID, partitionEntry.getKey());
                 partitionData.set(FETCH_OFFSET_KEY_NAME, fetchPartitionData.fetchOffset);
-                if (partitionData.hasField(LOG_START_OFFSET_KEY_NAME))
+                if (partitionData.hasField(LOG_START_OFFSET_KEY_NAME)) {
                     partitionData.set(LOG_START_OFFSET_KEY_NAME, fetchPartitionData.logStartOffset);
+                }
                 partitionData.set(MAX_BYTES_KEY_NAME, fetchPartitionData.maxBytes);
                 partitionArray.add(partitionData);
             }
@@ -381,8 +386,12 @@ public class FetchRequest extends AbstractRequest {
 
         @Override
         public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
             PartitionData that = (PartitionData) o;
             return Objects.equals(fetchOffset, that.fetchOffset) &&
                     Objects.equals(logStartOffset, that.logStartOffset) &&
@@ -406,8 +415,9 @@ public class FetchRequest extends AbstractRequest {
                 String topic = topicEntry.getKey().topic();
                 int partition = topicEntry.getKey().partition();
                 T partitionData = topicEntry.getValue();
-                if (topics.isEmpty() || !topics.get(topics.size() - 1).topic.equals(topic))
+                if (topics.isEmpty() || !topics.get(topics.size() - 1).topic.equals(topic)) {
                     topics.add(new TopicAndPartitionData<T>(topic));
+                }
                 topics.get(topics.size() - 1).partitions.put(partition, partitionData);
             }
             return topics;

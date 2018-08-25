@@ -238,8 +238,9 @@ public abstract class AbstractCoordinator implements Closeable {
                 if (future.isRetriable()) {
                     remainingMs = timeoutMs - (time.milliseconds() - startTimeMs);
                     //超时了
-                    if (remainingMs <= 0)
+                    if (remainingMs <= 0) {
                         break;
+                    }
 
                     log.debug("Coordinator discovery failed, refreshing metadata");
                     //阻塞更新Metadata记录的集群元数
@@ -332,8 +333,9 @@ public abstract class AbstractCoordinator implements Closeable {
 
     protected synchronized long timeToNextHeartbeat(long now) {
         // if we have not joined the group, we don't need to send heartbeats
-        if (state == MemberState.UNJOINED)
+        if (state == MemberState.UNJOINED) {
             return Long.MAX_VALUE;
+        }
         return heartbeat.timeToNextHeartbeat(now);
     }
 
@@ -356,8 +358,9 @@ public abstract class AbstractCoordinator implements Closeable {
     }
 
     private synchronized void disableHeartbeatThread() {
-        if (heartbeatThread != null)
+        if (heartbeatThread != null) {
             heartbeatThread.disable();
+        }
     }
 
     private void closeHeartbeatThread() {
@@ -412,10 +415,11 @@ public abstract class AbstractCoordinator implements Closeable {
                 RuntimeException exception = future.exception();
                 if (exception instanceof UnknownMemberIdException ||
                         exception instanceof RebalanceInProgressException ||
-                        exception instanceof IllegalGenerationException)
+                        exception instanceof IllegalGenerationException) {
                     continue;
-                else if (!future.isRetriable())
+                } else if (!future.isRetriable()) {
                     throw exception;
+                }
                 time.sleep(retryBackoffMs);
             }
         }
@@ -606,8 +610,9 @@ public abstract class AbstractCoordinator implements Closeable {
 
             // Disconnect from the coordinator to ensure that there are no in-flight requests remaining.
             // Pending callbacks will be invoked with a DisconnectException on the next call to poll.
-            if (!isDisconnected)
+            if (!isDisconnected) {
                 client.disconnectAsync(oldCoordinator);
+            }
         }
     }
 
@@ -617,8 +622,9 @@ public abstract class AbstractCoordinator implements Closeable {
      * @return the current generation or null if the group is unjoined/rebalancing
      */
     protected synchronized Generation generation() {
-        if (this.state != MemberState.STABLE)
+        if (this.state != MemberState.STABLE) {
             return null;
+        }
         return generation;
     }
 
@@ -660,9 +666,10 @@ public abstract class AbstractCoordinator implements Closeable {
                 // yet sent to the broker. Wait up to close timeout for these pending requests to be processed.
                 // If coordinator is not known, requests are aborted.
                 Node coordinator = checkAndGetCoordinator();
-                if (coordinator != null && !client.awaitPendingRequests(coordinator, timeoutMs))
+                if (coordinator != null && !client.awaitPendingRequests(coordinator, timeoutMs)) {
                     log.warn("Close timed out with {} pending requests to coordinator, terminating client connections",
                             client.pendingRequestCount(coordinator));
+                }
             }
         }
     }
@@ -1003,6 +1010,7 @@ public abstract class AbstractCoordinator implements Closeable {
 
             Measurable lastHeartbeat =
                     new Measurable() {
+                        @Override
                         public double measure(MetricConfig config, long now) {
                             return TimeUnit.SECONDS.convert(now - heartbeat.lastHeartbeatSend(), TimeUnit.MILLISECONDS);
                         }
@@ -1089,7 +1097,9 @@ public abstract class AbstractCoordinator implements Closeable {
                             if (findCoordinatorFuture != null || lookupCoordinator().failed())
                                 // the immediate future check ensures that we backoff properly in the case that no
                                 // brokers are available to connect to.
+                            {
                                 AbstractCoordinator.this.wait(retryBackoffMs);
+                            }
                         } else if (heartbeat.sessionTimeoutExpired(now)) {
                             // the session timeout has expired without seeing a successful heartbeat, so we should
                             // probably make sure the coordinator is still healthy.
@@ -1147,10 +1157,11 @@ public abstract class AbstractCoordinator implements Closeable {
                 this.failed.set(new RuntimeException(e));
             } catch (Throwable e) {
                 log.error("Heartbeat thread failed due to unexpected error", e);
-                if (e instanceof RuntimeException)
+                if (e instanceof RuntimeException) {
                     this.failed.set((RuntimeException) e);
-                else
+                } else {
                     this.failed.set(new RuntimeException(e));
+                }
             } finally {
                 log.debug("Heartbeat thread has closed");
             }

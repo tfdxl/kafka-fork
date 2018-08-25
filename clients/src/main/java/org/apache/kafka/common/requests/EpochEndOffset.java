@@ -63,12 +63,18 @@ public class EpochEndOffset {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         EpochEndOffset that = (EpochEndOffset) o;
 
-        if (error != that.error) return false;
+        if (error != that.error) {
+            return false;
+        }
         return endOffset == that.endOffset;
     }
 

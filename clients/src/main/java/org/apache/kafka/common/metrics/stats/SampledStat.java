@@ -47,8 +47,9 @@ public abstract class SampledStat implements MeasurableStat {
     @Override
     public void record(MetricConfig config, double value, long timeMs) {
         Sample sample = current(timeMs);
-        if (sample.isComplete(timeMs, config))
+        if (sample.isComplete(timeMs, config)) {
             sample = advance(config, timeMs);
+        }
         update(sample, config, value, timeMs);
         sample.eventCount += 1;
     }
@@ -77,19 +78,22 @@ public abstract class SampledStat implements MeasurableStat {
     }
 
     public Sample current(long timeMs) {
-        if (samples.size() == 0)
+        if (samples.size() == 0) {
             this.samples.add(newSample(timeMs));
+        }
         return this.samples.get(this.current);
     }
 
     public Sample oldest(long now) {
-        if (samples.size() == 0)
+        if (samples.size() == 0) {
             this.samples.add(newSample(now));
+        }
         Sample oldest = this.samples.get(0);
         for (int i = 1; i < this.samples.size(); i++) {
             Sample curr = this.samples.get(i);
-            if (curr.lastWindowMs < oldest.lastWindowMs)
+            if (curr.lastWindowMs < oldest.lastWindowMs) {
                 oldest = curr;
+            }
         }
         return oldest;
     }
@@ -102,8 +106,9 @@ public abstract class SampledStat implements MeasurableStat {
     protected void purgeObsoleteSamples(MetricConfig config, long now) {
         long expireAge = config.samples() * config.timeWindowMs();
         for (Sample sample : samples) {
-            if (now - sample.lastWindowMs >= expireAge)
+            if (now - sample.lastWindowMs >= expireAge) {
                 sample.reset(now);
+            }
         }
     }
 

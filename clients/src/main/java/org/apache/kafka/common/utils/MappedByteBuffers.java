@@ -67,10 +67,12 @@ public final class MappedByteBuffers {
     }
 
     public static void unmap(String resourceDescription, MappedByteBuffer buffer) throws IOException {
-        if (!buffer.isDirect())
+        if (!buffer.isDirect()) {
             throw new IllegalArgumentException("Unmapping only works with direct buffers");
-        if (UNMAP == null)
+        }
+        if (UNMAP == null) {
             throw UNMAP_NOT_SUPPORTED_EXCEPTION;
+        }
 
         try {
             UNMAP.invokeExact((ByteBuffer) buffer);
@@ -82,10 +84,11 @@ public final class MappedByteBuffers {
     private static MethodHandle lookupUnmapMethodHandle() {
         final MethodHandles.Lookup lookup = lookup();
         try {
-            if (Java.IS_JAVA9_COMPATIBLE)
+            if (Java.IS_JAVA9_COMPATIBLE) {
                 return unmapJava9(lookup);
-            else
+            } else {
                 return unmapJava7Or8(lookup);
+            }
         } catch (ReflectiveOperationException | RuntimeException e1) {
             throw new UnsupportedOperationException("Unmapping is not supported on this platform, because internal " +
                     "Java APIs are not compatible with this Kafka version", e1);

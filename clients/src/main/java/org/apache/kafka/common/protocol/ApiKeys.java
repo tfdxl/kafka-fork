@@ -107,11 +107,13 @@ public enum ApiKeys {
 
     static {
         int maxKey = -1;
-        for (ApiKeys key : ApiKeys.values())
+        for (ApiKeys key : ApiKeys.values()) {
             maxKey = Math.max(maxKey, key.id);
+        }
         ApiKeys[] idToType = new ApiKeys[maxKey + 1];
-        for (ApiKeys key : ApiKeys.values())
+        for (ApiKeys key : ApiKeys.values()) {
             idToType[key.id] = key;
+        }
         ID_TO_TYPE = idToType;
         MAX_API_KEY = maxKey;
     }
@@ -152,22 +154,26 @@ public enum ApiKeys {
 
     ApiKeys(int id, String name, boolean clusterAction, byte minRequiredInterBrokerMagic,
             Schema[] requestSchemas, Schema[] responseSchemas) {
-        if (id < 0)
+        if (id < 0) {
             throw new IllegalArgumentException("id must not be negative, id: " + id);
+        }
         this.id = (short) id;
         this.name = name;
         this.clusterAction = clusterAction;
         this.minRequiredInterBrokerMagic = minRequiredInterBrokerMagic;
 
-        if (requestSchemas.length != responseSchemas.length)
+        if (requestSchemas.length != responseSchemas.length) {
             throw new IllegalStateException(requestSchemas.length + " request versions for api " + name
                     + " but " + responseSchemas.length + " response versions.");
+        }
 
         for (int i = 0; i < requestSchemas.length; ++i) {
-            if (requestSchemas[i] == null)
+            if (requestSchemas[i] == null) {
                 throw new IllegalStateException("Request schema for api " + name + " for version " + i + " is null");
-            if (responseSchemas[i] == null)
+            }
+            if (responseSchemas[i] == null) {
                 throw new IllegalStateException("Response schema for api " + name + " for version " + i + " is null");
+            }
         }
 
         boolean requestRetainsBufferReference = false;
@@ -183,9 +189,10 @@ public enum ApiKeys {
     }
 
     public static ApiKeys forId(int id) {
-        if (!hasId(id))
+        if (!hasId(id)) {
             throw new IllegalArgumentException(String.format("Unexpected ApiKeys id `%s`, it should be between `%s` " +
                     "and `%s` (inclusive)", id, MIN_API_KEY, MAX_API_KEY));
+        }
         return ID_TO_TYPE[id];
     }
 
@@ -223,8 +230,9 @@ public enum ApiKeys {
         Schema.Visitor detector = new Schema.Visitor() {
             @Override
             public void visit(Type field) {
-                if (field == BYTES || field == NULLABLE_BYTES || field == RECORDS)
+                if (field == BYTES || field == NULLABLE_BYTES || field == RECORDS) {
                     hasBuffer.set(true);
+                }
             }
         };
         schema.walk(detector);
@@ -263,14 +271,16 @@ public enum ApiKeys {
             if (version != fallbackVersion) {
                 buffer.position(bufferPosition);
                 return responseSchema(fallbackVersion).read(buffer);
-            } else
+            } else {
                 throw e;
+            }
         }
     }
 
     private Schema schemaFor(Schema[] versions, short version) {
-        if (!isVersionSupported(version))
+        if (!isVersionSupported(version)) {
             throw new IllegalArgumentException("Invalid version for API key " + this + ": " + version);
+        }
         return versions[version];
     }
 

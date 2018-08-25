@@ -96,8 +96,9 @@ public class OffsetFetchRequest extends AbstractRequest {
                     partitions.add(new TopicPartition(topic, partition));
                 }
             }
-        } else
+        } else {
             partitions = null;
+        }
 
 
         groupId = struct.get(GROUP_ID);
@@ -184,8 +185,9 @@ public class OffsetFetchRequest extends AbstractRequest {
                 topicArray.add(topicData);
             }
             struct.set(TOPICS_KEY_NAME, topicArray.toArray());
-        } else
+        } else {
             struct.set(TOPICS_KEY_NAME, null);
+        }
 
         return struct;
     }
@@ -211,9 +213,10 @@ public class OffsetFetchRequest extends AbstractRequest {
 
         @Override
         public OffsetFetchRequest build(short version) {
-            if (isAllTopicPartitions() && version < 2)
+            if (isAllTopicPartitions() && version < 2) {
                 throw new UnsupportedVersionException("The broker only supports OffsetFetchRequest " +
                         "v" + version + ", but we need v2 or newer to request all topic partitions.");
+            }
             return new OffsetFetchRequest(groupId, partitions, version);
         }
 

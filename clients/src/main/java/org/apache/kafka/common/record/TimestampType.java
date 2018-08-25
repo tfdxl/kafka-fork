@@ -34,9 +34,11 @@ public enum TimestampType {
 
     public static TimestampType forName(String name) {
         //也是很low嗒
-        for (TimestampType t : values())
-            if (t.name.equals(name))
+        for (TimestampType t : values()) {
+            if (t.name.equals(name)) {
                 return t;
+            }
+        }
         throw new NoSuchElementException("Invalid timestamp type " + name);
     }
 

@@ -28,6 +28,7 @@ public class KTableMaterializedValueGetterSupplier<K, V> implements KTableValueG
         this.storeName = storeName;
     }
 
+    @Override
     public KTableValueGetter<K, V> get() {
         return new KTableMaterializedValueGetter();
     }

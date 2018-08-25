@@ -57,8 +57,9 @@ public class ApiError {
 
     public void write(Struct struct) {
         struct.set(ERROR_CODE, error.code());
-        if (error != Errors.NONE)
+        if (error != Errors.NONE) {
             struct.setIfExists(ERROR_MESSAGE, message);
+        }
     }
 
     public boolean is(Errors error) {
@@ -89,8 +90,9 @@ public class ApiError {
      * code.
      */
     public String messageWithFallback() {
-        if (message == null)
+        if (message == null) {
             return error.message();
+        }
         return message;
     }
 

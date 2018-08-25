@@ -140,6 +140,7 @@ public abstract class AbstractTask implements Task {
      * This is useful in debugging scenarios.
      * @return A string representation of the StreamTask instance.
      */
+    @Override
     public String toString(final String indent) {
         final StringBuilder sb = new StringBuilder();
         sb.append(indent);
@@ -257,10 +258,12 @@ public abstract class AbstractTask implements Task {
     }
 
 
+    @Override
     public boolean hasStateStores() {
         return !topology.stateStores().isEmpty();
     }
 
+    @Override
     public Collection<TopicPartition> changelogPartitions() {
         return stateMgr.changelogPartitions();
     }

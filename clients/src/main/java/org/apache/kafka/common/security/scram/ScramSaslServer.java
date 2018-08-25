@@ -102,8 +102,9 @@ public class ScramSaslServer implements SaslServer {
                             DelegationTokenCredentialCallback tokenCallback = new DelegationTokenCredentialCallback();
                             credentialCallback = tokenCallback;
                             callbackHandler.handle(new Callback[]{nameCallback, tokenCallback});
-                            if (tokenCallback.tokenOwner() == null)
+                            if (tokenCallback.tokenOwner() == null) {
                                 throw new SaslException("Token Authentication failed: Invalid tokenId : " + username);
+                            }
                             this.authorizationId = tokenCallback.tokenOwner();
                         } else {
                             credentialCallback = new ScramCredentialCallback();
@@ -111,14 +112,17 @@ public class ScramSaslServer implements SaslServer {
                             this.authorizationId = username;
                         }
                         this.scramCredential = credentialCallback.scramCredential();
-                        if (scramCredential == null)
+                        if (scramCredential == null) {
                             throw new SaslException("Authentication failed: Invalid user credentials");
+                        }
                         String authorizationIdFromClient = clientFirstMessage.authorizationId();
-                        if (!authorizationIdFromClient.isEmpty() && !authorizationIdFromClient.equals(username))
+                        if (!authorizationIdFromClient.isEmpty() && !authorizationIdFromClient.equals(username)) {
                             throw new SaslAuthenticationException("Authentication failed: Client requested an authorization id that is different from username");
+                        }
 
-                        if (scramCredential.iterations() < mechanism.minIterations())
+                        if (scramCredential.iterations() < mechanism.minIterations()) {
                             throw new SaslException("Iterations " + scramCredential.iterations() + " is less than the minimum " + mechanism.minIterations() + " for " + mechanism);
+                        }
                         this.serverFirstMessage = new ServerFirstMessage(clientFirstMessage.nonce(),
                                 serverNonce,
                                 scramCredential.salt(),
@@ -155,8 +159,9 @@ public class ScramSaslServer implements SaslServer {
 
     @Override
     public String getAuthorizationID() {
-        if (!isComplete())
+        if (!isComplete()) {
             throw new IllegalStateException("Authentication exchange has not completed");
+        }
         return authorizationId;
     }
 
@@ -167,13 +172,15 @@ public class ScramSaslServer implements SaslServer {
 
     @Override
     public Object getNegotiatedProperty(String propName) {
-        if (!isComplete())
+        if (!isComplete()) {
             throw new IllegalStateException("Authentication exchange has not completed");
+        }
 
-        if (SUPPORTED_EXTENSIONS.contains(propName))
+        if (SUPPORTED_EXTENSIONS.contains(propName)) {
             return scramExtensions.extensionValue(propName);
-        else
+        } else {
             return null;
+        }
     }
 
     @Override
@@ -183,15 +190,17 @@ public class ScramSaslServer implements SaslServer {
 
     @Override
     public byte[] unwrap(byte[] incoming, int offset, int len) throws SaslException {
-        if (!isComplete())
+        if (!isComplete()) {
             throw new IllegalStateException("Authentication exchange has not completed");
+        }
         return Arrays.copyOfRange(incoming, offset, offset + len);
     }
 
     @Override
     public byte[] wrap(byte[] outgoing, int offset, int len) throws SaslException {
-        if (!isComplete())
+        if (!isComplete()) {
             throw new IllegalStateException("Authentication exchange has not completed");
+        }
         return Arrays.copyOfRange(outgoing, offset, offset + len);
     }
 
@@ -209,8 +218,9 @@ public class ScramSaslServer implements SaslServer {
             byte[] expectedStoredKey = scramCredential.storedKey();
             byte[] clientSignature = formatter.clientSignature(expectedStoredKey, clientFirstMessage, serverFirstMessage, clientFinalMessage);
             byte[] computedStoredKey = formatter.storedKey(clientSignature, clientFinalMessage.proof());
-            if (!Arrays.equals(computedStoredKey, expectedStoredKey))
+            if (!Arrays.equals(computedStoredKey, expectedStoredKey)) {
                 throw new SaslException("Invalid client credentials");
+            }
         } catch (InvalidKeyException e) {
             throw new SaslException("Sasl client verification failed", e);
         }

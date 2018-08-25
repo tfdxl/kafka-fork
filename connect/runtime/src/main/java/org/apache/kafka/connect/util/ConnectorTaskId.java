@@ -47,17 +47,21 @@ public class ConnectorTaskId implements Serializable, Comparable<ConnectorTaskId
 
     @Override
     public boolean equals(Object o) {
-        if (this == o)
+        if (this == o) {
             return true;
-        if (o == null || getClass() != o.getClass())
+        }
+        if (o == null || getClass() != o.getClass()) {
             return false;
+        }
 
         ConnectorTaskId that = (ConnectorTaskId) o;
 
-        if (task != that.task)
+        if (task != that.task) {
             return false;
-        if (connector != null ? !connector.equals(that.connector) : that.connector != null)
+        }
+        if (connector != null ? !connector.equals(that.connector) : that.connector != null) {
             return false;
+        }
 
         return true;
     }
@@ -77,8 +81,9 @@ public class ConnectorTaskId implements Serializable, Comparable<ConnectorTaskId
     @Override
     public int compareTo(ConnectorTaskId o) {
         int connectorCmp = connector.compareTo(o.connector);
-        if (connectorCmp != 0)
+        if (connectorCmp != 0) {
             return connectorCmp;
+        }
         return Integer.compare(task, o.task);
     }
 }

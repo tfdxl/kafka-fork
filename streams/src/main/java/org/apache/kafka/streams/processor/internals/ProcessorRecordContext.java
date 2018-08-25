@@ -36,10 +36,12 @@ public class ProcessorRecordContext implements RecordContext {
         this.partition = partition;
     }
 
+    @Override
     public long offset() {
         return offset;
     }
 
+    @Override
     public long timestamp() {
         return timestamp;
     }
@@ -56,8 +58,12 @@ public class ProcessorRecordContext implements RecordContext {
 
     @Override
     public boolean equals(final Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         final ProcessorRecordContext that = (ProcessorRecordContext) o;
         return timestamp == that.timestamp &&
                 offset == that.offset &&

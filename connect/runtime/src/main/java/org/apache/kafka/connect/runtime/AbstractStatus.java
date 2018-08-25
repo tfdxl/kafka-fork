@@ -67,15 +67,27 @@ public abstract class AbstractStatus<T> {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         AbstractStatus<?> that = (AbstractStatus<?>) o;
 
-        if (generation != that.generation) return false;
-        if (id != null ? !id.equals(that.id) : that.id != null) return false;
-        if (state != that.state) return false;
-        if (trace != null ? !trace.equals(that.trace) : that.trace != null) return false;
+        if (generation != that.generation) {
+            return false;
+        }
+        if (id != null ? !id.equals(that.id) : that.id != null) {
+            return false;
+        }
+        if (state != that.state) {
+            return false;
+        }
+        if (trace != null ? !trace.equals(that.trace) : that.trace != null) {
+            return false;
+        }
         return workerId != null ? workerId.equals(that.workerId) : that.workerId == null;
 
     }

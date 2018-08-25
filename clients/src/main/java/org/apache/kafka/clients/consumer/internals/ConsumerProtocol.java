@@ -91,8 +91,9 @@ public class ConsumerProtocol {
         Struct struct = SUBSCRIPTION_V0.read(buffer);
         ByteBuffer userData = struct.getBytes(USER_DATA_KEY_NAME);
         List<String> topics = new ArrayList<>();
-        for (Object topicObj : struct.getArray(TOPICS_KEY_NAME))
+        for (Object topicObj : struct.getArray(TOPICS_KEY_NAME)) {
             topics.add((String) topicObj);
+        }
         return new PartitionAssignor.Subscription(topics, userData);
     }
 
@@ -135,8 +136,9 @@ public class ConsumerProtocol {
 
     private static void checkVersionCompatibility(short version) {
         // check for invalid versions
-        if (version < CONSUMER_PROTOCOL_V0)
+        if (version < CONSUMER_PROTOCOL_V0) {
             throw new SchemaException("Unsupported subscription version: " + version);
+        }
 
         // otherwise, assume versions can be parsed as V0
     }

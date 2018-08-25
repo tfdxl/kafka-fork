@@ -202,10 +202,11 @@ public class TransactionalMessageCopier {
     private static void resetToLastCommittedPositions(KafkaConsumer<String, String> consumer) {
         for (TopicPartition topicPartition : consumer.assignment()) {
             OffsetAndMetadata offsetAndMetadata = consumer.committed(topicPartition);
-            if (offsetAndMetadata != null)
+            if (offsetAndMetadata != null) {
                 consumer.seek(topicPartition, offsetAndMetadata.offset());
-            else
+            } else {
                 consumer.seekToBeginning(singleton(topicPartition));
+            }
         }
     }
 
@@ -285,8 +286,9 @@ public class TransactionalMessageCopier {
             Random random = new Random();
             while (0 < remainingMessages.get()) {
                 System.out.println(statusAsJson(numMessagesProcessed.get(), remainingMessages.get(), transactionalId));
-                if (isShuttingDown.get())
+                if (isShuttingDown.get()) {
                     break;
+                }
                 int messagesInCurrentTransaction = 0;
                 long numMessagesForNextTransaction = Math.min(numMessagesPerTransaction, remainingMessages.get());
 

@@ -63,17 +63,19 @@ public class RequestHeader extends AbstractRequestResponse {
 
     public RequestHeader(Struct struct) {
         short apiKey = struct.getShort(API_KEY_FIELD_NAME);
-        if (!ApiKeys.hasId(apiKey))
+        if (!ApiKeys.hasId(apiKey)) {
             throw new InvalidRequestException("Unknown API key " + apiKey);
+        }
 
         this.apiKey = ApiKeys.forId(apiKey);
         apiVersion = struct.getShort(API_VERSION_FIELD_NAME);
 
         // only v0 of the controlled shutdown request is missing the clientId
-        if (struct.hasField(CLIENT_ID_FIELD_NAME))
+        if (struct.hasField(CLIENT_ID_FIELD_NAME)) {
             clientId = struct.getString(CLIENT_ID_FIELD_NAME);
-        else
+        } else {
             clientId = "";
+        }
         correlationId = struct.getInt(CORRELATION_ID_FIELD_NAME);
     }
 
@@ -103,7 +105,9 @@ public class RequestHeader extends AbstractRequestResponse {
         if (apiKey == ApiKeys.CONTROLLED_SHUTDOWN.id && version == 0)
             // This will be removed once we remove support for v0 of ControlledShutdownRequest, which
             // depends on a non-standard request header (it does not have a clientId)
+        {
             return CONTROLLED_SHUTDOWN_V0_SCHEMA;
+        }
         return SCHEMA;
     }
 
@@ -114,8 +118,9 @@ public class RequestHeader extends AbstractRequestResponse {
         struct.set(API_VERSION_FIELD_NAME, apiVersion);
 
         // only v0 of the controlled shutdown request is missing the clientId
-        if (struct.hasField(CLIENT_ID_FIELD_NAME))
+        if (struct.hasField(CLIENT_ID_FIELD_NAME)) {
             struct.set(CLIENT_ID_FIELD_NAME, clientId);
+        }
         struct.set(CORRELATION_ID_FIELD_NAME, correlationId);
         return struct;
     }
@@ -151,8 +156,12 @@ public class RequestHeader extends AbstractRequestResponse {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         RequestHeader that = (RequestHeader) o;
         return apiKey == that.apiKey &&

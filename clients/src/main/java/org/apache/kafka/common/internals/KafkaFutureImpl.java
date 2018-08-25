@@ -91,6 +91,7 @@ public class KafkaFutureImpl<T> extends KafkaFuture<T> {
         return future;
     }
 
+    @Override
     protected synchronized void addWaiter(BiConsumer<? super T, ? super Throwable> action) {
         if (exception != null) {
             action.accept(null, exception);
@@ -105,8 +106,9 @@ public class KafkaFutureImpl<T> extends KafkaFuture<T> {
     public synchronized boolean complete(T newValue) {
         List<BiConsumer<? super T, ? super Throwable>> oldWaiters = null;
         synchronized (this) {
-            if (done)
+            if (done) {
                 return false;
+            }
             value = newValue;
             done = true;
             oldWaiters = waiters;
@@ -122,8 +124,9 @@ public class KafkaFutureImpl<T> extends KafkaFuture<T> {
     public boolean completeExceptionally(Throwable newException) {
         List<BiConsumer<? super T, ? super Throwable>> oldWaiters = null;
         synchronized (this) {
-            if (done)
+            if (done) {
                 return false;
+            }
             exception = newException;
             done = true;
             oldWaiters = waiters;
@@ -142,8 +145,9 @@ public class KafkaFutureImpl<T> extends KafkaFuture<T> {
      */
     @Override
     public synchronized boolean cancel(boolean mayInterruptIfRunning) {
-        if (completeExceptionally(new CancellationException()))
+        if (completeExceptionally(new CancellationException())) {
             return true;
+        }
         return exception instanceof CancellationException;
     }
 
@@ -176,10 +180,12 @@ public class KafkaFutureImpl<T> extends KafkaFuture<T> {
      */
     @Override
     public synchronized T getNow(T valueIfAbsent) throws InterruptedException, ExecutionException {
-        if (exception != null)
+        if (exception != null) {
             wrapAndThrow(exception);
-        if (done)
+        }
+        if (done) {
             return value;
+        }
         return valueIfAbsent;
     }
 
@@ -258,10 +264,12 @@ public class KafkaFutureImpl<T> extends KafkaFuture<T> {
          */
         synchronized R await() throws InterruptedException, ExecutionException {
             while (true) {
-                if (exception != null)
+                if (exception != null) {
                     wrapAndThrow(exception);
-                if (done)
+                }
+                if (done) {
                     return value;
+                }
                 this.wait();
             }
         }
@@ -276,10 +284,12 @@ public class KafkaFutureImpl<T> extends KafkaFuture<T> {
             long delta = 0;
             synchronized (this) {
                 while (true) {
-                    if (exception != null)
+                    if (exception != null) {
                         wrapAndThrow(exception);
-                    if (done)
+                    }
+                    if (done) {
                         return value;
+                    }
                     if (delta >= waitTimeMs) {
                         throw new TimeoutException();
                     }

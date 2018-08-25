@@ -42,6 +42,7 @@ public class WrappingStoreProvider implements StateStoreProvider {
      * @param <T>       The type of the Store, for example, {@link org.apache.kafka.streams.state.ReadOnlyKeyValueStore}
      * @return  a List of all the stores with the storeName and are accepted by {@link QueryableStoreType#accepts(StateStore)}
      */
+    @Override
     public <T> List<T> stores(final String storeName, QueryableStoreType<T> type) {
         final List<T> allStores = new ArrayList<>();
         for (StateStoreProvider provider : storeProviders) {

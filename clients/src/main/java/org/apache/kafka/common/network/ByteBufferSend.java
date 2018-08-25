@@ -35,8 +35,9 @@ public class ByteBufferSend implements Send {
     public ByteBufferSend(String destination, ByteBuffer... buffers) {
         this.destination = destination;
         this.buffers = buffers;
-        for (ByteBuffer buffer : buffers)
+        for (ByteBuffer buffer : buffers) {
             remaining += buffer.remaining();
+        }
         this.size = remaining;
     }
 
@@ -58,8 +59,9 @@ public class ByteBufferSend implements Send {
     @Override
     public long writeTo(GatheringByteChannel channel) throws IOException {
         long written = channel.write(buffers);
-        if (written < 0)
+        if (written < 0) {
             throw new EOFException("Wrote negative bytes to channel. This shouldn't happen.");
+        }
         remaining -= written;
         pending = TransportLayers.hasPendingWrites(channel);
         return written;

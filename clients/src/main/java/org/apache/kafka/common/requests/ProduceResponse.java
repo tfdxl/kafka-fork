@@ -195,14 +195,16 @@ public class ProduceResponse extends AbstractResponse {
                 // for KafkaStorageException. In this case the client library will translate KafkaStorageException to
                 // UnknownServerException which is not retriable. We can ensure that producer will update metadata and retry
                 // by converting the KafkaStorageException to NotLeaderForPartitionException in the response if ProduceRequest version <= 3
-                if (errorCode == Errors.KAFKA_STORAGE_ERROR.code() && version <= 3)
+                if (errorCode == Errors.KAFKA_STORAGE_ERROR.code() && version <= 3) {
                     errorCode = Errors.NOT_LEADER_FOR_PARTITION.code();
+                }
                 Struct partStruct = topicData.instance(PARTITION_RESPONSES_KEY_NAME)
                         .set(PARTITION_ID, partitionEntry.getKey())
                         .set(ERROR_CODE, errorCode)
                         .set(BASE_OFFSET_KEY_NAME, part.baseOffset);
-                if (partStruct.hasField(LOG_APPEND_TIME_KEY_NAME))
+                if (partStruct.hasField(LOG_APPEND_TIME_KEY_NAME)) {
                     partStruct.set(LOG_APPEND_TIME_KEY_NAME, part.logAppendTime);
+                }
                 partStruct.setIfExists(LOG_START_OFFSET_FIELD, part.logStartOffset);
                 partitionArray.add(partStruct);
             }
@@ -226,8 +228,9 @@ public class ProduceResponse extends AbstractResponse {
     @Override
     public Map<Errors, Integer> errorCounts() {
         Map<Errors, Integer> errorCounts = new HashMap<>();
-        for (PartitionResponse response : responses.values())
+        for (PartitionResponse response : responses.values()) {
             updateErrorCounts(errorCounts, response.error);
+        }
         return errorCounts;
     }
 

@@ -67,8 +67,9 @@ public class DescribeConfigsRequest extends AbstractRequest {
             List<String> configNames = null;
             if (configNamesArray != null) {
                 configNames = new ArrayList<>(configNamesArray.length);
-                for (Object configNameObj : configNamesArray)
+                for (Object configNameObj : configNamesArray) {
                     configNames.add((String) configNameObj);
+                }
             }
 
             resourceToConfigNames.put(new Resource(resourceType, resourceName), configNames);
@@ -129,8 +130,9 @@ public class DescribeConfigsRequest extends AbstractRequest {
                 Map<Resource, DescribeConfigsResponse.Config> errors = new HashMap<>(resources().size());
                 DescribeConfigsResponse.Config config = new DescribeConfigsResponse.Config(error,
                         Collections.<DescribeConfigsResponse.ConfigEntry>emptyList());
-                for (Resource resource : resources())
+                for (Resource resource : resources()) {
                     errors.put(resource, config);
+                }
                 return new DescribeConfigsResponse(throttleTimeMs, errors);
             default:
                 throw new IllegalArgumentException(String.format("Version %d is not valid. Valid versions for %s are 0 to %d",
@@ -153,8 +155,9 @@ public class DescribeConfigsRequest extends AbstractRequest {
 
         private static Map<Resource, Collection<String>> toResourceToConfigNames(Collection<Resource> resources) {
             Map<Resource, Collection<String>> result = new HashMap<>(resources.size());
-            for (Resource resource : resources)
+            for (Resource resource : resources) {
                 result.put(resource, null);
+            }
             return result;
         }
 

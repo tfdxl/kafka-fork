@@ -104,10 +104,13 @@ public class JoinGroupRequest extends AbstractRequest {
 
         if (struct.hasField(REBALANCE_TIMEOUT_KEY_NAME))
             // rebalance timeout is added in v1
+        {
             rebalanceTimeout = struct.getInt(REBALANCE_TIMEOUT_KEY_NAME);
-        else
+        } else
             // v0 had no rebalance timeout but used session timeout implicitly
+        {
             rebalanceTimeout = sessionTimeout;
+        }
 
         memberId = struct.get(MEMBER_ID);
         protocolType = struct.getString(PROTOCOL_TYPE_KEY_NAME);

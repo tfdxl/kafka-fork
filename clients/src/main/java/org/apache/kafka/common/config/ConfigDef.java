@@ -94,37 +94,44 @@ public class ConfigDef {
      */
     public static Object parseType(String name, Object value, Type type) {
         try {
-            if (value == null) return null;
+            if (value == null) {
+                return null;
+            }
 
             String trimmed = null;
-            if (value instanceof String)
+            if (value instanceof String) {
                 trimmed = ((String) value).trim();
+            }
 
             switch (type) {
                 case BOOLEAN:
                     if (value instanceof String) {
-                        if (trimmed.equalsIgnoreCase("true"))
+                        if (trimmed.equalsIgnoreCase("true")) {
                             return true;
-                        else if (trimmed.equalsIgnoreCase("false"))
+                        } else if (trimmed.equalsIgnoreCase("false")) {
                             return false;
-                        else
+                        } else {
                             throw new ConfigException(name, value, "Expected value to be either true or false");
-                    } else if (value instanceof Boolean)
+                        }
+                    } else if (value instanceof Boolean) {
                         return value;
-                    else
+                    } else {
                         throw new ConfigException(name, value, "Expected value to be either true or false");
+                    }
                 case PASSWORD:
-                    if (value instanceof Password)
+                    if (value instanceof Password) {
                         return value;
-                    else if (value instanceof String)
+                    } else if (value instanceof String) {
                         return new Password(trimmed);
-                    else
+                    } else {
                         throw new ConfigException(name, value, "Expected value to be a string, but it was a " + value.getClass().getName());
+                    }
                 case STRING:
-                    if (value instanceof String)
+                    if (value instanceof String) {
                         return trimmed;
-                    else
+                    } else {
                         throw new ConfigException(name, value, "Expected value to be a string, but it was a " + value.getClass().getName());
+                    }
                 case INT:
                     if (value instanceof Integer) {
                         return value;
@@ -142,38 +149,44 @@ public class ConfigDef {
                         throw new ConfigException(name, value, "Expected value to be a 16-bit integer (short), but it was a " + value.getClass().getName());
                     }
                 case LONG:
-                    if (value instanceof Integer)
+                    if (value instanceof Integer) {
                         return ((Integer) value).longValue();
-                    if (value instanceof Long)
+                    }
+                    if (value instanceof Long) {
                         return value;
-                    else if (value instanceof String)
+                    } else if (value instanceof String) {
                         return Long.parseLong(trimmed);
-                    else
+                    } else {
                         throw new ConfigException(name, value, "Expected value to be a 64-bit integer (long), but it was a " + value.getClass().getName());
+                    }
                 case DOUBLE:
-                    if (value instanceof Number)
+                    if (value instanceof Number) {
                         return ((Number) value).doubleValue();
-                    else if (value instanceof String)
+                    } else if (value instanceof String) {
                         return Double.parseDouble(trimmed);
-                    else
+                    } else {
                         throw new ConfigException(name, value, "Expected value to be a double, but it was a " + value.getClass().getName());
+                    }
                 case LIST:
-                    if (value instanceof List)
+                    if (value instanceof List) {
                         return value;
-                    else if (value instanceof String)
-                        if (trimmed.isEmpty())
+                    } else if (value instanceof String) {
+                        if (trimmed.isEmpty()) {
                             return Collections.emptyList();
-                        else
+                        } else {
                             return Arrays.asList(trimmed.split("\\s*,\\s*", -1));
-                    else
+                        }
+                    } else {
                         throw new ConfigException(name, value, "Expected a comma separated list.");
+                    }
                 case CLASS:
-                    if (value instanceof Class)
+                    if (value instanceof Class) {
                         return value;
-                    else if (value instanceof String)
+                    } else if (value instanceof String) {
                         return Class.forName(trimmed, true, Utils.getContextOrKafkaClassLoader());
-                    else
+                    } else {
                         throw new ConfigException(name, value, "Expected a Class instance or class name.");
+                    }
                 default:
                     throw new IllegalStateException("Unknown type.");
             }
@@ -223,16 +236,18 @@ public class ConfigDef {
         for (Map.Entry<String, ?> entry : configs.entrySet()) {
             Object value = entry.getValue();
             String strValue;
-            if (value instanceof Password)
+            if (value instanceof Password) {
                 strValue = ((Password) value).value();
-            else if (value instanceof List)
+            } else if (value instanceof List) {
                 strValue = convertToString(value, Type.LIST);
-            else if (value instanceof Class)
+            } else if (value instanceof Class) {
                 strValue = convertToString(value, Type.CLASS);
-            else
+            } else {
                 strValue = convertToString(value, null);
-            if (strValue != null)
+            }
+            if (strValue != null) {
                 result.put(entry.getKey(), strValue);
+            }
         }
         return result;
     }
@@ -241,7 +256,9 @@ public class ConfigDef {
      * Returns a new validator instance that delegates to the base validator but unprefixes the config name along the way.
      */
     private static Validator embeddedValidator(final String keyPrefix, final Validator base) {
-        if (base == null) return null;
+        if (base == null) {
+            return null;
+        }
         return new ConfigDef.Validator() {
             @Override
             public void ensureValid(String name, Object value) {
@@ -254,7 +271,9 @@ public class ConfigDef {
      * Updated list of dependent configs with the specified {@code prefix} added.
      */
     private static List<String> embeddedDependents(final String keyPrefix, final List<String> dependents) {
-        if (dependents == null) return null;
+        if (dependents == null) {
+            return null;
+        }
         final List<String> updatedDependents = new ArrayList<>(dependents.size());
         for (String dependent : dependents) {
             updatedDependents.add(keyPrefix + dependent);
@@ -266,7 +285,9 @@ public class ConfigDef {
      * Returns a new recommender instance that delegates to the base recommender but unprefixes the input parameters along the way.
      */
     private static Recommender embeddedRecommender(final String keyPrefix, final Recommender base) {
-        if (base == null) return null;
+        if (base == null) {
+            return null;
+        }
         return new Recommender() {
             private String unprefixed(String k) {
                 return k.substring(keyPrefix.length());
@@ -306,8 +327,9 @@ public class ConfigDef {
     public Map<String, Object> defaultValues() {
         Map<String, Object> defaultValues = new HashMap<>();
         for (ConfigKey key : configKeys.values()) {
-            if (key.defaultValue != NO_DEFAULT_VALUE)
+            if (key.defaultValue != NO_DEFAULT_VALUE) {
                 defaultValues.put(key.name, key.defaultValue);
+            }
         }
         return defaultValues;
     }
@@ -676,8 +698,9 @@ public class ConfigDef {
         }
         // parse all known keys
         Map<String, Object> values = new HashMap<>();
-        for (ConfigKey key : configKeys.values())
+        for (ConfigKey key : configKeys.values()) {
             values.put(key.name, parseValue(key, props.get(key.name), props.containsKey(key.name)));
+        }
         return values;
     }
 
@@ -858,15 +881,18 @@ public class ConfigDef {
                 return key.type.toString().toLowerCase(Locale.ROOT);
             case "Default":
                 if (key.hasDefault()) {
-                    if (key.defaultValue == null)
+                    if (key.defaultValue == null) {
                         return "null";
+                    }
                     String defaultValueStr = convertToString(key.defaultValue, key.type);
-                    if (defaultValueStr.isEmpty())
+                    if (defaultValueStr.isEmpty()) {
                         return "\"\"";
-                    else
+                    } else {
                         return defaultValueStr;
-                } else
+                    }
+                } else {
                     return "";
+                }
             case "Valid Values":
                 return key.validator != null ? key.validator.toString() : "";
             case "Importance":
@@ -910,8 +936,9 @@ public class ConfigDef {
         for (String headerName : headers()) {
             addHeader(b, headerName);
         }
-        if (hasUpdateModes)
+        if (hasUpdateModes) {
             addHeader(b, "Dynamic Update Mode");
+        }
         b.append("</tr>\n");
         for (ConfigKey key : configs) {
             if (key.internalConfig) {
@@ -925,8 +952,9 @@ public class ConfigDef {
             }
             if (hasUpdateModes) {
                 String updateMode = dynamicUpdateModes.get(key.name);
-                if (updateMode == null)
+                if (updateMode == null) {
                     updateMode = "read-only";
+                }
                 addColumnValue(b, updateMode);
             }
             b.append("</tr>\n");
@@ -982,10 +1010,11 @@ public class ConfigDef {
                 for (String dependent : key.dependents) {
                     b.append("``");
                     b.append(dependent);
-                    if (++j == key.dependents.size())
+                    if (++j == key.dependents.size()) {
                         b.append("``");
-                    else
+                    } else {
                         b.append("``, ");
+                    }
                 }
                 b.append("\n");
             }
@@ -1167,23 +1196,29 @@ public class ConfigDef {
             return new Range(min, max);
         }
 
+        @Override
         public void ensureValid(String name, Object o) {
-            if (o == null)
+            if (o == null) {
                 throw new ConfigException(name, null, "Value must be non-null");
+            }
             Number n = (Number) o;
-            if (min != null && n.doubleValue() < min.doubleValue())
+            if (min != null && n.doubleValue() < min.doubleValue()) {
                 throw new ConfigException(name, o, "Value must be at least " + min);
-            if (max != null && n.doubleValue() > max.doubleValue())
+            }
+            if (max != null && n.doubleValue() > max.doubleValue()) {
                 throw new ConfigException(name, o, "Value must be no more than " + max);
+            }
         }
 
+        @Override
         public String toString() {
-            if (min == null)
+            if (min == null) {
                 return "[...," + max + "]";
-            else if (max == null)
+            } else if (max == null) {
                 return "[" + min + ",...]";
-            else
+            } else {
                 return "[" + min + ",...," + max + "]";
+            }
         }
     }
 
@@ -1208,6 +1243,7 @@ public class ConfigDef {
             }
         }
 
+        @Override
         public String toString() {
             return validString.toString();
         }
@@ -1233,6 +1269,7 @@ public class ConfigDef {
 
         }
 
+        @Override
         public String toString() {
             return "[" + Utils.join(validStrings, ", ") + "]";
         }
@@ -1342,8 +1379,9 @@ public class ConfigDef {
             this.defaultValue = NO_DEFAULT_VALUE.equals(defaultValue) ? NO_DEFAULT_VALUE : parseType(name, defaultValue, type);
             this.validator = validator;
             this.importance = importance;
-            if (this.validator != null && hasDefault())
+            if (this.validator != null && hasDefault()) {
                 this.validator.ensureValid(name, this.defaultValue);
+            }
             this.documentation = documentation;
             this.dependents = dependents;
             this.group = group;

@@ -95,8 +95,9 @@ public class RequestFuture<T> implements ConsumerNetworkClient.PollCondition {
      */
     @SuppressWarnings("unchecked")
     public T value() {
-        if (!succeeded())
+        if (!succeeded()) {
             throw new IllegalStateException("Attempt to retrieve value from future which hasn't successfully completed");
+        }
         return (T) result.get();
     }
 
@@ -136,8 +137,9 @@ public class RequestFuture<T> implements ConsumerNetworkClient.PollCondition {
      * @throws IllegalStateException if the future is not complete or completed successfully
      */
     public RuntimeException exception() {
-        if (!failed())
+        if (!failed()) {
             throw new IllegalStateException("Attempt to retrieve exception from future which hasn't failed");
+        }
         return (RuntimeException) result.get();
     }
 
@@ -151,11 +153,13 @@ public class RequestFuture<T> implements ConsumerNetworkClient.PollCondition {
      */
     public void complete(T value) {
         try {
-            if (value instanceof RuntimeException)
+            if (value instanceof RuntimeException) {
                 throw new IllegalArgumentException("The argument to complete can not be an instance of RuntimeException");
+            }
 
-            if (!result.compareAndSet(INCOMPLETE_SENTINEL, value))
+            if (!result.compareAndSet(INCOMPLETE_SENTINEL, value)) {
                 throw new IllegalStateException("Invalid attempt to complete a request future which is already complete");
+            }
             fireSuccess();
         } finally {
             completedLatch.countDown();
@@ -171,11 +175,13 @@ public class RequestFuture<T> implements ConsumerNetworkClient.PollCondition {
      */
     public void raise(RuntimeException e) {
         try {
-            if (e == null)
+            if (e == null) {
                 throw new IllegalArgumentException("The exception passed to raise must not be null");
+            }
 
-            if (!result.compareAndSet(INCOMPLETE_SENTINEL, e))
+            if (!result.compareAndSet(INCOMPLETE_SENTINEL, e)) {
                 throw new IllegalStateException("Invalid attempt to complete a request future which is already complete");
+            }
 
             fireFailure();
         } finally {
@@ -196,8 +202,9 @@ public class RequestFuture<T> implements ConsumerNetworkClient.PollCondition {
         T value = value();
         while (true) {
             RequestFutureListener<T> listener = listeners.poll();
-            if (listener == null)
+            if (listener == null) {
                 break;
+            }
             listener.onSuccess(value);
         }
     }
@@ -206,8 +213,9 @@ public class RequestFuture<T> implements ConsumerNetworkClient.PollCondition {
         RuntimeException exception = exception();
         while (true) {
             RequestFutureListener<T> listener = listeners.poll();
-            if (listener == null)
+            if (listener == null) {
                 break;
+            }
             listener.onFailure(exception);
         }
     }
@@ -222,10 +230,13 @@ public class RequestFuture<T> implements ConsumerNetworkClient.PollCondition {
         this.listeners.add(listener);
         if (failed())
             //触发监听器failure
+        {
             fireFailure();
-        else if (succeeded())
+        } else if (succeeded())
             //触发success
+        {
             fireSuccess();
+        }
     }
 
     /**

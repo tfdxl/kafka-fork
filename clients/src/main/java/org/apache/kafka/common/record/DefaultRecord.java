@@ -129,15 +129,17 @@ public class DefaultRecord implements Record {
             Utils.writeTo(out, value, valueSize);
         }
 
-        if (headers == null)
+        if (headers == null) {
             throw new IllegalArgumentException("Headers cannot be null");
+        }
 
         ByteUtils.writeVarint(headers.length, out);
 
         for (Header header : headers) {
             String headerKey = header.key();
-            if (headerKey == null)
+            if (headerKey == null) {
                 throw new IllegalArgumentException("Invalid null header key found in headers");
+            }
 
             byte[] utf8Bytes = Utils.utf8(headerKey);
             ByteUtils.writeVarint(utf8Bytes.length, out);
@@ -174,8 +176,9 @@ public class DefaultRecord implements Record {
                                          int baseSequence,
                                          Long logAppendTime) {
         int sizeOfBodyInBytes = ByteUtils.readVarint(buffer);
-        if (buffer.remaining() < sizeOfBodyInBytes)
+        if (buffer.remaining() < sizeOfBodyInBytes) {
             return null;
+        }
 
         int totalSizeInBytes = ByteUtils.sizeOfVarint(sizeOfBodyInBytes) + sizeOfBodyInBytes;
         return readFrom(buffer, totalSizeInBytes, sizeOfBodyInBytes, baseOffset, baseTimestamp,
@@ -194,8 +197,9 @@ public class DefaultRecord implements Record {
             byte attributes = buffer.get();
             long timestampDelta = ByteUtils.readVarlong(buffer);
             long timestamp = baseTimestamp + timestampDelta;
-            if (logAppendTime != null)
+            if (logAppendTime != null) {
                 timestamp = logAppendTime;
+            }
 
             int offsetDelta = ByteUtils.readVarint(buffer);
             long offset = baseOffset + offsetDelta;
@@ -220,19 +224,22 @@ public class DefaultRecord implements Record {
             }
 
             int numHeaders = ByteUtils.readVarint(buffer);
-            if (numHeaders < 0)
+            if (numHeaders < 0) {
                 throw new InvalidRecordException("Found invalid number of record headers " + numHeaders);
+            }
 
             final Header[] headers;
-            if (numHeaders == 0)
+            if (numHeaders == 0) {
                 headers = Record.EMPTY_HEADERS;
-            else
+            } else {
                 headers = readHeaders(buffer, numHeaders);
+            }
 
             // validate whether we have read all header bytes in the current record
-            if (buffer.position() - recordStart != sizeOfBodyInBytes)
+            if (buffer.position() - recordStart != sizeOfBodyInBytes) {
                 throw new InvalidRecordException("Invalid record size: expected to read " + sizeOfBodyInBytes +
                         " bytes in record payload, but instead read " + (buffer.position() - recordStart));
+            }
 
             return new DefaultRecord(sizeInBytes, attributes, offset, timestamp, sequence, key, value, headers);
         } catch (BufferUnderflowException | IllegalArgumentException e) {
@@ -244,8 +251,9 @@ public class DefaultRecord implements Record {
         Header[] headers = new Header[numHeaders];
         for (int i = 0; i < numHeaders; i++) {
             int headerKeySize = ByteUtils.readVarint(buffer);
-            if (headerKeySize < 0)
+            if (headerKeySize < 0) {
                 throw new InvalidRecordException("Invalid negative header key size " + headerKeySize);
+            }
 
             String headerKey = Utils.utf8(buffer, headerKeySize);
             buffer.position(buffer.position() + headerKeySize);
@@ -307,24 +315,28 @@ public class DefaultRecord implements Record {
 
     private static int sizeOf(int keySize, int valueSize, Header[] headers) {
         int size = 0;
-        if (keySize < 0)
+        if (keySize < 0) {
             size += NULL_VARINT_SIZE_BYTES;
-        else
+        } else {
             size += ByteUtils.sizeOfVarint(keySize) + keySize;
+        }
 
-        if (valueSize < 0)
+        if (valueSize < 0) {
             size += NULL_VARINT_SIZE_BYTES;
-        else
+        } else {
             size += ByteUtils.sizeOfVarint(valueSize) + valueSize;
+        }
 
-        if (headers == null)
+        if (headers == null) {
             throw new IllegalArgumentException("Headers cannot be null");
+        }
 
         size += ByteUtils.sizeOfVarint(headers.length);
         for (Header header : headers) {
             String headerKey = header.key();
-            if (headerKey == null)
+            if (headerKey == null) {
                 throw new IllegalArgumentException("Invalid null header key found in headers");
+            }
 
             int headerKeySize = Utils.utf8Length(headerKey);
             size += ByteUtils.sizeOfVarint(headerKeySize) + headerKeySize;
@@ -454,10 +466,12 @@ public class DefaultRecord implements Record {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o)
+        if (this == o) {
             return true;
-        if (o == null || getClass() != o.getClass())
+        }
+        if (o == null || getClass() != o.getClass()) {
             return false;
+        }
 
         DefaultRecord that = (DefaultRecord) o;
         return sizeInBytes == that.sizeInBytes &&

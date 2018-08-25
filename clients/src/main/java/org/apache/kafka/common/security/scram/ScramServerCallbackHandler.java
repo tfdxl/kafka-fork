@@ -45,17 +45,18 @@ public class ScramServerCallbackHandler implements AuthCallbackHandler {
     public void handle(Callback[] callbacks) throws IOException, UnsupportedCallbackException {
         String username = null;
         for (Callback callback : callbacks) {
-            if (callback instanceof NameCallback)
+            if (callback instanceof NameCallback) {
                 username = ((NameCallback) callback).getDefaultName();
-            else if (callback instanceof DelegationTokenCredentialCallback) {
+            } else if (callback instanceof DelegationTokenCredentialCallback) {
                 DelegationTokenCredentialCallback tokenCallback = (DelegationTokenCredentialCallback) callback;
                 tokenCallback.scramCredential(tokenCache.credential(saslMechanism, username));
                 tokenCallback.tokenOwner(tokenCache.owner(username));
             } else if (callback instanceof ScramCredentialCallback) {
                 ScramCredentialCallback sc = (ScramCredentialCallback) callback;
                 sc.scramCredential(credentialCache.get(username));
-            } else
+            } else {
                 throw new UnsupportedCallbackException(callback);
+            }
         }
     }
 

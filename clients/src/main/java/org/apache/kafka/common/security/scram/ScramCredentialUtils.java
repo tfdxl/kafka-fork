@@ -69,8 +69,9 @@ public final class ScramCredentialUtils {
         String[] tokens = str.split(",");
         for (String token : tokens) {
             int index = token.indexOf('=');
-            if (index <= 0)
+            if (index <= 0) {
                 throw new IllegalArgumentException("Credentials not valid: " + str);
+            }
             props.put(token.substring(0, index), token.substring(index + 1));
         }
         return props;
@@ -78,8 +79,9 @@ public final class ScramCredentialUtils {
 
     public static void createCache(CredentialCache cache, Collection<String> mechanisms) {
         for (String mechanism : ScramMechanism.mechanismNames()) {
-            if (mechanisms.contains(mechanism))
+            if (mechanisms.contains(mechanism)) {
                 cache.createCache(mechanism, ScramCredential.class);
+            }
         }
     }
 }

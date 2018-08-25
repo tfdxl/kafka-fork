@@ -148,29 +148,39 @@ public abstract class ConnectRecord<R extends ConnectRecord<R>> {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o)
+        if (this == o) {
             return true;
-        if (o == null || getClass() != o.getClass())
+        }
+        if (o == null || getClass() != o.getClass()) {
             return false;
+        }
 
         ConnectRecord that = (ConnectRecord) o;
 
-        if (kafkaPartition != null ? !kafkaPartition.equals(that.kafkaPartition) : that.kafkaPartition != null)
+        if (kafkaPartition != null ? !kafkaPartition.equals(that.kafkaPartition) : that.kafkaPartition != null) {
             return false;
-        if (topic != null ? !topic.equals(that.topic) : that.topic != null)
+        }
+        if (topic != null ? !topic.equals(that.topic) : that.topic != null) {
             return false;
-        if (keySchema != null ? !keySchema.equals(that.keySchema) : that.keySchema != null)
+        }
+        if (keySchema != null ? !keySchema.equals(that.keySchema) : that.keySchema != null) {
             return false;
-        if (key != null ? !key.equals(that.key) : that.key != null)
+        }
+        if (key != null ? !key.equals(that.key) : that.key != null) {
             return false;
-        if (valueSchema != null ? !valueSchema.equals(that.valueSchema) : that.valueSchema != null)
+        }
+        if (valueSchema != null ? !valueSchema.equals(that.valueSchema) : that.valueSchema != null) {
             return false;
-        if (value != null ? !value.equals(that.value) : that.value != null)
+        }
+        if (value != null ? !value.equals(that.value) : that.value != null) {
             return false;
-        if (timestamp != null ? !timestamp.equals(that.timestamp) : that.timestamp != null)
+        }
+        if (timestamp != null ? !timestamp.equals(that.timestamp) : that.timestamp != null) {
             return false;
-        if (!Objects.equals(headers, that.headers))
+        }
+        if (!Objects.equals(headers, that.headers)) {
             return false;
+        }
 
         return true;
     }

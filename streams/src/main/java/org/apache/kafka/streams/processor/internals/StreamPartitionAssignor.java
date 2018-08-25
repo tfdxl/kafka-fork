@@ -104,8 +104,9 @@ public class StreamPartitionAssignor implements PartitionAssignor, Configurable 
                 final String host = getHost(endPoint);
                 final Integer port = getPort(endPoint);
 
-                if (host == null || port == null)
+                if (host == null || port == null) {
                     throw new ConfigException(String.format("Error parsing host address %s. Expected format host:port.", endPoint));
+                }
 
                 hostInfo = new HostInfo(host, port);
             } else {
@@ -217,10 +218,11 @@ public class StreamPartitionAssignor implements PartitionAssignor, Configurable 
                 String host = getHost(userEndPoint);
                 Integer port = getPort(userEndPoint);
 
-                if (host == null || port == null)
+                if (host == null || port == null) {
                     throw new ConfigException(String.format("%s Config %s isn't in the correct format. Expected a host:port pair" +
                                     " but received %s",
                             logPrefix, StreamsConfig.APPLICATION_SERVER_CONFIG, userEndPoint));
+                }
             } catch (NumberFormatException nfe) {
                 throw new ConfigException(String.format("%s Invalid port supplied in %s for config %s",
                         logPrefix, userEndPoint, StreamsConfig.APPLICATION_SERVER_CONFIG));
@@ -447,8 +449,9 @@ public class StreamPartitionAssignor implements PartitionAssignor, Configurable 
                 int numPartitions = UNKNOWN;
                 if (tasksByTopicGroup.get(topicGroupId) != null) {
                     for (TaskId task : tasksByTopicGroup.get(topicGroupId)) {
-                        if (numPartitions < task.partition + 1)
+                        if (numPartitions < task.partition + 1) {
                             numPartitions = task.partition + 1;
+                        }
                     }
                     final InternalTopicMetadata topicMetadata = new InternalTopicMetadata(topicConfig);
                     topicMetadata.numPartitions = numPartitions;

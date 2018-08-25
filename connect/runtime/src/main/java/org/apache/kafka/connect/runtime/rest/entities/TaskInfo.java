@@ -43,8 +43,12 @@ public class TaskInfo {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         TaskInfo taskInfo = (TaskInfo) o;
         return Objects.equals(id, taskInfo.id) &&
                 Objects.equals(config, taskInfo.config);

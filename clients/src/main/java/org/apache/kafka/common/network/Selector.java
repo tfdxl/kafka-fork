@@ -240,10 +240,12 @@ public class Selector implements Selectable, AutoCloseable {
          */
         socket.setKeepAlive(true);
         //设置socket读写buffer的大小
-        if (sendBufferSize != Selectable.USE_DEFAULT_BUFFER_SIZE)
+        if (sendBufferSize != Selectable.USE_DEFAULT_BUFFER_SIZE) {
             socket.setSendBufferSize(sendBufferSize);
-        if (receiveBufferSize != Selectable.USE_DEFAULT_BUFFER_SIZE)
+        }
+        if (receiveBufferSize != Selectable.USE_DEFAULT_BUFFER_SIZE) {
             socket.setReceiveBufferSize(receiveBufferSize);
+        }
         //不合并需求，延迟低，但是他妈的效率也打点折扣
         socket.setTcpNoDelay(true);
     }
@@ -321,8 +323,9 @@ public class Selector implements Selectable, AutoCloseable {
     @Override
     public void close() {
         List<String> connections = new ArrayList<>(channels.keySet());
-        for (String id : connections)
+        for (String id : connections) {
             close(id);
+        }
         try {
             this.nioSelector.close();
         } catch (IOException | SecurityException e) {
@@ -338,6 +341,7 @@ public class Selector implements Selectable, AutoCloseable {
      *
      * @param send The request to send
      */
+    @Override
     public void send(Send send) {
 
         //获取连接标识符
@@ -412,8 +416,9 @@ public class Selector implements Selectable, AutoCloseable {
 
         boolean dataInBuffers = !keysWithBufferedRead.isEmpty();
 
-        if (hasStagedReceives() || !immediatelyConnectedKeys.isEmpty() || (madeReadProgressLastCall && dataInBuffers))
+        if (hasStagedReceives() || !immediatelyConnectedKeys.isEmpty() || (madeReadProgressLastCall && dataInBuffers)) {
             timeout = 0;
+        }
 
         if (!memoryPool.isOutOfMemory() && outOfMemory) {
             //we have recovered from memory pressure. unmute any channel not explicitly muted for other reasons
@@ -483,8 +488,9 @@ public class Selector implements Selectable, AutoCloseable {
 
             // register all per-connection metrics at once
             sensors.maybeRegisterConnectionMetrics(channel.id());
-            if (idleExpiryManager != null)
+            if (idleExpiryManager != null) {
                 idleExpiryManager.update(channel.id(), currentTimeNanos);
+            }
 
             boolean sendFailed = false;
             try {
@@ -500,8 +506,9 @@ public class Selector implements Selectable, AutoCloseable {
                                 socketChannel.socket().getSendBufferSize(),
                                 socketChannel.socket().getSoTimeout(),
                                 channel.id());
-                    } else
+                    } else {
                         continue;
+                    }
                 }
 
                 /* if channel is not ready finish prepare */
@@ -512,8 +519,9 @@ public class Selector implements Selectable, AutoCloseable {
                         sensors.failedAuthentication.record();
                         throw e;
                     }
-                    if (channel.ready())
+                    if (channel.ready()) {
                         sensors.successfulAuthentication.record();
+                    }
                 }
 
                 attemptRead(key, channel);
@@ -542,17 +550,20 @@ public class Selector implements Selectable, AutoCloseable {
                 }
 
                 /* cancel any defunct sockets */
-                if (!key.isValid())
+                if (!key.isValid()) {
                     close(channel, CloseMode.GRACEFUL);
+                }
 
             } catch (Exception e) {
                 String desc = channel.socketDescription();
-                if (e instanceof IOException)
+                if (e instanceof IOException) {
                     log.debug("Connection with {} disconnected", desc, e);
-                else if (e instanceof AuthenticationException) // will be logged later as error by clients
+                } else if (e instanceof AuthenticationException) // will be logged later as error by clients
+                {
                     log.debug("Connection with {} disconnected due to authentication exception", desc, e);
-                else
+                } else {
                     log.warn("Unexpected error from {}; closing connection", desc, e);
+                }
                 close(channel, sendFailed ? CloseMode.NOTIFY_ONLY : CloseMode.GRACEFUL);
             } finally {
                 maybeRecordTimePerConnection(channel, channelStartTimeNanos);
@@ -592,8 +603,9 @@ public class Selector implements Selectable, AutoCloseable {
 
     // Record time spent in pollSelectionKeys for channel (moved into a method to keep checkstyle happy)
     private void maybeRecordTimePerConnection(KafkaChannel channel, long startTimeNanos) {
-        if (recordTimePerConnection)
+        if (recordTimePerConnection) {
             channel.addNetworkThreadTimeNanos(time.nanoseconds() - startTimeNanos);
+        }
     }
 
     @Override
@@ -640,28 +652,32 @@ public class Selector implements Selectable, AutoCloseable {
 
     @Override
     public void muteAll() {
-        for (KafkaChannel channel : this.channels.values())
+        for (KafkaChannel channel : this.channels.values()) {
             mute(channel);
+        }
     }
 
     @Override
     public void unmuteAll() {
-        for (KafkaChannel channel : this.channels.values())
+        for (KafkaChannel channel : this.channels.values()) {
             unmute(channel);
+        }
     }
 
     private void maybeCloseOldestConnection(long currentTimeNanos) {
-        if (idleExpiryManager == null)
+        if (idleExpiryManager == null) {
             return;
+        }
 
         Map.Entry<String, Long> expiredConnection = idleExpiryManager.pollExpiredConnection(currentTimeNanos);
         if (expiredConnection != null) {
             String connectionId = expiredConnection.getKey();
             KafkaChannel channel = this.channels.get(connectionId);
             if (channel != null) {
-                if (log.isTraceEnabled())
+                if (log.isTraceEnabled()) {
                     log.trace("About to close the idle connection from {} due to being idle for {} millis",
                             connectionId, (currentTimeNanos - expiredConnection.getValue()) / 1000 / 1000);
+                }
                 channel.state(ChannelState.EXPIRED);
                 close(channel, CloseMode.GRACEFUL);
             }
@@ -687,8 +703,9 @@ public class Selector implements Selectable, AutoCloseable {
                 it.remove();
             }
         }
-        for (String channel : this.failedSends)
+        for (String channel : this.failedSends) {
             this.disconnected.put(channel, ChannelState.FAILED_SEND);
+        }
         this.failedSends.clear();
         this.madeReadProgressLastPoll = false;
     }
@@ -700,18 +717,21 @@ public class Selector implements Selectable, AutoCloseable {
      * @return The number of keys ready
      */
     private int select(long timeoutMs) throws IOException {
-        if (timeoutMs < 0L)
+        if (timeoutMs < 0L) {
             throw new IllegalArgumentException("timeout should be >= 0");
+        }
 
-        if (timeoutMs == 0L)
+        if (timeoutMs == 0L) {
             return this.nioSelector.selectNow();
-        else
+        } else {
             return this.nioSelector.select(timeoutMs);
+        }
     }
 
     /**
      * Close the connection identified by the given id
      */
+    @Override
     public void close(String id) {
         KafkaChannel channel = this.channels.get(id);
         if (channel != null) {
@@ -722,8 +742,9 @@ public class Selector implements Selectable, AutoCloseable {
         } else {
             KafkaChannel closingChannel = this.closingChannels.remove(id);
             // Close any closing channel, leave the channel in the state in which closing was triggered
-            if (closingChannel != null)
+            if (closingChannel != null) {
                 doClose(closingChannel, false);
+            }
         }
     }
 
@@ -755,12 +776,14 @@ public class Selector implements Selectable, AutoCloseable {
             // stagedReceives will be moved to completedReceives later along with receives from other channels
             closingChannels.put(channel.id(), channel);
             log.debug("Tracking closing connection {} to process outstanding requests", channel.id());
-        } else
+        } else {
             doClose(channel, closeMode.notifyDisconnect);
+        }
         this.channels.remove(channel.id());
 
-        if (idleExpiryManager != null)
+        if (idleExpiryManager != null) {
             idleExpiryManager.remove(channel.id());
+        }
     }
 
     private void doClose(KafkaChannel channel, boolean notifyDisconnect) {
@@ -778,8 +801,9 @@ public class Selector implements Selectable, AutoCloseable {
         this.sensors.connectionClosed.record();
         this.stagedReceives.remove(channel);
         this.explicitlyMutedChannels.remove(channel);
-        if (notifyDisconnect)
+        if (notifyDisconnect) {
             this.disconnected.put(channel.id(), channel.state());
+        }
     }
 
     /**
@@ -793,10 +817,12 @@ public class Selector implements Selectable, AutoCloseable {
 
     private KafkaChannel openOrClosingChannelOrFail(String id) {
         KafkaChannel channel = this.channels.get(id);
-        if (channel == null)
+        if (channel == null) {
             channel = this.closingChannels.get(id);
-        if (channel == null)
+        }
+        if (channel == null) {
             throw new IllegalStateException("Attempt to retrieve channel for which there is no connection. Connection id " + id + " existing connections " + channels.keySet());
+        }
         return channel;
     }
 
@@ -842,8 +868,9 @@ public class Selector implements Selectable, AutoCloseable {
      */
     private boolean hasStagedReceives() {
         for (KafkaChannel channel : this.stagedReceives.keySet()) {
-            if (!channel.isMute())
+            if (!channel.isMute()) {
                 return true;
+            }
         }
         return false;
     }
@@ -852,8 +879,9 @@ public class Selector implements Selectable, AutoCloseable {
      * adds a receive to staged receives
      */
     private void addToStagedReceives(KafkaChannel channel, NetworkReceive receive) {
-        if (!stagedReceives.containsKey(channel))
+        if (!stagedReceives.containsKey(channel)) {
             stagedReceives.put(channel, new ArrayDeque<NetworkReceive>());
+        }
 
         Deque<NetworkReceive> deque = stagedReceives.get(channel);
         deque.add(receive);
@@ -871,8 +899,9 @@ public class Selector implements Selectable, AutoCloseable {
                 if (!explicitlyMutedChannels.contains(channel)) {
                     Deque<NetworkReceive> deque = entry.getValue();
                     addToCompletedReceives(channel, deque);
-                    if (deque.isEmpty())
+                    if (deque.isEmpty()) {
                         iter.remove();
+                    }
                 }
             }
         }
@@ -935,8 +964,9 @@ public class Selector implements Selectable, AutoCloseable {
         }
 
         public Map.Entry<String, Long> pollExpiredConnection(long currentTimeNanos) {
-            if (currentTimeNanos <= nextIdleCloseCheckTime)
+            if (currentTimeNanos <= nextIdleCloseCheckTime) {
                 return null;
+            }
 
             if (lruConnections.isEmpty()) {
                 nextIdleCloseCheckTime = currentTimeNanos + connectionsMaxIdleNanos;
@@ -947,10 +977,11 @@ public class Selector implements Selectable, AutoCloseable {
             Long connectionLastActiveTime = oldestConnectionEntry.getValue();
             nextIdleCloseCheckTime = connectionLastActiveTime + connectionsMaxIdleNanos;
 
-            if (currentTimeNanos > nextIdleCloseCheckTime)
+            if (currentTimeNanos > nextIdleCloseCheckTime) {
                 return oldestConnectionEntry;
-            else
+            } else {
                 return null;
+            }
         }
 
         public void remove(String connectionId) {
@@ -1041,6 +1072,7 @@ public class Selector implements Selectable, AutoCloseable {
             metricName = metrics.metricName("connection-count", metricGrpName, "The current number of active connections.", metricTags);
             topLevelMetricNames.add(metricName);
             this.metrics.addMetric(metricName, new Measurable() {
+                @Override
                 public double measure(MetricConfig config, long now) {
                     return channels.size();
                 }
@@ -1053,10 +1085,11 @@ public class Selector implements Selectable, AutoCloseable {
                     String.format("The number of %s per second", descriptiveName), metricTags);
             MetricName totalMetricName = metrics.metricName(baseName + "-total", groupName,
                     String.format("The total number of %s", descriptiveName), metricTags);
-            if (stat == null)
+            if (stat == null) {
                 return new Meter(rateMetricName, totalMetricName);
-            else
+            } else {
                 return new Meter(stat, rateMetricName, totalMetricName);
+            }
         }
 
         private Meter createMeter(Metrics metrics, String groupName, Map<String, String> metricTags,
@@ -1120,8 +1153,9 @@ public class Selector implements Selectable, AutoCloseable {
             if (!connectionId.isEmpty()) {
                 String nodeRequestName = "node-" + connectionId + ".bytes-sent";
                 Sensor nodeRequest = this.metrics.getSensor(nodeRequestName);
-                if (nodeRequest != null)
+                if (nodeRequest != null) {
                     nodeRequest.record(bytes, now);
+                }
             }
         }
 
@@ -1131,16 +1165,19 @@ public class Selector implements Selectable, AutoCloseable {
             if (!connection.isEmpty()) {
                 String nodeRequestName = "node-" + connection + ".bytes-received";
                 Sensor nodeRequest = this.metrics.getSensor(nodeRequestName);
-                if (nodeRequest != null)
+                if (nodeRequest != null) {
                     nodeRequest.record(bytes, now);
+                }
             }
         }
 
         public void close() {
-            for (MetricName metricName : topLevelMetricNames)
+            for (MetricName metricName : topLevelMetricNames) {
                 metrics.removeMetric(metricName);
-            for (Sensor sensor : sensors)
+            }
+            for (Sensor sensor : sensors) {
                 metrics.removeSensor(sensor.name());
+            }
         }
     }
 }

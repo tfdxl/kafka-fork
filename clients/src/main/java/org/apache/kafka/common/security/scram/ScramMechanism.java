@@ -30,8 +30,9 @@ public enum ScramMechanism {
 
     static {
         Map<String, ScramMechanism> map = new HashMap<>();
-        for (ScramMechanism mech : values())
+        for (ScramMechanism mech : values()) {
             map.put(mech.mechanismName, mech);
+        }
         MECHANISMS_MAP = Collections.unmodifiableMap(map);
     }
 

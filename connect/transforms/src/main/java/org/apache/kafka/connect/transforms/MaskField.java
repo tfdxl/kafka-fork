@@ -105,16 +105,18 @@ public abstract class MaskField<R extends ConnectRecord<R>> implements Transform
     }
 
     private static Object masked(Object value) {
-        if (value == null)
+        if (value == null) {
             return null;
+        }
         Object maskedValue = PRIMITIVE_VALUE_MAPPING.get(value.getClass());
         if (maskedValue == null) {
-            if (value instanceof List)
+            if (value instanceof List) {
                 maskedValue = Collections.emptyList();
-            else if (value instanceof Map)
+            } else if (value instanceof Map) {
                 maskedValue = Collections.emptyMap();
-            else
+            } else {
                 throw new DataException("Cannot mask value of type: " + value.getClass());
+            }
         }
         return maskedValue;
     }

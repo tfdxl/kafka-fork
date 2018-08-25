@@ -80,8 +80,9 @@ public class AclBindingFilter {
 
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof AclBindingFilter))
+        if (!(o instanceof AclBindingFilter)) {
             return false;
+        }
         AclBindingFilter other = (AclBindingFilter) o;
         return resourceFilter.equals(other.resourceFilter) && entryFilter.equals(other.entryFilter);
     }
@@ -99,8 +100,9 @@ public class AclBindingFilter {
      */
     public String findIndefiniteField() {
         String indefinite = resourceFilter.findIndefiniteField();
-        if (indefinite != null)
+        if (indefinite != null) {
             return indefinite;
+        }
         return entryFilter.findIndefiniteField();
     }
 

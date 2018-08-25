@@ -279,8 +279,9 @@ public class ClientCompatibilityTest {
                                 client.describeTopics(Collections.singleton("newtopic")).all().get();
                                 break;
                             } catch (ExecutionException e) {
-                                if (e.getCause() instanceof UnknownTopicOrPartitionException)
+                                if (e.getCause() instanceof UnknownTopicOrPartitionException) {
                                     continue;
+                                }
                                 throw e;
                             }
                         }
@@ -288,18 +289,21 @@ public class ClientCompatibilityTest {
                 });
             while (true) {
                 Collection<TopicListing> listings = client.listTopics().listings().get();
-                if (!testConfig.createTopicsSupported)
+                if (!testConfig.createTopicsSupported) {
                     break;
+                }
                 boolean foundNewTopic = false;
                 for (TopicListing listing : listings) {
                     if (listing.name().equals("newtopic")) {
-                        if (listing.isInternal())
+                        if (listing.isInternal()) {
                             throw new KafkaException("Did not expect newtopic to be an internal topic.");
+                        }
                         foundNewTopic = true;
                     }
                 }
-                if (foundNewTopic)
+                if (foundNewTopic) {
                     break;
+                }
                 Thread.sleep(1);
                 log.info("Did not see newtopic.  Retrying listTopics...");
             }
@@ -310,8 +314,9 @@ public class ClientCompatibilityTest {
                         try {
                             client.describeAcls(AclBindingFilter.ANY).values().get();
                         } catch (ExecutionException e) {
-                            if (e.getCause() instanceof SecurityDisabledException)
+                            if (e.getCause() instanceof SecurityDisabledException) {
                                 return;
+                            }
                             throw e.getCause();
                         }
                     }
@@ -372,8 +377,9 @@ public class ClientCompatibilityTest {
             new ClientCompatibilityTestDeserializer(testConfig.expectClusterId);
         try (final KafkaConsumer<byte[], byte[]> consumer = new KafkaConsumer<>(consumerProps, deserializer, deserializer)) {
             final List<PartitionInfo> partitionInfos = consumer.partitionsFor(testConfig.topic);
-            if (partitionInfos.size() < 1)
+            if (partitionInfos.size() < 1) {
                 throw new RuntimeException("Expected at least one partition for topic " + testConfig.topic);
+            }
             final Map<TopicPartition, Long> timestampsToSearch = new HashMap<>();
             final LinkedList<TopicPartition> topicPartitions = new LinkedList<>();
             for (PartitionInfo partitionInfo : partitionInfos) {
@@ -410,30 +416,34 @@ public class ClientCompatibilityTest {
                 private byte[] fetchNext() {
                     while (true) {
                         long curTime = Time.SYSTEM.milliseconds();
-                        if (curTime - prodTimeMs > TIMEOUT_MS)
+                        if (curTime - prodTimeMs > TIMEOUT_MS) {
                             throw new RuntimeException("Timed out after " + TIMEOUT_MS + " ms.");
+                        }
                         if (recordIter == null) {
                             ConsumerRecords<byte[], byte[]> records = consumer.poll(100);
                             recordIter = records.iterator();
                         }
-                        if (recordIter.hasNext())
+                        if (recordIter.hasNext()) {
                             return recordIter.next().value();
+                        }
                         recordIter = null;
                     }
                 }
 
                 @Override
                 public boolean hasNext() {
-                    if (next != null)
+                    if (next != null) {
                         return true;
+                    }
                     next = fetchNext();
                     return next != null;
                 }
 
                 @Override
                 public byte[] next() {
-                    if (!hasNext())
+                    if (!hasNext()) {
                         throw new NoSuchElementException();
+                    }
                     byte[] cur = next;
                     next = null;
                     return cur;
@@ -467,9 +477,10 @@ public class ClientCompatibilityTest {
                 }
             } catch (RecordTooLargeException e) {
                 log.debug("Got RecordTooLargeException", e);
-                if (!testConfig.expectRecordTooLargeException)
+                if (!testConfig.expectRecordTooLargeException) {
                     throw new RuntimeException("Got an unexpected RecordTooLargeException when reading a record " +
                         "bigger than " + ConsumerConfig.MAX_PARTITION_FETCH_BYTES_CONFIG);
+                }
             }
             log.debug("Closing consumer.");
         }

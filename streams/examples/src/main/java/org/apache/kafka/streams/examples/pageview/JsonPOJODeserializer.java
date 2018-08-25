@@ -41,8 +41,9 @@ public class JsonPOJODeserializer<T> implements Deserializer<T> {
 
     @Override
     public T deserialize(String topic, byte[] bytes) {
-        if (bytes == null)
+        if (bytes == null) {
             return null;
+        }
 
         T data;
         try {

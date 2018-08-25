@@ -122,7 +122,9 @@ public final class RecordMetadata {
     public long checksum() {
         if (checksum == null)
             // The checksum is null only for message format v2 and above, which do not have a record-level checksum.
+        {
             this.checksum = DefaultRecord.computePartialChecksum(timestamp, serializedKeySize, serializedValueSize);
+        }
         return this.checksum;
     }
 

@@ -101,10 +101,11 @@ public class TemperatureDemo {
             .reduce(new Reducer<String>() {
                 @Override
                 public String apply(String value1, String value2) {
-                    if (Integer.parseInt(value1) > Integer.parseInt(value2))
+                    if (Integer.parseInt(value1) > Integer.parseInt(value2)) {
                         return value1;
-                    else
+                    } else {
                         return value2;
+                    }
                 }
             })
             .toStream()

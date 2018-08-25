@@ -30,8 +30,9 @@ public class Field {
         this.hasDefaultValue = hasDefaultValue;
         this.defaultValue = defaultValue;
 
-        if (hasDefaultValue)
+        if (hasDefaultValue) {
             type.validate(defaultValue);
+        }
     }
 
     public Field(String name, Type type, String docString) {

@@ -121,8 +121,9 @@ public class ConsumerRecord<K, V> {
                           K key,
                           V value,
                           Headers headers) {
-        if (topic == null)
+        if (topic == null) {
             throw new IllegalArgumentException("Topic cannot be null");
+        }
         this.topic = topic;
         this.partition = partition;
         this.offset = offset;
@@ -205,8 +206,9 @@ public class ConsumerRecord<K, V> {
      */
     @Deprecated
     public long checksum() {
-        if (checksum == null)
+        if (checksum == null) {
             this.checksum = DefaultRecord.computePartialChecksum(timestamp, serializedKeySize, serializedValueSize);
+        }
         return this.checksum;
     }
 

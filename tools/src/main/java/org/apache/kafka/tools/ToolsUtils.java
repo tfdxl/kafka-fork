@@ -49,10 +49,11 @@ public class ToolsUtils {
 
             for (Map.Entry<String, Object> entry : sortedMetrics.entrySet()) {
                 String outputFormat;
-                if (entry.getValue() instanceof Double)
+                if (entry.getValue() instanceof Double) {
                     outputFormat = doubleOutputFormat;
-                else
+                } else {
                     outputFormat = defaultOutputFormat;
+                }
                 System.out.println(String.format(outputFormat, entry.getKey(), entry.getValue()));
             }
         }

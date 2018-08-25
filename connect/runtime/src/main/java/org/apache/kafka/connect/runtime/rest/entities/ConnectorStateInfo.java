@@ -115,10 +115,12 @@ public class ConnectorStateInfo {
 
         @Override
         public boolean equals(Object o) {
-            if (o == this)
+            if (o == this) {
                 return true;
-            if (!(o instanceof TaskState))
+            }
+            if (!(o instanceof TaskState)) {
                 return false;
+            }
             TaskState other = (TaskState) o;
             return compareTo(other) == 0;
         }

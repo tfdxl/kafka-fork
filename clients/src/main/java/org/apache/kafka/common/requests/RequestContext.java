@@ -98,8 +98,9 @@ public class RequestContext {
 
     public short apiVersion() {
         // Use v0 when serializing an unhandled ApiVersion response
-        if (isUnsupportedApiVersionsRequest())
+        if (isUnsupportedApiVersionsRequest()) {
             return 0;
+        }
         return header.apiVersion();
     }
 

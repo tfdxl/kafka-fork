@@ -50,8 +50,9 @@ public class SSLUtils {
         configureSslContextFactoryAlgorithms(ssl, sslConfigValues);
         configureSslContextFactoryAuthentication(ssl, sslConfigValues);
 
-        if (client)
+        if (client) {
             configureSslContextFactoryEndpointIdentification(ssl, sslConfigValues);
+        }
 
         return ssl;
     }
@@ -63,21 +64,25 @@ public class SSLUtils {
         ssl.setKeyStoreType((String) getOrDefault(sslConfigValues, SslConfigs.SSL_KEYSTORE_TYPE_CONFIG, SslConfigs.DEFAULT_SSL_KEYSTORE_TYPE));
 
         String sslKeystoreLocation = (String) sslConfigValues.get(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG);
-        if (sslKeystoreLocation != null)
+        if (sslKeystoreLocation != null) {
             ssl.setKeyStorePath(sslKeystoreLocation);
+        }
 
         Password sslKeystorePassword = (Password) sslConfigValues.get(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG);
-        if (sslKeystorePassword != null)
+        if (sslKeystorePassword != null) {
             ssl.setKeyStorePassword(sslKeystorePassword.value());
+        }
 
         Password sslKeyPassword = (Password) sslConfigValues.get(SslConfigs.SSL_KEY_PASSWORD_CONFIG);
-        if (sslKeyPassword != null)
+        if (sslKeyPassword != null) {
             ssl.setKeyManagerPassword(sslKeyPassword.value());
+        }
     }
 
     protected static Object getOrDefault(Map<String, Object> configMap, String key, Object defaultValue) {
-        if (configMap.containsKey(key))
+        if (configMap.containsKey(key)) {
             return configMap.get(key);
+        }
 
         return defaultValue;
     }
@@ -89,12 +94,14 @@ public class SSLUtils {
         ssl.setTrustStoreType((String) getOrDefault(sslConfigValues, SslConfigs.SSL_TRUSTSTORE_TYPE_CONFIG, SslConfigs.DEFAULT_SSL_TRUSTSTORE_TYPE));
 
         String sslTruststoreLocation = (String) sslConfigValues.get(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG);
-        if (sslTruststoreLocation != null)
+        if (sslTruststoreLocation != null) {
             ssl.setTrustStorePath(sslTruststoreLocation);
+        }
 
         Password sslTruststorePassword = (Password) sslConfigValues.get(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG);
-        if (sslTruststorePassword != null)
+        if (sslTruststorePassword != null) {
             ssl.setTrustStorePassword(sslTruststorePassword.value());
+        }
     }
 
     /**
@@ -105,20 +112,23 @@ public class SSLUtils {
         ssl.setIncludeProtocols(sslEnabledProtocols.toArray(new String[sslEnabledProtocols.size()]));
 
         String sslProvider = (String) sslConfigValues.get(SslConfigs.SSL_PROVIDER_CONFIG);
-        if (sslProvider != null)
+        if (sslProvider != null) {
             ssl.setProvider(sslProvider);
+        }
 
         ssl.setProtocol((String) getOrDefault(sslConfigValues, SslConfigs.SSL_PROTOCOL_CONFIG, SslConfigs.DEFAULT_SSL_PROTOCOL));
 
         List<String> sslCipherSuites = (List<String>) sslConfigValues.get(SslConfigs.SSL_CIPHER_SUITES_CONFIG);
-        if (sslCipherSuites != null)
+        if (sslCipherSuites != null) {
             ssl.setIncludeCipherSuites(sslCipherSuites.toArray(new String[sslCipherSuites.size()]));
+        }
 
         ssl.setSslKeyManagerFactoryAlgorithm((String) getOrDefault(sslConfigValues, SslConfigs.SSL_KEYMANAGER_ALGORITHM_CONFIG, SslConfigs.DEFAULT_SSL_KEYMANGER_ALGORITHM));
 
         String sslSecureRandomImpl = (String) sslConfigValues.get(SslConfigs.SSL_SECURE_RANDOM_IMPLEMENTATION_CONFIG);
-        if (sslSecureRandomImpl != null)
+        if (sslSecureRandomImpl != null) {
             ssl.setSecureRandomAlgorithm(sslSecureRandomImpl);
+        }
 
         ssl.setTrustManagerFactoryAlgorithm((String) getOrDefault(sslConfigValues, SslConfigs.SSL_TRUSTMANAGER_ALGORITHM_CONFIG, SslConfigs.DEFAULT_SSL_TRUSTMANAGER_ALGORITHM));
     }
@@ -128,8 +138,9 @@ public class SSLUtils {
      */
     protected static void configureSslContextFactoryEndpointIdentification(SslContextFactory ssl, Map<String, Object> sslConfigValues) {
         String sslEndpointIdentificationAlg = (String) sslConfigValues.get(SslConfigs.SSL_ENDPOINT_IDENTIFICATION_ALGORITHM_CONFIG);
-        if (sslEndpointIdentificationAlg != null)
+        if (sslEndpointIdentificationAlg != null) {
             ssl.setEndpointIdentificationAlgorithm(sslEndpointIdentificationAlg);
+        }
     }
 
     /**

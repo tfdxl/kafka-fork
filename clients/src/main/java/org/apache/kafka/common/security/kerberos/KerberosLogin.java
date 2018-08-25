@@ -82,14 +82,17 @@ public class KerberosLogin extends AbstractLogin {
             throw new IllegalArgumentException(message);
         }
 
-        if (jaasServiceName != null)
+        if (jaasServiceName != null) {
             return jaasServiceName;
-        if (configServiceName != null)
+        }
+        if (configServiceName != null) {
             return configServiceName;
+        }
 
         throw new IllegalArgumentException("No serviceName defined in either JAAS or Kafka config");
     }
 
+    @Override
     public void configure(Map<String, ?> configs, JaasContext jaasContext) {
         super.configure(configs, jaasContext);
         this.ticketRenewWindowFactor = (Double) configs.get(SaslConfigs.SASL_KERBEROS_TICKET_RENEW_WINDOW_FACTOR);
@@ -121,12 +124,14 @@ public class KerberosLogin extends AbstractLogin {
             if (entry.getOptions().get("useTicketCache") != null) {
                 String val = (String) entry.getOptions().get("useTicketCache");
                 isUsingTicketCache = val.equals("true");
-            } else
+            } else {
                 isUsingTicketCache = false;
-            if (entry.getOptions().get("principal") != null)
+            }
+            if (entry.getOptions().get("principal") != null) {
                 principal = (String) entry.getOptions().get("principal");
-            else
+            } else {
                 principal = null;
+            }
         }
 
         if (!isKrbTicket) {
@@ -142,6 +147,7 @@ public class KerberosLogin extends AbstractLogin {
         // you can decrease the interval of expiration of tickets (for example, to 3 minutes) by running:
         //  "modprinc -maxlife 3mins <principal>" in kadmin.
         t = KafkaThread.daemon(String.format("kafka-kerberos-refresh-thread-%s", principal), new Runnable() {
+            @Override
             public void run() {
                 log.info("[Principal={}]: TGT refresh thread started.", principal);
                 while (true) {  // renewal thread's main loop. if it exits from here, thread will exit.
@@ -302,9 +308,11 @@ public class KerberosLogin extends AbstractLogin {
 
         if (proposedRefresh > expires)
             // proposedRefresh is too far in the future: it's after ticket expires: simply return now.
+        {
             return currentWallTime();
-        else
+        } else {
             return proposedRefresh;
+        }
     }
 
     private KerberosTicket getTGT() {

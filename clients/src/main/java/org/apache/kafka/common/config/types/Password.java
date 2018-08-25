@@ -41,8 +41,9 @@ public class Password {
 
     @Override
     public boolean equals(Object obj) {
-        if (!(obj instanceof Password))
+        if (!(obj instanceof Password)) {
             return false;
+        }
         Password other = (Password) obj;
         return value.equals(other.value);
     }

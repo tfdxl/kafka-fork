@@ -38,8 +38,9 @@ public class QuickUnion<T> {
         T current = id;
         T parent = ids.get(current);
 
-        if (parent == null)
+        if (parent == null) {
             throw new NoSuchElementException("id: " + id.toString());
+        }
 
         while (!parent.equals(current)) {
             // do the path compression
@@ -63,8 +64,9 @@ public class QuickUnion<T> {
         T root1 = root(id1);
         T root2 = root(id2);
 
-        if (!root1.equals(root2))
+        if (!root1.equals(root2)) {
             ids.put(root1, root2);
+        }
     }
 
 }

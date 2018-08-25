@@ -46,8 +46,9 @@ public class MultiSend implements Send {
         this.sendQueue = sends;
 
         long size = 0;
-        for (Send send : sends)
+        for (Send send : sends) {
             size += send.size();
+        }
         this.size = size;
 
         this.current = sendQueue.poll();
@@ -71,16 +72,18 @@ public class MultiSend implements Send {
     // Visible for testing
     int numResidentSends() {
         int count = 0;
-        if (current != null)
+        if (current != null) {
             count += 1;
+        }
         count += sendQueue.size();
         return count;
     }
 
     @Override
     public long writeTo(GatheringByteChannel channel) throws IOException {
-        if (completed())
+        if (completed()) {
             throw new KafkaException("This operation cannot be invoked on a complete request.");
+        }
 
         int totalWrittenPerCall = 0;
         boolean sendComplete;
@@ -88,14 +91,16 @@ public class MultiSend implements Send {
             long written = current.writeTo(channel);
             totalWrittenPerCall += written;
             sendComplete = current.completed();
-            if (sendComplete)
+            if (sendComplete) {
                 current = sendQueue.poll();
+            }
         } while (!completed() && sendComplete);
 
         totalWritten += totalWrittenPerCall;
 
-        if (completed() && totalWritten != size)
+        if (completed() && totalWritten != size) {
             log.error("mismatch in sending bytes over socket; expected: " + size + " actual: " + totalWritten);
+        }
 
         log.trace("Bytes written as part of multi-send call: {}, total bytes written so far: {}, expected bytes to write: {}",
                 totalWrittenPerCall, totalWritten, size);

@@ -190,15 +190,18 @@ public class FileRecords extends AbstractRecords implements Closeable {
      * @return A sliced wrapper on this message set limited based on the given position and size
      */
     public FileRecords read(int position, int size) throws IOException {
-        if (position < 0)
+        if (position < 0) {
             throw new IllegalArgumentException("Invalid position: " + position);
-        if (size < 0)
+        }
+        if (size < 0) {
             throw new IllegalArgumentException("Invalid size: " + size);
+        }
         //计算结束地址
         int end = this.start + position + size;
         // handle integer overflow or if end is beyond the end of the file
-        if (end < 0 || end >= start + sizeInBytes())
+        if (end < 0 || end >= start + sizeInBytes()) {
             end = start + sizeInBytes();
+        }
         return new FileRecords(file, channel, this.start + position, end, true);
     }
 
@@ -224,6 +227,7 @@ public class FileRecords extends AbstractRecords implements Closeable {
     /**
      * Close this record set
      */
+    @Override
     public void close() throws IOException {
         flush();
         trim();
@@ -291,9 +295,10 @@ public class FileRecords extends AbstractRecords implements Closeable {
      */
     public int truncateTo(int targetSize) throws IOException {
         int originalSize = sizeInBytes();
-        if (targetSize > originalSize || targetSize < 0)
+        if (targetSize > originalSize || targetSize < 0) {
             throw new KafkaException("Attempt to truncate log segment to " + targetSize + " bytes failed, " +
                     " size of this log segment is " + originalSize + " bytes.");
+        }
         if (targetSize < (int) channel.size()) {
             channel.truncate(targetSize);
             size.set(targetSize);
@@ -322,10 +327,11 @@ public class FileRecords extends AbstractRecords implements Closeable {
     public long writeTo(GatheringByteChannel destChannel, long offset, int length) throws IOException {
         long newSize = Math.min(channel.size(), end) - start;
         int oldSize = sizeInBytes();
-        if (newSize < oldSize)
+        if (newSize < oldSize) {
             throw new KafkaException(String.format(
                     "Size of FileRecords %s has been truncated during write: old size %d, new size %d",
                     file.getAbsolutePath(), oldSize, newSize));
+        }
 
         long position = start + offset;
         int count = Math.min(length, oldSize);
@@ -350,8 +356,9 @@ public class FileRecords extends AbstractRecords implements Closeable {
     public LogOffsetPosition searchForOffsetWithSize(long targetOffset, int startingPosition) {
         for (FileChannelRecordBatch batch : batchesFrom(startingPosition)) {
             long offset = batch.lastOffset();
-            if (offset >= targetOffset)
+            if (offset >= targetOffset) {
                 return new LogOffsetPosition(offset, batch.position(), batch.sizeInBytes());
+            }
         }
         return null;
     }
@@ -373,8 +380,9 @@ public class FileRecords extends AbstractRecords implements Closeable {
                 // We found a message
                 for (Record record : batch) {
                     long timestamp = record.timestamp();
-                    if (timestamp >= targetTimestamp && record.offset() >= startingOffset)
+                    if (timestamp >= targetTimestamp && record.offset() >= startingOffset) {
                         return new TimestampAndOffset(timestamp, record.offset());
+                    }
                 }
             }
         }
@@ -424,10 +432,11 @@ public class FileRecords extends AbstractRecords implements Closeable {
 
     private Iterator<FileChannelRecordBatch> batchIterator(int start) {
         final int end;
-        if (isSlice)
+        if (isSlice) {
             end = this.end;
-        else
+        } else {
             end = this.sizeInBytes();
+        }
         FileLogInputStream inputStream = new FileLogInputStream(channel, start, end);
         return new RecordBatchIterator<>(inputStream);
     }
@@ -448,10 +457,12 @@ public class FileRecords extends AbstractRecords implements Closeable {
 
         @Override
         public boolean equals(Object o) {
-            if (this == o)
+            if (this == o) {
                 return true;
-            if (o == null || getClass() != o.getClass())
+            }
+            if (o == null || getClass() != o.getClass()) {
                 return false;
+            }
 
             LogOffsetPosition that = (LogOffsetPosition) o;
 
@@ -490,12 +501,18 @@ public class FileRecords extends AbstractRecords implements Closeable {
 
         @Override
         public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
 
             TimestampAndOffset that = (TimestampAndOffset) o;
 
-            if (timestamp != that.timestamp) return false;
+            if (timestamp != that.timestamp) {
+                return false;
+            }
             return offset == that.offset;
         }
 

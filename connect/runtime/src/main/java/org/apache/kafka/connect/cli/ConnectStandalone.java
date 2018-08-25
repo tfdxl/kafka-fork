@@ -94,10 +94,11 @@ public class ConnectStandalone {
                     FutureCallback<Herder.Created<ConnectorInfo>> cb = new FutureCallback<>(new Callback<Herder.Created<ConnectorInfo>>() {
                         @Override
                         public void onCompletion(Throwable error, Herder.Created<ConnectorInfo> info) {
-                            if (error != null)
+                            if (error != null) {
                                 log.error("Failed to create job for {}", connectorPropsFile);
-                            else
+                            } else {
                                 log.info("Created connector {}", info.result().name());
+                            }
                         }
                     });
                     herder.putConnectorConfig(

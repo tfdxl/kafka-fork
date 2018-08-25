@@ -121,8 +121,9 @@ public class ClusterConfigState {
     public List<Map<String, String>> allTaskConfigs(String connector) {
         Map<Integer, Map<String, String>> taskConfigs = new TreeMap<>();
         for (Map.Entry<ConnectorTaskId, Map<String, String>> taskConfigEntry : this.taskConfigs.entrySet()) {
-            if (taskConfigEntry.getKey().connector().equals(connector))
+            if (taskConfigEntry.getKey().connector().equals(connector)) {
                 taskConfigs.put(taskConfigEntry.getKey().task(), taskConfigEntry.getValue());
+            }
         }
         return new LinkedList<>(taskConfigs.values());
     }
@@ -145,12 +146,14 @@ public class ClusterConfigState {
      * @return the current set of connector task IDs
      */
     public List<ConnectorTaskId> tasks(String connectorName) {
-        if (inconsistentConnectors.contains(connectorName))
+        if (inconsistentConnectors.contains(connectorName)) {
             return Collections.emptyList();
+        }
 
         Integer numTasks = connectorTaskCounts.get(connectorName);
-        if (numTasks == null)
+        if (numTasks == null) {
             return Collections.emptyList();
+        }
 
         List<ConnectorTaskId> taskIds = new ArrayList<>();
         for (int taskIndex = 0; taskIndex < numTasks; taskIndex++) {

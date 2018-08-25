@@ -51,8 +51,9 @@ public class Struct {
      * @param schema the {@link Schema} for the Struct
      */
     public Struct(Schema schema) {
-        if (schema.type() != Schema.Type.STRUCT)
+        if (schema.type() != Schema.Type.STRUCT) {
             throw new DataException("Not a struct schema: " + schema);
+        }
         this.schema = schema;
         this.values = new Object[schema.fields().size()];
     }
@@ -169,8 +170,9 @@ public class Struct {
      */
     public byte[] getBytes(String fieldName) {
         Object bytes = getCheckType(fieldName, Schema.Type.BYTES);
-        if (bytes instanceof ByteBuffer)
+        if (bytes instanceof ByteBuffer) {
             return ((ByteBuffer) bytes).array();
+        }
         return (byte[]) bytes;
     }
 
@@ -219,8 +221,9 @@ public class Struct {
      * @return the Struct, to allow chaining of {@link #put(String, Object)} calls
      */
     public Struct put(Field field, Object value) {
-        if (null == field)
+        if (null == field) {
             throw new DataException("field cannot be null.");
+        }
         ConnectSchema.validateValue(field.name(), field.schema(), value);
         values[field.index()] = value;
         return this;
@@ -236,16 +239,21 @@ public class Struct {
         for (Field field : schema.fields()) {
             Schema fieldSchema = field.schema();
             Object value = values[field.index()];
-            if (value == null && (fieldSchema.isOptional() || fieldSchema.defaultValue() != null))
+            if (value == null && (fieldSchema.isOptional() || fieldSchema.defaultValue() != null)) {
                 continue;
+            }
             ConnectSchema.validateValue(field.name(), fieldSchema, value);
         }
     }
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         Struct struct = (Struct) o;
         return Objects.equals(schema, struct.schema) &&
                 Arrays.deepEquals(values, struct.values);

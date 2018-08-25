@@ -139,11 +139,13 @@ public class VerifiableConsumer implements Closeable, OffsetCommitCallback, Cons
         for (TopicPartition tp : records.partitions()) {
             List<ConsumerRecord<String, String>> partitionRecords = records.records(tp);
 
-            if (hasMessageLimit() && consumedMessages + partitionRecords.size() > maxMessages)
+            if (hasMessageLimit() && consumedMessages + partitionRecords.size() > maxMessages) {
                 partitionRecords = partitionRecords.subList(0, maxMessages - consumedMessages);
+            }
 
-            if (partitionRecords.isEmpty())
+            if (partitionRecords.isEmpty()) {
                 continue;
+            }
 
             long minOffset = partitionRecords.get(0).offset();
             long maxOffset = partitionRecords.get(partitionRecords.size() - 1).offset();
@@ -153,13 +155,15 @@ public class VerifiableConsumer implements Closeable, OffsetCommitCallback, Cons
                     partitionRecords.size(), minOffset, maxOffset));
 
             if (verbose) {
-                for (ConsumerRecord<String, String> record : partitionRecords)
+                for (ConsumerRecord<String, String> record : partitionRecords) {
                     printJson(new RecordData(record));
+                }
             }
 
             consumedMessages += partitionRecords.size();
-            if (isFinished())
+            if (isFinished()) {
                 break;
+            }
         }
 
         printJson(new RecordsConsumed(records.count(), summaries));
@@ -224,10 +228,11 @@ public class VerifiableConsumer implements Closeable, OffsetCommitCallback, Cons
                 Map<TopicPartition, OffsetAndMetadata> offsets = onRecordsReceived(records);
 
                 if (!useAutoCommit) {
-                    if (useAsyncCommit)
+                    if (useAsyncCommit) {
                         consumer.commitAsync(offsets, this);
-                    else
+                    } else {
                         commitSync(offsets);
+                    }
                 }
             }
         } catch (WakeupException e) {
@@ -239,6 +244,7 @@ public class VerifiableConsumer implements Closeable, OffsetCommitCallback, Cons
         }
     }
 
+    @Override
     public void close() {
         boolean interrupted = false;
         try {
@@ -252,8 +258,9 @@ public class VerifiableConsumer implements Closeable, OffsetCommitCallback, Cons
                 }
             }
         } finally {
-            if (interrupted)
+            if (interrupted) {
                 Thread.currentThread().interrupt();
+            }
         }
     }
 

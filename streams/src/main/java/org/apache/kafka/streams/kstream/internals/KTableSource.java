@@ -57,8 +57,9 @@ public class KTableSource<K, V> implements ProcessorSupplier<K, V> {
         @Override
         public void process(K key, V value) {
             // if the key is null, then ignore the record
-            if (key == null)
+            if (key == null) {
                 return;
+            }
             V oldValue = store.get(key);
             store.put(key, value);
             tupleForwarder.maybeForward(key, value, oldValue);

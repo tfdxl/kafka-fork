@@ -94,15 +94,17 @@ public class DefaultKafkaPrincipalBuilder implements KafkaPrincipalBuilder, Clos
     @Override
     public KafkaPrincipal build(AuthenticationContext context) {
         if (context instanceof PlaintextAuthenticationContext) {
-            if (oldPrincipalBuilder != null)
+            if (oldPrincipalBuilder != null) {
                 return convertToKafkaPrincipal(oldPrincipalBuilder.buildPrincipal(transportLayer, authenticator));
+            }
 
             return KafkaPrincipal.ANONYMOUS;
         } else if (context instanceof SslAuthenticationContext) {
             SSLSession sslSession = ((SslAuthenticationContext) context).session();
 
-            if (oldPrincipalBuilder != null)
+            if (oldPrincipalBuilder != null) {
                 return convertToKafkaPrincipal(oldPrincipalBuilder.buildPrincipal(transportLayer, authenticator));
+            }
 
             try {
                 return convertToKafkaPrincipal(sslSession.getPeerPrincipal());
@@ -111,10 +113,11 @@ public class DefaultKafkaPrincipalBuilder implements KafkaPrincipalBuilder, Clos
             }
         } else if (context instanceof SaslAuthenticationContext) {
             SaslServer saslServer = ((SaslAuthenticationContext) context).server();
-            if (SaslConfigs.GSSAPI_MECHANISM.equals(saslServer.getMechanismName()))
+            if (SaslConfigs.GSSAPI_MECHANISM.equals(saslServer.getMechanismName())) {
                 return applyKerberosShortNamer(saslServer.getAuthorizationID());
-            else
+            } else {
                 return new KafkaPrincipal(KafkaPrincipal.USER_TYPE, saslServer.getAuthorizationID());
+            }
         } else {
             throw new IllegalArgumentException("Unhandled authentication context type: " + context.getClass().getName());
         }
@@ -137,8 +140,9 @@ public class DefaultKafkaPrincipalBuilder implements KafkaPrincipalBuilder, Clos
 
     @Override
     public void close() {
-        if (oldPrincipalBuilder != null)
+        if (oldPrincipalBuilder != null) {
             oldPrincipalBuilder.close();
+        }
     }
 
 }

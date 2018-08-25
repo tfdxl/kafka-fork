@@ -119,15 +119,17 @@ public class LeaderAndIsrRequest extends AbstractRequest {
 
             Object[] isrArray = partitionStateData.getArray(ISR_KEY_NAME);
             List<Integer> isr = new ArrayList<>(isrArray.length);
-            for (Object r : isrArray)
+            for (Object r : isrArray) {
                 isr.add((Integer) r);
+            }
 
             int zkVersion = partitionStateData.getInt(ZK_VERSION_KEY_NAME);
 
             Object[] replicasArray = partitionStateData.getArray(REPLICAS_KEY_NAME);
             List<Integer> replicas = new ArrayList<>(replicasArray.length);
-            for (Object r : replicasArray)
+            for (Object r : replicasArray) {
                 replicas.add((Integer) r);
+            }
             boolean isNew = partitionStateData.hasField(IS_NEW_KEY_NAME) ? partitionStateData.getBoolean(IS_NEW_KEY_NAME) : false;
 
             PartitionState partitionState = new PartitionState(controllerEpoch, leader, leaderEpoch, isr, zkVersion, replicas, isNew);
@@ -177,8 +179,9 @@ public class LeaderAndIsrRequest extends AbstractRequest {
             partitionStateData.set(ISR_KEY_NAME, partitionState.basePartitionState.isr.toArray());
             partitionStateData.set(ZK_VERSION_KEY_NAME, partitionState.basePartitionState.zkVersion);
             partitionStateData.set(REPLICAS_KEY_NAME, partitionState.basePartitionState.replicas.toArray());
-            if (partitionStateData.hasField(IS_NEW_KEY_NAME))
+            if (partitionStateData.hasField(IS_NEW_KEY_NAME)) {
                 partitionStateData.set(IS_NEW_KEY_NAME, partitionState.isNew);
+            }
             partitionStatesData.add(partitionStateData);
         }
         struct.set(PARTITION_STATES_KEY_NAME, partitionStatesData.toArray());

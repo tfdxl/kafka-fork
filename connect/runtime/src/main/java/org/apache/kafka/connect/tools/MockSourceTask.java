@@ -47,8 +47,9 @@ public class MockSourceTask extends SourceTask {
 
             String delayMsString = config.get(MockConnector.DELAY_MS_KEY);
             this.failureDelayMs = MockConnector.DEFAULT_FAILURE_DELAY_MS;
-            if (delayMsString != null)
+            if (delayMsString != null) {
                 failureDelayMs = Long.parseLong(delayMsString);
+            }
 
             log.debug("Started MockSourceTask at {} with failure scheduled in {} ms", startTimeMs, failureDelayMs);
         }

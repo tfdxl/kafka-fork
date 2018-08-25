@@ -72,8 +72,9 @@ public class SchemaBuilder implements Schema {
     private Map<String, String> parameters;
 
     public SchemaBuilder(Type type) {
-        if (null == type)
+        if (null == type) {
             throw new SchemaBuilderException("type cannot be null");
+        }
         this.type = type;
         if (type == Type.STRUCT) {
             fields = new LinkedHashMap<>();
@@ -170,8 +171,9 @@ public class SchemaBuilder implements Schema {
      * @return a new {@link Schema.Type#ARRAY} SchemaBuilder
      */
     public static SchemaBuilder array(Schema valueSchema) {
-        if (null == valueSchema)
+        if (null == valueSchema) {
             throw new SchemaBuilderException("valueSchema cannot be null.");
+        }
         SchemaBuilder builder = new SchemaBuilder(Type.ARRAY);
         builder.valueSchema = valueSchema;
         return builder;
@@ -183,10 +185,12 @@ public class SchemaBuilder implements Schema {
      * @return a new {@link Schema.Type#MAP} SchemaBuilder
      */
     public static SchemaBuilder map(Schema keySchema, Schema valueSchema) {
-        if (null == keySchema)
+        if (null == keySchema) {
             throw new SchemaBuilderException("keySchema cannot be null.");
-        if (null == valueSchema)
+        }
+        if (null == valueSchema) {
             throw new SchemaBuilderException("valueSchema cannot be null.");
+        }
         SchemaBuilder builder = new SchemaBuilder(Type.MAP);
         builder.keySchema = keySchema;
         builder.valueSchema = valueSchema;
@@ -194,13 +198,15 @@ public class SchemaBuilder implements Schema {
     }
 
     private static void checkCanSet(String fieldName, Object fieldVal, Object val) {
-        if (fieldVal != null && fieldVal != val)
+        if (fieldVal != null && fieldVal != val) {
             throw new SchemaBuilderException("Invalid SchemaBuilder call: " + fieldName + " has already been set.");
+        }
     }
 
     private static void checkNotNull(String fieldName, Object val, String fieldToSet) {
-        if (val == null)
+        if (val == null) {
             throw new SchemaBuilderException("Invalid SchemaBuilder call: " + fieldName + " must be specified to set " + fieldToSet);
+        }
     }
 
     @Override
@@ -326,8 +332,9 @@ public class SchemaBuilder implements Schema {
     public SchemaBuilder parameter(String propertyName, String propertyValue) {
         // Preserve order of insertion with a LinkedHashMap. This isn't strictly necessary, but is nice if logical types
         // can print their properties in a consistent order.
-        if (parameters == null)
+        if (parameters == null) {
             parameters = new LinkedHashMap<>();
+        }
         parameters.put(propertyName, propertyValue);
         return this;
     }
@@ -341,10 +348,12 @@ public class SchemaBuilder implements Schema {
      */
     public SchemaBuilder parameters(Map<String, String> props) {
         // Avoid creating an empty set of properties so we never have an empty map
-        if (props.isEmpty())
+        if (props.isEmpty()) {
             return this;
-        if (parameters == null)
+        }
+        if (parameters == null) {
             parameters = new LinkedHashMap<>();
+        }
         parameters.putAll(props);
         return this;
     }
@@ -365,15 +374,19 @@ public class SchemaBuilder implements Schema {
      * @return the SchemaBuilder
      */
     public SchemaBuilder field(String fieldName, Schema fieldSchema) {
-        if (type != Type.STRUCT)
+        if (type != Type.STRUCT) {
             throw new SchemaBuilderException("Cannot create fields on type " + type);
-        if (null == fieldName || fieldName.isEmpty())
+        }
+        if (null == fieldName || fieldName.isEmpty()) {
             throw new SchemaBuilderException("fieldName cannot be null.");
-        if (null == fieldSchema)
+        }
+        if (null == fieldSchema) {
             throw new SchemaBuilderException("fieldSchema for field " + fieldName + " cannot be null.");
+        }
         int fieldIndex = fields.size();
-        if (fields.containsKey(fieldName))
+        if (fields.containsKey(fieldName)) {
             throw new SchemaBuilderException("Cannot create field because of field name duplication " + fieldName);
+        }
         fields.put(fieldName, new Field(fieldName, fieldIndex, fieldSchema));
         return this;
     }
@@ -383,15 +396,19 @@ public class SchemaBuilder implements Schema {
      *
      * @return the list of fields for this Schema
      */
+    @Override
     public List<Field> fields() {
-        if (type != Type.STRUCT)
+        if (type != Type.STRUCT) {
             throw new DataException("Cannot list fields on non-struct type");
+        }
         return new ArrayList<>(fields.values());
     }
 
+    @Override
     public Field field(String fieldName) {
-        if (type != Type.STRUCT)
+        if (type != Type.STRUCT) {
             throw new DataException("Cannot look up fields on non-struct type");
+        }
         return fields.get(fieldName);
     }
 

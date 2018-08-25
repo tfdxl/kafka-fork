@@ -137,8 +137,9 @@ public abstract class Cast<R extends ConnectRecord<R>> implements Transformation
         Schema updatedSchema = getOrBuildSchema(valueSchema);
 
         // Whole-record casting
-        if (wholeValueCastType != null)
+        if (wholeValueCastType != null) {
             return newRecord(record, updatedSchema, castValueToType(operatingValue(record), wholeValueCastType));
+        }
 
         // Casting within a struct
         final Struct value = requireStruct(operatingValue(record), PURPOSE);
@@ -155,8 +156,9 @@ public abstract class Cast<R extends ConnectRecord<R>> implements Transformation
 
     private Schema getOrBuildSchema(Schema valueSchema) {
         Schema updatedSchema = schemaUpdateCache.get(valueSchema);
-        if (updatedSchema != null)
+        if (updatedSchema != null) {
             return updatedSchema;
+        }
 
         final SchemaBuilder builder;
         if (wholeValueCastType != null) {
@@ -166,18 +168,22 @@ public abstract class Cast<R extends ConnectRecord<R>> implements Transformation
             for (Field field : valueSchema.fields()) {
                 SchemaBuilder fieldBuilder =
                         convertFieldType(casts.containsKey(field.name()) ? casts.get(field.name()) : field.schema().type());
-                if (field.schema().isOptional())
+                if (field.schema().isOptional()) {
                     fieldBuilder.optional();
-                if (field.schema().defaultValue() != null)
+                }
+                if (field.schema().defaultValue() != null) {
                     fieldBuilder.defaultValue(castValueToType(field.schema().defaultValue(), fieldBuilder.type()));
+                }
                 builder.field(field.name(), fieldBuilder.build());
             }
         }
 
-        if (valueSchema.isOptional())
+        if (valueSchema.isOptional()) {
             builder.optional();
-        if (valueSchema.defaultValue() != null)
+        }
+        if (valueSchema.defaultValue() != null) {
             builder.defaultValue(castValueToType(valueSchema.defaultValue(), builder.type()));
+        }
 
         updatedSchema = builder.build();
         schemaUpdateCache.put(valueSchema, updatedSchema);
@@ -210,7 +216,9 @@ public abstract class Cast<R extends ConnectRecord<R>> implements Transformation
 
     private static Object castValueToType(Object value, Schema.Type targetType) {
         try {
-            if (value == null) return null;
+            if (value == null) {
+                return null;
+            }
 
             Schema.Type inferredType = ConnectSchema.schemaType(value.getClass());
             if (inferredType == null) {
@@ -246,80 +254,87 @@ public abstract class Cast<R extends ConnectRecord<R>> implements Transformation
     }
 
     private static byte castToInt8(Object value) {
-        if (value instanceof Number)
+        if (value instanceof Number) {
             return ((Number) value).byteValue();
-        else if (value instanceof Boolean)
+        } else if (value instanceof Boolean) {
             return ((boolean) value) ? (byte) 1 : (byte) 0;
-        else if (value instanceof String)
+        } else if (value instanceof String) {
             return Byte.parseByte((String) value);
-        else
+        } else {
             throw new DataException("Unexpected type in Cast transformation: " + value.getClass());
+        }
     }
 
     private static short castToInt16(Object value) {
-        if (value instanceof Number)
+        if (value instanceof Number) {
             return ((Number) value).shortValue();
-        else if (value instanceof Boolean)
+        } else if (value instanceof Boolean) {
             return ((boolean) value) ? (short) 1 : (short) 0;
-        else if (value instanceof String)
+        } else if (value instanceof String) {
             return Short.parseShort((String) value);
-        else
+        } else {
             throw new DataException("Unexpected type in Cast transformation: " + value.getClass());
+        }
     }
 
     private static int castToInt32(Object value) {
-        if (value instanceof Number)
+        if (value instanceof Number) {
             return ((Number) value).intValue();
-        else if (value instanceof Boolean)
+        } else if (value instanceof Boolean) {
             return ((boolean) value) ? 1 : 0;
-        else if (value instanceof String)
+        } else if (value instanceof String) {
             return Integer.parseInt((String) value);
-        else
+        } else {
             throw new DataException("Unexpected type in Cast transformation: " + value.getClass());
+        }
     }
 
     private static long castToInt64(Object value) {
-        if (value instanceof Number)
+        if (value instanceof Number) {
             return ((Number) value).longValue();
-        else if (value instanceof Boolean)
+        } else if (value instanceof Boolean) {
             return ((boolean) value) ? (long) 1 : (long) 0;
-        else if (value instanceof String)
+        } else if (value instanceof String) {
             return Long.parseLong((String) value);
-        else
+        } else {
             throw new DataException("Unexpected type in Cast transformation: " + value.getClass());
+        }
     }
 
     private static float castToFloat32(Object value) {
-        if (value instanceof Number)
+        if (value instanceof Number) {
             return ((Number) value).floatValue();
-        else if (value instanceof Boolean)
+        } else if (value instanceof Boolean) {
             return ((boolean) value) ? 1.f : 0.f;
-        else if (value instanceof String)
+        } else if (value instanceof String) {
             return Float.parseFloat((String) value);
-        else
+        } else {
             throw new DataException("Unexpected type in Cast transformation: " + value.getClass());
+        }
     }
 
     private static double castToFloat64(Object value) {
-        if (value instanceof Number)
+        if (value instanceof Number) {
             return ((Number) value).doubleValue();
-        else if (value instanceof Boolean)
+        } else if (value instanceof Boolean) {
             return ((boolean) value) ? 1. : 0.;
-        else if (value instanceof String)
+        } else if (value instanceof String) {
             return Double.parseDouble((String) value);
-        else
+        } else {
             throw new DataException("Unexpected type in Cast transformation: " + value.getClass());
+        }
     }
 
     private static boolean castToBoolean(Object value) {
-        if (value instanceof Number)
+        if (value instanceof Number) {
             return ((Number) value).longValue() != 0L;
-        else if (value instanceof Boolean)
+        } else if (value instanceof Boolean) {
             return (Boolean) value;
-        else if (value instanceof String)
+        } else if (value instanceof String) {
             return Boolean.parseBoolean((String) value);
-        else
+        } else {
             throw new DataException("Unexpected type in Cast transformation: " + value.getClass());
+        }
     }
 
     private static String castToString(Object value) {

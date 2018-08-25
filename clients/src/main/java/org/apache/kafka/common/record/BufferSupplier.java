@@ -63,6 +63,7 @@ public abstract class BufferSupplier implements AutoCloseable {
     /**
      * Release all resources associated with this supplier.
      */
+    @Override
     public abstract void close();
 
     private static class DefaultSupplier extends BufferSupplier {
@@ -72,10 +73,11 @@ public abstract class BufferSupplier implements AutoCloseable {
         @Override
         public ByteBuffer get(int size) {
             Deque<ByteBuffer> bufferQueue = bufferMap.get(size);
-            if (bufferQueue == null || bufferQueue.isEmpty())
+            if (bufferQueue == null || bufferQueue.isEmpty()) {
                 return ByteBuffer.allocate(size);
-            else
+            } else {
                 return bufferQueue.pollFirst();
+            }
         }
 
         @Override

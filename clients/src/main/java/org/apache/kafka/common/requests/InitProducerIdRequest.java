@@ -89,11 +89,13 @@ public class InitProducerIdRequest extends AbstractRequest {
         public Builder(String transactionalId, int transactionTimeoutMs) {
             super(ApiKeys.INIT_PRODUCER_ID);
 
-            if (transactionTimeoutMs <= 0)
+            if (transactionTimeoutMs <= 0) {
                 throw new IllegalArgumentException("transaction timeout value is not positive: " + transactionTimeoutMs);
+            }
 
-            if (transactionalId != null && transactionalId.isEmpty())
+            if (transactionalId != null && transactionalId.isEmpty()) {
                 throw new IllegalArgumentException("Must set either a null or a non-empty transactional id.");
+            }
 
             this.transactionalId = transactionalId;
             this.transactionTimeoutMs = transactionTimeoutMs;

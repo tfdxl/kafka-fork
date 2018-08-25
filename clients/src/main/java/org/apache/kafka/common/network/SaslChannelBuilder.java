@@ -120,8 +120,9 @@ public class SaslChannelBuilder implements ChannelBuilder, ListenerReconfigurabl
                 }
                 @SuppressWarnings("unchecked")
                 List<String> principalToLocalRules = (List<String>) configs.get(BrokerSecurityConfigs.SASL_KERBEROS_PRINCIPAL_TO_LOCAL_RULES_CONFIG);
-                if (principalToLocalRules != null)
+                if (principalToLocalRules != null) {
                     kerberosShortNamer = KerberosShortNamer.fromUnparsedRules(defaultRealm, principalToLocalRules);
+                }
             }
             for (Map.Entry<String, JaasContext> entry : jaasContexts.entrySet()) {
                 String mechanism = entry.getKey();
@@ -149,14 +150,16 @@ public class SaslChannelBuilder implements ChannelBuilder, ListenerReconfigurabl
 
     @Override
     public void validateReconfiguration(Map<String, ?> configs) {
-        if (this.securityProtocol == SecurityProtocol.SASL_SSL)
+        if (this.securityProtocol == SecurityProtocol.SASL_SSL) {
             sslFactory.validateReconfiguration(configs);
+        }
     }
 
     @Override
     public void reconfigure(Map<String, ?> configs) {
-        if (this.securityProtocol == SecurityProtocol.SASL_SSL)
+        if (this.securityProtocol == SecurityProtocol.SASL_SSL) {
             sslFactory.reconfigure(configs);
+        }
     }
 
     @Override
@@ -187,8 +190,9 @@ public class SaslChannelBuilder implements ChannelBuilder, ListenerReconfigurabl
 
     @Override
     public void close() {
-        for (LoginManager loginManager : loginManagers.values())
+        for (LoginManager loginManager : loginManagers.values()) {
             loginManager.release();
+        }
         loginManagers.clear();
     }
 

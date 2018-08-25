@@ -32,8 +32,9 @@ public class Protocol {
 
     private static String indentString(int size) {
         StringBuilder b = new StringBuilder(size);
-        for (int i = 0; i < size; i++)
+        for (int i = 0; i < size; i++) {
             b.append(" ");
+        }
         return b.toString();
     }
 
@@ -48,13 +49,15 @@ public class Protocol {
                 b.append(field.def.name);
                 b.append("] ");
                 Type innerType = ((ArrayOf) field.def.type).type();
-                if (!subTypes.containsKey(field.def.name))
+                if (!subTypes.containsKey(field.def.name)) {
                     subTypes.put(field.def.name, innerType);
+                }
             } else {
                 b.append(field.def.name);
                 b.append(" ");
-                if (!subTypes.containsKey(field.def.name))
+                if (!subTypes.containsKey(field.def.name)) {
                     subTypes.put(field.def.name, field.def.type);
+                }
             }
         }
         b.append("\n");
@@ -83,10 +86,12 @@ public class Protocol {
             fields.add(field);
             if (field.def.type instanceof ArrayOf) {
                 Type innerType = ((ArrayOf) field.def.type).type();
-                if (innerType instanceof Schema)
+                if (innerType instanceof Schema) {
                     populateSchemaFields((Schema) innerType, fields);
-            } else if (field.def.type instanceof Schema)
+                }
+            } else if (field.def.type instanceof Schema) {
                 populateSchemaFields((Schema) field.def.type, fields);
+            }
         }
     }
 

@@ -158,8 +158,9 @@ public final class KafkaLZ4BlockInputStream extends InputStream {
         // Check for EndMark
         if (blockSize == 0) {
             finished = true;
-            if (flg.isContentChecksumSet())
+            if (flg.isContentChecksumSet()) {
                 in.getInt(); // TODO: verify this content checksum
+            }
             return;
         } else if (blockSize > maxBlockSize) {
             throw new IOException(String.format("Block size %s exceeded max: %s", blockSize, maxBlockSize));

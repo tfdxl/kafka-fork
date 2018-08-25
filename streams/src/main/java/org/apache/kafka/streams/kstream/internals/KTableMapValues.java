@@ -53,6 +53,7 @@ class KTableMapValues<K, V, V1> implements KTableProcessorSupplier<K, V, V1> {
             return new KTableValueGetterSupplier<K, V1>() {
                 final KTableValueGetterSupplier<K, V> parentValueGetterSupplier = parent.valueGetterSupplier();
 
+                @Override
                 public KTableValueGetter<K, V1> get() {
                     return new KTableMapValuesValueGetter(parentValueGetterSupplier.get());
                 }
@@ -74,8 +75,9 @@ class KTableMapValues<K, V, V1> implements KTableProcessorSupplier<K, V, V1> {
     private V1 computeValue(final K key, final V value) {
         V1 newValue = null;
 
-        if (value != null)
+        if (value != null) {
             newValue = mapper.apply(key, value);
+        }
 
         return newValue;
     }

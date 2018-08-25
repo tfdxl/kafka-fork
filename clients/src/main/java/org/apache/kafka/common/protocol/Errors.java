@@ -560,8 +560,9 @@ public enum Errors {
     static {
         for (Errors error : Errors.values()) {
             codeToError.put(error.code(), error);
-            if (error.exception != null)
+            if (error.exception != null) {
                 classToError.put(error.exception.getClass(), error);
+            }
         }
     }
 
@@ -596,8 +597,9 @@ public enum Errors {
         Class<?> clazz = t.getClass();
         while (clazz != null) {
             Errors error = classToError.get(clazz);
-            if (error != null)
+            if (error != null) {
                 return error;
+            }
             clazz = clazz.getSuperclass();
         }
         return UNKNOWN_SERVER_ERROR;
@@ -687,8 +689,9 @@ public enum Errors {
      * @return the error message
      */
     public String message() {
-        if (exception != null)
+        if (exception != null) {
             return exception.getMessage();
+        }
         return toString();
     }
 

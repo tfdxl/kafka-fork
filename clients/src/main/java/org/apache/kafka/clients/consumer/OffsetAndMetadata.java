@@ -39,10 +39,11 @@ public class OffsetAndMetadata implements Serializable {
         this.offset = offset;
         // The server converts null metadata to an empty string. So we store it as an empty string as well on the client
         // to be consistent.
-        if (metadata == null)
+        if (metadata == null) {
             this.metadata = OffsetFetchResponse.NO_METADATA;
-        else
+        } else {
             this.metadata = metadata;
+        }
     }
 
     /**
@@ -65,12 +66,18 @@ public class OffsetAndMetadata implements Serializable {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         OffsetAndMetadata that = (OffsetAndMetadata) o;
 
-        if (offset != that.offset) return false;
+        if (offset != that.offset) {
+            return false;
+        }
         return metadata.equals(that.metadata);
     }
 

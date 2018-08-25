@@ -82,7 +82,9 @@ public class TopicAdmin implements AutoCloseable {
      * @throws UnsupportedVersionException if the broker does not support the necessary APIs to perform this request
      */
     public boolean createTopic(NewTopic topic) {
-        if (topic == null) return false;
+        if (topic == null) {
+            return false;
+        }
         Set<String> newTopicNames = createTopics(topic);
         return newTopicNames.contains(topic.name());
     }
@@ -106,10 +108,14 @@ public class TopicAdmin implements AutoCloseable {
         Map<String, NewTopic> topicsByName = new HashMap<>();
         if (topics != null) {
             for (NewTopic topic : topics) {
-                if (topic != null) topicsByName.put(topic.name(), topic);
+                if (topic != null) {
+                    topicsByName.put(topic.name(), topic);
+                }
             }
         }
-        if (topicsByName.isEmpty()) return Collections.emptySet();
+        if (topicsByName.isEmpty()) {
+            return Collections.emptySet();
+        }
         String bootstrapServers = bootstrapServers();
         String topicNameList = Utils.join(topicsByName.keySet(), "', '");
 

@@ -48,8 +48,9 @@ public final class ClientUtils {
                 try {
                     String host = getHost(url);
                     Integer port = getPort(url);
-                    if (host == null || port == null)
+                    if (host == null || port == null) {
                         throw new ConfigException("Invalid url in " + CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG + ": " + url);
+                    }
 
                     InetSocketAddress address = new InetSocketAddress(host, port);
 
@@ -63,8 +64,9 @@ public final class ClientUtils {
                 }
             }
         }
-        if (addresses.isEmpty())
+        if (addresses.isEmpty()) {
             throw new ConfigException("No resolvable bootstrap urls given in " + CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG);
+        }
         return addresses;
     }
 

@@ -247,8 +247,9 @@ public class Fetcher<K, V> implements SubscriptionState.Listener, Closeable {
      */
     public Map<String, List<PartitionInfo>> getTopicMetadata(MetadataRequest.Builder request, long timeout) {
         // Save the round trip if no topics are requested.
-        if (!request.isAllTopics() && request.topics().isEmpty())
+        if (!request.isAllTopics() && request.topics().isEmpty()) {
             return Collections.emptyMap();
+        }
 
         long start = time.milliseconds();
         long remaining = timeout;
@@ -266,8 +267,9 @@ public class Fetcher<K, V> implements SubscriptionState.Listener, Closeable {
                 Cluster cluster = response.cluster();
 
                 Set<String> unauthorizedTopics = cluster.unauthorizedTopics();
-                if (!unauthorizedTopics.isEmpty())
+                if (!unauthorizedTopics.isEmpty()) {
                     throw new TopicAuthorizationException(unauthorizedTopics);
+                }
 
                 boolean shouldRetry = false;
                 Map<String, Errors> errors = response.errors();
@@ -281,24 +283,27 @@ public class Fetcher<K, V> implements SubscriptionState.Listener, Closeable {
                         String topic = errorEntry.getKey();
                         Errors error = errorEntry.getValue();
 
-                        if (error == Errors.INVALID_TOPIC_EXCEPTION)
+                        if (error == Errors.INVALID_TOPIC_EXCEPTION) {
                             throw new InvalidTopicException("Topic '" + topic + "' is invalid");
-                        else if (error == Errors.UNKNOWN_TOPIC_OR_PARTITION)
+                        } else if (error == Errors.UNKNOWN_TOPIC_OR_PARTITION)
                             // if a requested topic is unknown, we just continue and let it be absent
                             // in the returned map
+                        {
                             continue;
-                        else if (error.exception() instanceof RetriableException)
+                        } else if (error.exception() instanceof RetriableException) {
                             shouldRetry = true;
-                        else
+                        } else {
                             throw new KafkaException("Unexpected error fetching metadata for topic " + topic,
                                     error.exception());
+                        }
                     }
                 }
 
                 if (!shouldRetry) {
                     HashMap<String, List<PartitionInfo>> topicsPartitionInfos = new HashMap<>();
-                    for (String topic : cluster.topics())
+                    for (String topic : cluster.topics()) {
                         topicsPartitionInfos.put(topic, cluster.availablePartitionsForTopic(topic));
+                    }
                     return topicsPartitionInfos;
                 }
             }
@@ -323,20 +328,22 @@ public class Fetcher<K, V> implements SubscriptionState.Listener, Closeable {
      */
     private RequestFuture<ClientResponse> sendMetadataRequest(MetadataRequest.Builder request) {
         final Node node = client.leastLoadedNode();
-        if (node == null)
+        if (node == null) {
             return RequestFuture.noBrokersAvailable();
-        else
+        } else {
             return client.send(node, request);
+        }
     }
 
     private Long offsetResetStrategyTimestamp(final TopicPartition partition) {
         OffsetResetStrategy strategy = subscriptions.resetStrategy(partition);
-        if (strategy == OffsetResetStrategy.EARLIEST)
+        if (strategy == OffsetResetStrategy.EARLIEST) {
             return ListOffsetRequest.EARLIEST_TIMESTAMP;
-        else if (strategy == OffsetResetStrategy.LATEST)
+        } else if (strategy == OffsetResetStrategy.LATEST) {
             return ListOffsetRequest.LATEST_TIMESTAMP;
-        else
+        } else {
             return null;
+        }
     }
 
     /**
@@ -353,14 +360,16 @@ public class Fetcher<K, V> implements SubscriptionState.Listener, Closeable {
         }
 
         Set<TopicPartition> partitions = subscriptions.partitionsNeedingReset(time.milliseconds());
-        if (partitions.isEmpty())
+        if (partitions.isEmpty()) {
             return;
+        }
 
         final Map<TopicPartition, Long> offsetResetTimestamps = new HashMap<>();
         for (final TopicPartition partition : partitions) {
             Long timestamp = offsetResetStrategyTimestamp(partition);
-            if (timestamp != null)
+            if (timestamp != null) {
                 offsetResetTimestamps.put(partition, timestamp);
+            }
         }
 
         resetOffsetsAsync(offsetResetTimestamps);
@@ -372,8 +381,9 @@ public class Fetcher<K, V> implements SubscriptionState.Listener, Closeable {
                 timeout, true).fetchedOffsets;
 
         HashMap<TopicPartition, OffsetAndTimestamp> offsetsByTimes = new HashMap<>(timestampsToSearch.size());
-        for (Map.Entry<TopicPartition, Long> entry : timestampsToSearch.entrySet())
+        for (Map.Entry<TopicPartition, Long> entry : timestampsToSearch.entrySet()) {
             offsetsByTimes.put(entry.getKey(), null);
+        }
 
         for (Map.Entry<TopicPartition, OffsetData> entry : fetchedOffsets.entrySet()) {
             // 'entry.getValue().timestamp' will not be null since we are guaranteed
@@ -389,8 +399,9 @@ public class Fetcher<K, V> implements SubscriptionState.Listener, Closeable {
                                                  long timeout,
                                                  boolean requireTimestamps) {
         ListOffsetResult result = new ListOffsetResult();
-        if (timestampsToSearch.isEmpty())
+        if (timestampsToSearch.isEmpty()) {
             return result;
+        }
 
         Map<TopicPartition, Long> remainingToSearch = new HashMap<>(timestampsToSearch);
 
@@ -400,14 +411,16 @@ public class Fetcher<K, V> implements SubscriptionState.Listener, Closeable {
             RequestFuture<ListOffsetResult> future = sendListOffsetsRequests(remainingToSearch, requireTimestamps);
             client.poll(future, remaining);
 
-            if (!future.isDone())
+            if (!future.isDone()) {
                 break;
+            }
 
             if (future.succeeded()) {
                 ListOffsetResult value = future.value();
                 result.fetchedOffsets.putAll(value.fetchedOffsets);
-                if (value.partitionsToRetry.isEmpty())
+                if (value.partitionsToRetry.isEmpty()) {
                     return result;
+                }
 
                 remainingToSearch.keySet().removeAll(result.fetchedOffsets.keySet());
             } else if (!future.isRetriable()) {
@@ -416,13 +429,15 @@ public class Fetcher<K, V> implements SubscriptionState.Listener, Closeable {
 
             long elapsed = time.milliseconds() - startMs;
             remaining = timeout - elapsed;
-            if (remaining <= 0)
+            if (remaining <= 0) {
                 break;
+            }
 
-            if (metadata.updateRequested())
+            if (metadata.updateRequested()) {
                 client.awaitMetadataUpdate(remaining);
-            else
+            } else {
                 time.sleep(Math.min(remaining, retryBackoffMs));
+            }
 
             elapsed = time.milliseconds() - startMs;
             remaining = timeout - elapsed;
@@ -443,8 +458,9 @@ public class Fetcher<K, V> implements SubscriptionState.Listener, Closeable {
                                                            long timestamp,
                                                            long timeout) {
         Map<TopicPartition, Long> timestampsToSearch = new HashMap<>();
-        for (TopicPartition tp : partitions)
+        for (TopicPartition tp : partitions) {
             timestampsToSearch.put(tp, timestamp);
+        }
         Map<TopicPartition, Long> offsets = new HashMap<>();
         ListOffsetResult result = fetchOffsetsByTimes(timestampsToSearch, timeout, false);
         for (Map.Entry<TopicPartition, OffsetData> entry : result.fetchedOffsets.entrySet()) {
@@ -470,7 +486,9 @@ public class Fetcher<K, V> implements SubscriptionState.Listener, Closeable {
             while (recordsRemaining > 0) {
                 if (nextInLineRecords == null || nextInLineRecords.isFetched) {
                     CompletedFetch completedFetch = completedFetches.peek();
-                    if (completedFetch == null) break;
+                    if (completedFetch == null) {
+                        break;
+                    }
 
                     nextInLineRecords = parseCompletedFetch(completedFetch);
                     completedFetches.poll();
@@ -495,8 +513,9 @@ public class Fetcher<K, V> implements SubscriptionState.Listener, Closeable {
                 }
             }
         } catch (KafkaException e) {
-            if (fetched.isEmpty())
+            if (fetched.isEmpty()) {
                 throw e;
+            }
         }
         return fetched;
     }
@@ -522,8 +541,9 @@ public class Fetcher<K, V> implements SubscriptionState.Listener, Closeable {
                 subscriptions.position(partitionRecords.partition, nextOffset);
 
                 Long partitionLag = subscriptions.partitionLag(partitionRecords.partition, isolationLevel);
-                if (partitionLag != null)
+                if (partitionLag != null) {
                     this.sensors.recordPartitionLag(partitionRecords.partition, partitionLag);
+                }
 
                 return partRecords;
             } else {
@@ -555,8 +575,9 @@ public class Fetcher<K, V> implements SubscriptionState.Listener, Closeable {
 
     private void resetOffsetsAsync(Map<TopicPartition, Long> partitionResetTimestamps) {
         // Add the topics to the metadata to do a single metadata fetch.
-        for (TopicPartition tp : partitionResetTimestamps.keySet())
+        for (TopicPartition tp : partitionResetTimestamps.keySet()) {
             metadata.add(tp.topic());
+        }
 
         Map<Node, Map<TopicPartition, Long>> timestampsToSearchByNode = groupListOffsetRequests(partitionResetTimestamps);
         for (Map.Entry<Node, Map<TopicPartition, Long>> entry : timestampsToSearchByNode.entrySet()) {
@@ -585,8 +606,9 @@ public class Fetcher<K, V> implements SubscriptionState.Listener, Closeable {
                     subscriptions.resetFailed(resetTimestamps.keySet(), time.milliseconds() + retryBackoffMs);
                     metadata.requestUpdate();
 
-                    if (!(e instanceof RetriableException) && !cachedListOffsetsException.compareAndSet(null, e))
+                    if (!(e instanceof RetriableException) && !cachedListOffsetsException.compareAndSet(null, e)) {
                         log.error("Discarding error in ListOffsetResponse because another error is pending", e);
+                    }
                 }
             });
         }
@@ -603,12 +625,14 @@ public class Fetcher<K, V> implements SubscriptionState.Listener, Closeable {
     private RequestFuture<ListOffsetResult> sendListOffsetsRequests(final Map<TopicPartition, Long> timestampsToSearch,
                                                                     final boolean requireTimestamps) {
         // Add the topics to the metadata to do a single metadata fetch.
-        for (TopicPartition tp : timestampsToSearch.keySet())
+        for (TopicPartition tp : timestampsToSearch.keySet()) {
             metadata.add(tp.topic());
+        }
 
         Map<Node, Map<TopicPartition, Long>> timestampsToSearchByNode = groupListOffsetRequests(timestampsToSearch);
-        if (timestampsToSearchByNode.isEmpty())
+        if (timestampsToSearchByNode.isEmpty()) {
             return RequestFuture.failure(new StaleMetadataException());
+        }
 
         final RequestFuture<ListOffsetResult> listOffsetRequestsFuture = new RequestFuture<>();
         final Map<TopicPartition, OffsetData> fetchedTimestampOffsets = new HashMap<>();
@@ -635,8 +659,9 @@ public class Fetcher<K, V> implements SubscriptionState.Listener, Closeable {
                 @Override
                 public void onFailure(RuntimeException e) {
                     synchronized (listOffsetRequestsFuture) {
-                        if (!listOffsetRequestsFuture.isDone())
+                        if (!listOffsetRequestsFuture.isDone()) {
                             listOffsetRequestsFuture.raise(e);
+                        }
                     }
                 }
             });
@@ -769,10 +794,11 @@ public class Fetcher<K, V> implements SubscriptionState.Listener, Closeable {
             }
         }
 
-        if (!unauthorizedTopics.isEmpty())
+        if (!unauthorizedTopics.isEmpty()) {
             future.raise(new TopicAuthorizationException(unauthorizedTopics));
-        else
+        } else {
             future.complete(new ListOffsetResult(fetchedOffsets, partitionsToRetry));
+        }
     }
 
     /**
@@ -921,13 +947,16 @@ public class Fetcher<K, V> implements SubscriptionState.Listener, Closeable {
                 throw new IllegalStateException("Unexpected error code " + error.code() + " while fetching data");
             }
         } finally {
-            if (partitionRecords == null)
+            if (partitionRecords == null) {
                 completedFetch.metricAggregator.record(tp, 0, 0);
+            }
 
             if (error != Errors.NONE)
                 // we move the partition to the end if there was an error. This way, it's more likely that partitions for
                 // the same topic can remain together (allowing for more efficient serialization).
+            {
                 subscriptions.movePartitionToEnd(tp);
+            }
         }
 
         return partitionRecords;
@@ -968,8 +997,9 @@ public class Fetcher<K, V> implements SubscriptionState.Listener, Closeable {
 
     @Override
     public void close() {
-        if (nextInLineRecords != null)
+        if (nextInLineRecords != null) {
             nextInLineRecords.drain();
+        }
         decompressionBufferSupplier.close();
     }
 
@@ -1154,8 +1184,9 @@ public class Fetcher<K, V> implements SubscriptionState.Listener, Closeable {
         private void updatePartitionLagSensors(Set<TopicPartition> assignedPartitions) {
             if (this.assignedPartitions != null) {
                 for (TopicPartition tp : this.assignedPartitions) {
-                    if (!assignedPartitions.contains(tp))
+                    if (!assignedPartitions.contains(tp)) {
                         metrics.removeSensor(partitionLagMetricName(tp));
+                    }
                 }
             }
             this.assignedPartitions = assignedPartitions;
@@ -1228,8 +1259,9 @@ public class Fetcher<K, V> implements SubscriptionState.Listener, Closeable {
 
                 // we move the partition to the end if we received some bytes. This way, it's more likely that partitions
                 // for the same topic can remain together (allowing for more efficient serialization).
-                if (bytesRead > 0)
+                if (bytesRead > 0) {
                     subscriptions.movePartitionToEnd(partition);
+                }
             }
         }
 
@@ -1273,8 +1305,9 @@ public class Fetcher<K, V> implements SubscriptionState.Listener, Closeable {
                         // we ensure that the offset of the next fetch will point to the next batch, which avoids
                         // unnecessary re-fetching of the same batch (in the worst case, the consumer could get stuck
                         // fetching the same batch repeatedly).
-                        if (currentBatch != null)
+                        if (currentBatch != null) {
                             nextFetchOffset = currentBatch.nextOffset();
+                        }
                         drain();
                         return null;
                     }
@@ -1322,13 +1355,15 @@ public class Fetcher<K, V> implements SubscriptionState.Listener, Closeable {
 
         private List<ConsumerRecord<K, V>> fetchRecords(int maxRecords) {
             // Error when fetching the next record before deserialization.
-            if (corruptLastRecord)
+            if (corruptLastRecord) {
                 throw new KafkaException("Received exception when fetching the next record from " + partition
                         + ". If needed, please seek past the record to "
                         + "continue consumption.", cachedRecordException);
+            }
 
-            if (isFetched)
+            if (isFetched) {
                 return Collections.emptyList();
+            }
 
             List<ConsumerRecord<K, V>> records = new ArrayList<>();
             try {
@@ -1340,8 +1375,9 @@ public class Fetcher<K, V> implements SubscriptionState.Listener, Closeable {
                         lastRecord = nextFetchedRecord();
                         corruptLastRecord = false;
                     }
-                    if (lastRecord == null)
+                    if (lastRecord == null) {
                         break;
+                    }
                     records.add(parseRecord(partition, currentBatch, lastRecord));
                     recordsRead++;
                     bytesRead += lastRecord.sizeInBytes();
@@ -1352,21 +1388,24 @@ public class Fetcher<K, V> implements SubscriptionState.Listener, Closeable {
                 }
             } catch (SerializationException se) {
                 cachedRecordException = se;
-                if (records.isEmpty())
+                if (records.isEmpty()) {
                     throw se;
+                }
             } catch (KafkaException e) {
                 cachedRecordException = e;
-                if (records.isEmpty())
+                if (records.isEmpty()) {
                     throw new KafkaException("Received exception when fetching the next record from " + partition
                             + ". If needed, please seek past the record to "
                             + "continue consumption.", e);
+                }
             }
             return records;
         }
 
         private void consumeAbortedTransactionsUpTo(long offset) {
-            if (abortedTransactions == null)
+            if (abortedTransactions == null) {
                 return;
+            }
 
             while (!abortedTransactions.isEmpty() && abortedTransactions.peek().firstOffset <= offset) {
                 FetchResponse.AbortedTransaction abortedTransaction = abortedTransactions.poll();
@@ -1379,8 +1418,9 @@ public class Fetcher<K, V> implements SubscriptionState.Listener, Closeable {
         }
 
         private PriorityQueue<FetchResponse.AbortedTransaction> abortedTransactions(FetchResponse.PartitionData partition) {
-            if (partition.abortedTransactions == null || partition.abortedTransactions.isEmpty())
+            if (partition.abortedTransactions == null || partition.abortedTransactions.isEmpty()) {
                 return null;
+            }
 
             PriorityQueue<FetchResponse.AbortedTransaction> abortedTransactions = new PriorityQueue<>(
                     partition.abortedTransactions.size(),
@@ -1396,13 +1436,15 @@ public class Fetcher<K, V> implements SubscriptionState.Listener, Closeable {
         }
 
         private boolean containsAbortMarker(RecordBatch batch) {
-            if (!batch.isControlBatch())
+            if (!batch.isControlBatch()) {
                 return false;
+            }
 
             Iterator<Record> batchIterator = batch.iterator();
-            if (!batchIterator.hasNext())
+            if (!batchIterator.hasNext()) {
                 throw new InvalidRecordException("Invalid batch for partition " + partition + " at offset " +
                         batch.baseOffset() + " with control sequence set, but no records");
+            }
 
             Record firstRecord = batchIterator.next();
             return ControlRecordType.ABORT == ControlRecordType.parse(firstRecord.key());

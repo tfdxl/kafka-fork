@@ -80,8 +80,9 @@ public class AclBinding {
 
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof AclBinding))
+        if (!(o instanceof AclBinding)) {
             return false;
+        }
         AclBinding other = (AclBinding) o;
         return resource.equals(other.resource) && entry.equals(other.entry);
     }

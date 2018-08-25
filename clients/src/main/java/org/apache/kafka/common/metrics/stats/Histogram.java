@@ -34,18 +34,22 @@ public class Histogram {
     }
 
     public double value(double quantile) {
-        if (count == 0.0d)
+        if (count == 0.0d) {
             return Double.NaN;
-        if (quantile > 1.00d)
+        }
+        if (quantile > 1.00d) {
             return Float.POSITIVE_INFINITY;
-        if (quantile < 0.00d)
+        }
+        if (quantile < 0.00d) {
             return Float.NEGATIVE_INFINITY;
+        }
         float sum = 0.0f;
         float quant = (float) quantile;
         for (int i = 0; i < this.hist.length - 1; i++) {
             sum += this.hist[i];
-            if (sum / count > quant)
+            if (sum / count > quant) {
                 return binScheme.fromBin(i);
+            }
         }
         return binScheme.fromBin(this.hist.length - 1);
     }
@@ -55,8 +59,9 @@ public class Histogram {
     }
 
     public void clear() {
-        for (int i = 0; i < this.hist.length; i++)
+        for (int i = 0; i < this.hist.length; i++) {
             this.hist[i] = 0.0f;
+        }
         this.count = 0;
     }
 
@@ -128,8 +133,9 @@ public class Histogram {
          * @param max  the maximum value to be counted in the bins
          */
         public ConstantBinScheme(int bins, double min, double max) {
-            if (bins < 2)
+            if (bins < 2) {
                 throw new IllegalArgumentException("Must have at least 2 bins.");
+            }
             this.min = min;
             this.max = max;
             this.bins = bins;
@@ -137,10 +143,12 @@ public class Histogram {
             this.maxBinNumber = bins - 1;
         }
 
+        @Override
         public int bins() {
             return this.bins;
         }
 
+        @Override
         public double fromBin(int b) {
             if (b < MIN_BIN_NUMBER) {
                 return Float.NEGATIVE_INFINITY;
@@ -151,6 +159,7 @@ public class Histogram {
             return min + b * bucketWidth;
         }
 
+        @Override
         public int toBin(double x) {
             int binNumber = (int) ((x - min) / bucketWidth);
             if (binNumber < MIN_BIN_NUMBER) {
@@ -180,18 +189,21 @@ public class Histogram {
          * @param max     the maximum value to be counted in the bins
          */
         public LinearBinScheme(int numBins, double max) {
-            if (numBins < 2)
+            if (numBins < 2) {
                 throw new IllegalArgumentException("Must have at least 2 bins.");
+            }
             this.bins = numBins;
             this.max = max;
             double denom = numBins * (numBins - 1.0) / 2.0;
             this.scale = max / denom;
         }
 
+        @Override
         public int bins() {
             return this.bins;
         }
 
+        @Override
         public double fromBin(int b) {
             if (b > this.bins - 1) {
                 return Float.POSITIVE_INFINITY;
@@ -202,6 +214,7 @@ public class Histogram {
             }
         }
 
+        @Override
         public int toBin(double x) {
             if (x < 0.0d) {
                 throw new IllegalArgumentException("Values less than 0.0 not accepted.");

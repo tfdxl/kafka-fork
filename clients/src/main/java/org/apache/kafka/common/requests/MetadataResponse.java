@@ -186,8 +186,9 @@ public class MetadataResponse extends AbstractResponse {
         // This field only exists in v1+
         // When we can't know the controller id in a v0 response we default to NO_CONTROLLER_ID
         int controllerId = NO_CONTROLLER_ID;
-        if (struct.hasField(CONTROLLER_ID_KEY_NAME))
+        if (struct.hasField(CONTROLLER_ID_KEY_NAME)) {
             controllerId = struct.getInt(CONTROLLER_ID_KEY_NAME);
+        }
 
         // This field only exists in v2+
         if (struct.hasField(CLUSTER_ID_KEY_NAME)) {
@@ -248,18 +249,21 @@ public class MetadataResponse extends AbstractResponse {
 
     private List<Node> convertToNodes(Map<Integer, Node> brokers, Object[] brokerIds) {
         List<Node> nodes = new ArrayList<>(brokerIds.length);
-        for (Object brokerId : brokerIds)
-            if (brokers.containsKey(brokerId))
+        for (Object brokerId : brokerIds) {
+            if (brokers.containsKey(brokerId)) {
                 nodes.add(brokers.get(brokerId));
-            else
+            } else {
                 nodes.add(new Node((int) brokerId, "", -1));
+            }
+        }
         return nodes;
     }
 
     private Node getControllerNode(int controllerId, Collection<Node> brokers) {
         for (Node broker : brokers) {
-            if (broker.id() == controllerId)
+            if (broker.id() == controllerId) {
                 return broker;
+            }
         }
         return null;
     }
@@ -276,8 +280,9 @@ public class MetadataResponse extends AbstractResponse {
     public Map<String, Errors> errors() {
         Map<String, Errors> errors = new HashMap<>();
         for (TopicMetadata metadata : topicMetadata) {
-            if (metadata.error != Errors.NONE)
+            if (metadata.error != Errors.NONE) {
                 errors.put(metadata.topic(), metadata.error);
+            }
         }
         return errors;
     }
@@ -285,8 +290,9 @@ public class MetadataResponse extends AbstractResponse {
     @Override
     public Map<Errors, Integer> errorCounts() {
         Map<Errors, Integer> errorCounts = new HashMap<>();
-        for (TopicMetadata metadata : topicMetadata)
+        for (TopicMetadata metadata : topicMetadata) {
             updateErrorCounts(errorCounts, metadata.error);
+        }
         return errorCounts;
     }
 
@@ -296,8 +302,9 @@ public class MetadataResponse extends AbstractResponse {
     public Set<String> topicsByError(Errors error) {
         Set<String> errorTopics = new HashSet<>();
         for (TopicMetadata metadata : topicMetadata) {
-            if (metadata.error == error)
+            if (metadata.error == error) {
                 errorTopics.add(metadata.topic());
+            }
         }
         return errorTopics;
     }
@@ -311,9 +318,9 @@ public class MetadataResponse extends AbstractResponse {
     public Set<String> unavailableTopics() {
         Set<String> invalidMetadataTopics = new HashSet<>();
         for (TopicMetadata topicMetadata : this.topicMetadata) {
-            if (topicMetadata.error.exception() instanceof InvalidMetadataException)
+            if (topicMetadata.error.exception() instanceof InvalidMetadataException) {
                 invalidMetadataTopics.add(topicMetadata.topic);
-            else {
+            } else {
                 for (PartitionMetadata partitionMetadata : topicMetadata.partitionMetadata) {
                     if (partitionMetadata.error.exception() instanceof InvalidMetadataException) {
                         invalidMetadataTopics.add(topicMetadata.topic);
@@ -335,9 +342,10 @@ public class MetadataResponse extends AbstractResponse {
         List<PartitionInfo> partitions = new ArrayList<>();
         for (TopicMetadata metadata : topicMetadata) {
             if (metadata.error == Errors.NONE) {
-                if (metadata.isInternal)
+                if (metadata.isInternal) {
                     internalTopics.add(metadata.topic);
-                for (PartitionMetadata partitionMetadata : metadata.partitionMetadata)
+                }
+                for (PartitionMetadata partitionMetadata : metadata.partitionMetadata) {
                     partitions.add(new PartitionInfo(
                             metadata.topic,
                             partitionMetadata.partition,
@@ -345,6 +353,7 @@ public class MetadataResponse extends AbstractResponse {
                             partitionMetadata.replicas.toArray(new Node[0]),
                             partitionMetadata.isr.toArray(new Node[0]),
                             partitionMetadata.offlineReplicas.toArray(new Node[0])));
+                }
             }
         }
 
@@ -399,19 +408,22 @@ public class MetadataResponse extends AbstractResponse {
             broker.set(HOST_KEY_NAME, node.host());
             broker.set(PORT_KEY_NAME, node.port());
             // This field only exists in v1+
-            if (broker.hasField(RACK_KEY_NAME))
+            if (broker.hasField(RACK_KEY_NAME)) {
                 broker.set(RACK_KEY_NAME, node.rack());
+            }
             brokerArray.add(broker);
         }
         struct.set(BROKERS_KEY_NAME, brokerArray.toArray());
 
         // This field only exists in v1+
-        if (struct.hasField(CONTROLLER_ID_KEY_NAME))
+        if (struct.hasField(CONTROLLER_ID_KEY_NAME)) {
             struct.set(CONTROLLER_ID_KEY_NAME, controller == null ? NO_CONTROLLER_ID : controller.id());
+        }
 
         // This field only exists in v2+
-        if (struct.hasField(CLUSTER_ID_KEY_NAME))
+        if (struct.hasField(CLUSTER_ID_KEY_NAME)) {
             struct.set(CLUSTER_ID_KEY_NAME, clusterId);
+        }
 
         List<Struct> topicMetadataArray = new ArrayList<>(topicMetadata.size());
         for (TopicMetadata metadata : topicMetadata) {
@@ -419,8 +431,9 @@ public class MetadataResponse extends AbstractResponse {
             topicData.set(TOPIC_NAME, metadata.topic);
             topicData.set(ERROR_CODE, metadata.error.code());
             // This field only exists in v1+
-            if (topicData.hasField(IS_INTERNAL_KEY_NAME))
+            if (topicData.hasField(IS_INTERNAL_KEY_NAME)) {
                 topicData.set(IS_INTERNAL_KEY_NAME, metadata.isInternal());
+            }
 
             List<Struct> partitionMetadataArray = new ArrayList<>(metadata.partitionMetadata.size());
             for (PartitionMetadata partitionMetadata : metadata.partitionMetadata()) {
@@ -429,17 +442,20 @@ public class MetadataResponse extends AbstractResponse {
                 partitionData.set(PARTITION_ID, partitionMetadata.partition);
                 partitionData.set(LEADER_KEY_NAME, partitionMetadata.leaderId());
                 ArrayList<Integer> replicas = new ArrayList<>(partitionMetadata.replicas.size());
-                for (Node node : partitionMetadata.replicas)
+                for (Node node : partitionMetadata.replicas) {
                     replicas.add(node.id());
+                }
                 partitionData.set(REPLICAS_KEY_NAME, replicas.toArray());
                 ArrayList<Integer> isr = new ArrayList<>(partitionMetadata.isr.size());
-                for (Node node : partitionMetadata.isr)
+                for (Node node : partitionMetadata.isr) {
                     isr.add(node.id());
+                }
                 partitionData.set(ISR_KEY_NAME, isr.toArray());
                 if (partitionData.hasField(OFFLINE_REPLICAS_KEY_NAME)) {
                     ArrayList<Integer> offlineReplicas = new ArrayList<>(partitionMetadata.offlineReplicas.size());
-                    for (Node node : partitionMetadata.offlineReplicas)
+                    for (Node node : partitionMetadata.offlineReplicas) {
                         offlineReplicas.add(node.id());
+                    }
                     partitionData.set(OFFLINE_REPLICAS_KEY_NAME, offlineReplicas.toArray());
                 }
                 partitionMetadataArray.add(partitionData);

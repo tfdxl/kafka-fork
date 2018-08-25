@@ -140,8 +140,9 @@ public class WriteTxnMarkersRequest extends AbstractRequest {
         Map<Long, Map<TopicPartition, Errors>> errors = new HashMap<>(markers.size());
         for (TxnMarkerEntry entry : markers) {
             Map<TopicPartition, Errors> errorsPerPartition = new HashMap<>(entry.partitions.size());
-            for (TopicPartition partition : entry.partitions)
+            for (TopicPartition partition : entry.partitions) {
                 errorsPerPartition.put(partition, error);
+            }
 
             errors.put(entry.producerId, errorsPerPartition);
         }
@@ -151,8 +152,12 @@ public class WriteTxnMarkersRequest extends AbstractRequest {
 
     @Override
     public boolean equals(final Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         final WriteTxnMarkersRequest that = (WriteTxnMarkersRequest) o;
         return Objects.equals(markers, that.markers);
     }
@@ -215,8 +220,12 @@ public class WriteTxnMarkersRequest extends AbstractRequest {
 
         @Override
         public boolean equals(final Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
             final TxnMarkerEntry that = (TxnMarkerEntry) o;
             return producerId == that.producerId &&
                     producerEpoch == that.producerEpoch &&

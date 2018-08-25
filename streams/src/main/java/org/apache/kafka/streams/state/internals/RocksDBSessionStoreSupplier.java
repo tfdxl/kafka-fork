@@ -54,11 +54,13 @@ public class RocksDBSessionStoreSupplier<K, V> extends AbstractStoreSupplier<K, 
         }
     }
 
+    @Override
     public SessionStore<K, V> get() {
         return builder.build();
 
     }
 
+    @Override
     public long retentionPeriod() {
         return retentionPeriod;
     }

@@ -198,6 +198,7 @@ public interface Consumer<K, V> extends Closeable {
     /**
      * @see KafkaConsumer#close()
      */
+    @Override
     void close();
 
     /**

@@ -96,13 +96,15 @@ public class ProducerPerformance {
             if (producerConfig != null) {
                 props.putAll(Utils.loadProps(producerConfig));
             }
-            if (producerProps != null)
+            if (producerProps != null) {
                 for (String prop : producerProps) {
                     String[] pieces = prop.split("=");
-                    if (pieces.length != 2)
+                    if (pieces.length != 2) {
                         throw new IllegalArgumentException("Invalid property: " + prop);
+                    }
                     props.put(pieces[0], pieces[1]);
                 }
+            }
 
             props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.ByteArraySerializer");
             props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.ByteArraySerializer");
@@ -123,8 +125,9 @@ public class ProducerPerformance {
             //生成一个payload
             if (recordSize != null) {
                 payload = new byte[recordSize];
-                for (int i = 0; i < payload.length; ++i)
+                for (int i = 0; i < payload.length; ++i) {
                     payload[i] = (byte) (random.nextInt(26) + 65);
+                }
             }
             ProducerRecord<byte[], byte[]> record;
             Stats stats = new Stats(numRecords, 5000);
@@ -475,13 +478,15 @@ public class ProducerPerformance {
          *                  OffsetOutOfRangeException
          *                  TimeoutException
          */
+        @Override
         public void onCompletion(RecordMetadata metadata, Exception exception) {
             //现在的时间
             long now = System.currentTimeMillis();
             int latency = (int) (now - start);
             this.stats.record(iteration, latency, bytes, now);
-            if (exception != null)
+            if (exception != null) {
                 exception.printStackTrace();
+            }
         }
     }
 

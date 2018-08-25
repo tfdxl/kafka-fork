@@ -127,10 +127,11 @@ public class OffsetCommitRequest extends AbstractRequest {
         memberId = struct.getOrElse(MEMBER_ID, DEFAULT_MEMBER_ID);
 
         // This field only exists in v2
-        if (struct.hasField(RETENTION_TIME_KEY_NAME))
+        if (struct.hasField(RETENTION_TIME_KEY_NAME)) {
             retentionTime = struct.getLong(RETENTION_TIME_KEY_NAME);
-        else
+        } else {
             retentionTime = DEFAULT_RETENTION_TIME;
+        }
 
         offsetData = new HashMap<>();
         for (Object topicDataObj : struct.getArray(TOPICS_KEY_NAME)) {
@@ -182,8 +183,9 @@ public class OffsetCommitRequest extends AbstractRequest {
                 partitionData.set(PARTITION_ID, partitionEntry.getKey());
                 partitionData.set(COMMIT_OFFSET_KEY_NAME, fetchPartitionData.offset);
                 // Only for v1
-                if (partitionData.hasField(TIMESTAMP_KEY_NAME))
+                if (partitionData.hasField(TIMESTAMP_KEY_NAME)) {
                     partitionData.set(TIMESTAMP_KEY_NAME, fetchPartitionData.timestamp);
+                }
                 partitionData.set(METADATA_KEY_NAME, fetchPartitionData.metadata);
                 partitionArray.add(partitionData);
             }
@@ -193,8 +195,9 @@ public class OffsetCommitRequest extends AbstractRequest {
         struct.set(TOPICS_KEY_NAME, topicArray.toArray());
         struct.setIfExists(GENERATION_ID, generationId);
         struct.setIfExists(MEMBER_ID, memberId);
-        if (struct.hasField(RETENTION_TIME_KEY_NAME))
+        if (struct.hasField(RETENTION_TIME_KEY_NAME)) {
             struct.set(RETENTION_TIME_KEY_NAME, retentionTime);
+        }
         return struct;
     }
 

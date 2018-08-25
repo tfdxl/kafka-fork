@@ -27,8 +27,9 @@ public class DoubleSerializer implements Serializer<Double> {
 
     @Override
     public byte[] serialize(String topic, Double data) {
-        if (data == null)
+        if (data == null) {
             return null;
+        }
 
         long bits = Double.doubleToLongBits(data);
         return new byte[]{

@@ -27,6 +27,7 @@ public class KTableSourceValueGetterSupplier<K, V> implements KTableValueGetterS
         this.storeName = storeName;
     }
 
+    @Override
     public KTableValueGetter<K, V> get() {
         return new KTableSourceValueGetter();
     }
@@ -40,11 +41,13 @@ public class KTableSourceValueGetterSupplier<K, V> implements KTableValueGetterS
 
         ReadOnlyKeyValueStore<K, V> store = null;
 
+        @Override
         @SuppressWarnings("unchecked")
         public void init(ProcessorContext context) {
             store = (ReadOnlyKeyValueStore<K, V>) context.getStateStore(storeName);
         }
 
+        @Override
         public V get(K key) {
             return store.get(key);
         }

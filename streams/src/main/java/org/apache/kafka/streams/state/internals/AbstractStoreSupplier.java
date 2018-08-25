@@ -45,14 +45,17 @@ abstract class AbstractStoreSupplier<K, V, T extends StateStore> implements org.
         this.logConfig = logConfig;
     }
 
+    @Override
     public String name() {
         return name;
     }
 
+    @Override
     public Map<String, String> logConfig() {
         return logConfig;
     }
 
+    @Override
     public boolean loggingEnabled() {
         return logged;
     }

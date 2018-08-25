@@ -31,12 +31,13 @@ public final class ConnectUtils {
     private static final Logger log = LoggerFactory.getLogger(ConnectUtils.class);
 
     public static Long checkAndConvertTimestamp(Long timestamp) {
-        if (timestamp == null || timestamp >= 0)
+        if (timestamp == null || timestamp >= 0) {
             return timestamp;
-        else if (timestamp == RecordBatch.NO_TIMESTAMP)
+        } else if (timestamp == RecordBatch.NO_TIMESTAMP) {
             return null;
-        else
+        } else {
             throw new InvalidRecordException(String.format("Invalid record timestamp %d", timestamp));
+        }
     }
 
     public static String lookupKafkaClusterId(WorkerConfig config) {

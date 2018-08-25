@@ -133,8 +133,9 @@ public final class ProducerBatch {
      * @param exception The exception to use to complete the future and awaiting callbacks.
      */
     public void abort(RuntimeException exception) {
-        if (!finalState.compareAndSet(null, FinalState.ABORTED))
+        if (!finalState.compareAndSet(null, FinalState.ABORTED)) {
             throw new IllegalStateException("Batch has already been completed in final state " + finalState.get());
+        }
 
         log.trace("Aborting batch for partition {}", topicPartition, exception);
         completeFutureAndFireCallbacks(ProduceResponse.INVALID_OFFSET, RecordBatch.NO_TIMESTAMP, exception);
@@ -180,11 +181,13 @@ public final class ProducerBatch {
             try {
                 if (exception == null) {
                     RecordMetadata metadata = thunk.future.value();
-                    if (thunk.callback != null)
+                    if (thunk.callback != null) {
                         thunk.callback.onCompletion(metadata, null);
+                    }
                 } else {
-                    if (thunk.callback != null)
+                    if (thunk.callback != null) {
                         thunk.callback.onCompletion(null, exception);
+                    }
                 }
             } catch (Exception e) {
                 log.error("Error executing user-provided callback on message for topic-partition '{}'", topicPartition, e);
@@ -199,16 +202,19 @@ public final class ProducerBatch {
         MemoryRecords memoryRecords = recordsBuilder.build();
 
         Iterator<MutableRecordBatch> recordBatchIter = memoryRecords.batches().iterator();
-        if (!recordBatchIter.hasNext())
+        if (!recordBatchIter.hasNext()) {
             throw new IllegalStateException("Cannot split an empty producer batch.");
+        }
 
         RecordBatch recordBatch = recordBatchIter.next();
-        if (recordBatch.magic() < MAGIC_VALUE_V2 && !recordBatch.isCompressed())
+        if (recordBatch.magic() < MAGIC_VALUE_V2 && !recordBatch.isCompressed()) {
             throw new IllegalArgumentException("Batch splitting cannot be used with non-compressed messages " +
                     "with version v0 and v1");
+        }
 
-        if (recordBatchIter.hasNext())
+        if (recordBatchIter.hasNext()) {
             throw new IllegalArgumentException("A producer batch should only have one record batch.");
+        }
 
         Iterator<Thunk> thunkIter = thunks.iterator();
         // We always allocate batch size because we are already splitting a big batch.
@@ -218,8 +224,9 @@ public final class ProducerBatch {
         for (Record record : recordBatch) {
             assert thunkIter.hasNext();
             Thunk thunk = thunkIter.next();
-            if (batch == null)
+            if (batch == null) {
                 batch = createBatchOffAccumulatorForRecord(record, splitBatchSize);
+            }
 
             // A newly created batch can always host the first message.
             if (!batch.tryAppendForSplit(record.timestamp(), record.key(), record.value(), record.headers(), thunk)) {
@@ -230,8 +237,9 @@ public final class ProducerBatch {
         }
 
         // Close the last batch and add it to the batch list after split.
-        if (batch != null)
+        if (batch != null) {
             batches.add(batch);
+        }
 
         produceFuture.set(ProduceResponse.INVALID_OFFSET, NO_TIMESTAMP, new RecordBatchTooLargeException());
         produceFuture.done();
@@ -278,16 +286,18 @@ public final class ProducerBatch {
      * This methods closes this batch and sets {@code expiryErrorMessage} if the batch has timed out.
      */
     boolean maybeExpire(int requestTimeoutMs, long retryBackoffMs, long now, long lingerMs, boolean isFull) {
-        if (!this.inRetry() && isFull && requestTimeoutMs < (now - this.lastAppendTime))
+        if (!this.inRetry() && isFull && requestTimeoutMs < (now - this.lastAppendTime)) {
             expiryErrorMessage = (now - this.lastAppendTime) + " ms has passed since last append";
-        else if (!this.inRetry() && requestTimeoutMs < (createdTimeMs(now) - lingerMs))
+        } else if (!this.inRetry() && requestTimeoutMs < (createdTimeMs(now) - lingerMs)) {
             expiryErrorMessage = (createdTimeMs(now) - lingerMs) + " ms has passed since batch creation plus linger time";
-        else if (this.inRetry() && requestTimeoutMs < (waitedTimeMs(now) - retryBackoffMs))
+        } else if (this.inRetry() && requestTimeoutMs < (waitedTimeMs(now) - retryBackoffMs)) {
             expiryErrorMessage = (waitedTimeMs(now) - retryBackoffMs) + " ms has passed since last attempt plus backoff time";
+        }
 
         boolean expired = expiryErrorMessage != null;
-        if (expired)
+        if (expired) {
             abortRecordAppends();
+        }
         return expired;
     }
 
@@ -298,8 +308,9 @@ public final class ProducerBatch {
      * @return An exception indicating the batch expired.
      */
     TimeoutException timeoutException() {
-        if (expiryErrorMessage == null)
+        if (expiryErrorMessage == null) {
             throw new IllegalStateException("Batch has not expired");
+        }
         return new TimeoutException("Expiring " + recordCount + " record(s) for " + topicPartition + ": " + expiryErrorMessage);
     }
 

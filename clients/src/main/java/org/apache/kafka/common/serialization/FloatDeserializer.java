@@ -29,8 +29,9 @@ public class FloatDeserializer implements Deserializer<Float> {
 
     @Override
     public Float deserialize(final String topic, final byte[] data) {
-        if (data == null)
+        if (data == null) {
             return null;
+        }
         if (data.length != 4) {
             throw new SerializationException("Size of data received by Deserializer is not 4");
         }

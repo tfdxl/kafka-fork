@@ -54,8 +54,9 @@ public class Time {
      * @return the encoded value
      */
     public static int fromLogical(Schema schema, java.util.Date value) {
-        if (!(LOGICAL_NAME.equals(schema.name())))
+        if (!(LOGICAL_NAME.equals(schema.name()))) {
             throw new DataException("Requested conversion of Time object but the schema does not match.");
+        }
         Calendar calendar = Calendar.getInstance(UTC);
         calendar.setTime(value);
         long unixMillis = calendar.getTimeInMillis();

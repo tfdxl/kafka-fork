@@ -48,9 +48,10 @@ public class SimpleMemoryPool implements MemoryPool {
     protected volatile Sensor oomTimeSensor;
 
     public SimpleMemoryPool(long sizeInBytes, int maxSingleAllocationBytes, boolean strict, Sensor oomPeriodSensor) {
-        if (sizeInBytes <= 0 || maxSingleAllocationBytes <= 0 || maxSingleAllocationBytes > sizeInBytes)
+        if (sizeInBytes <= 0 || maxSingleAllocationBytes <= 0 || maxSingleAllocationBytes > sizeInBytes) {
             throw new IllegalArgumentException("must provide a positive size and max single allocation size smaller than size."
                     + "provided " + sizeInBytes + " and " + maxSingleAllocationBytes + " respectively");
+        }
         this.sizeBytes = sizeInBytes;
         this.strict = strict;
         this.availableMemory = new AtomicLong(sizeInBytes);
@@ -60,10 +61,12 @@ public class SimpleMemoryPool implements MemoryPool {
 
     @Override
     public ByteBuffer tryAllocate(int sizeBytes) {
-        if (sizeBytes < 1)
+        if (sizeBytes < 1) {
             throw new IllegalArgumentException("requested size " + sizeBytes + "<=0");
-        if (sizeBytes > maxSingleAllocationSize)
+        }
+        if (sizeBytes > maxSingleAllocationSize) {
             throw new IllegalArgumentException("requested size " + sizeBytes + " is larger than maxSingleAllocationSize " + maxSingleAllocationSize);
+        }
 
         long available;
         boolean success = false;
@@ -73,8 +76,9 @@ public class SimpleMemoryPool implements MemoryPool {
         long threshold = strict ? sizeBytes : 1;
         while ((available = availableMemory.get()) >= threshold) {
             success = availableMemory.compareAndSet(available, available - sizeBytes);
-            if (success)
+            if (success) {
                 break;
+            }
         }
 
         if (success) {
@@ -94,8 +98,9 @@ public class SimpleMemoryPool implements MemoryPool {
 
     @Override
     public void release(ByteBuffer previouslyAllocated) {
-        if (previouslyAllocated == null)
+        if (previouslyAllocated == null) {
             throw new IllegalArgumentException("provided null buffer");
+        }
 
         bufferToBeReleased(previouslyAllocated);
         availableMemory.addAndGet(previouslyAllocated.capacity());

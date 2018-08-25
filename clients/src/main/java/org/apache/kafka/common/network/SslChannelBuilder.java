@@ -55,6 +55,7 @@ public class SslChannelBuilder implements ChannelBuilder, ListenerReconfigurable
         this.isInterBrokerListener = isInterBrokerListener;
     }
 
+    @Override
     public void configure(Map<String, ?> configs) throws KafkaException {
         try {
             this.configs = configs;
@@ -180,8 +181,9 @@ public class SslChannelBuilder implements ChannelBuilder, ListenerReconfigurable
 
         @Override
         public void close() throws IOException {
-            if (principalBuilder instanceof Closeable)
+            if (principalBuilder instanceof Closeable) {
                 Utils.closeQuietly((Closeable) principalBuilder, "principal builder");
+            }
         }
 
         /**

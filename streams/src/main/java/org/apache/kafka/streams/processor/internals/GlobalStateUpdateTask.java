@@ -90,11 +90,13 @@ public class GlobalStateUpdateTask implements GlobalStateMaintainer {
         offsets.put(new TopicPartition(record.topic(), record.partition()), record.offset() + 1);
     }
 
+    @Override
     public void flushState() {
         stateMgr.flush();
         stateMgr.checkpoint(offsets);
     }
 
+    @Override
     public void close() throws IOException {
         stateMgr.close(offsets);
     }

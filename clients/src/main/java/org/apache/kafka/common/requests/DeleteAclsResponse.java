@@ -124,11 +124,13 @@ public class DeleteAclsResponse extends AbstractResponse {
     @Override
     public Map<Errors, Integer> errorCounts() {
         Map<Errors, Integer> errorCounts = new HashMap<>();
-        for (AclFilterResponse response : responses)
+        for (AclFilterResponse response : responses) {
             updateErrorCounts(errorCounts, response.error.error());
+        }
         return errorCounts;
     }
 
+    @Override
     public String toString() {
         return "(responses=" + Utils.join(responses, ",") + ")";
     }

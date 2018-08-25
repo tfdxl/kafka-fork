@@ -229,10 +229,12 @@ public final class LegacyRecord {
                               long timestamp,
                               ByteBuffer key,
                               ByteBuffer value) throws IOException {
-        if (magic != RecordBatch.MAGIC_VALUE_V0 && magic != RecordBatch.MAGIC_VALUE_V1)
+        if (magic != RecordBatch.MAGIC_VALUE_V0 && magic != RecordBatch.MAGIC_VALUE_V1) {
             throw new IllegalArgumentException("Invalid magic value " + magic);
-        if (timestamp < 0 && timestamp != RecordBatch.NO_TIMESTAMP)
+        }
+        if (timestamp < 0 && timestamp != RecordBatch.NO_TIMESTAMP) {
             throw new IllegalArgumentException("Invalid message timestamp " + timestamp);
+        }
 
         // write crc
         out.writeInt((int) (crc & 0xffffffffL));
@@ -242,8 +244,9 @@ public final class LegacyRecord {
         out.writeByte(attributes);
 
         // maybe write timestamp
-        if (magic > RecordBatch.MAGIC_VALUE_V0)
+        if (magic > RecordBatch.MAGIC_VALUE_V0) {
             out.writeLong(timestamp);
+        }
 
         // write the key
         if (key == null) {
@@ -274,14 +277,17 @@ public final class LegacyRecord {
     // visible only for testing
     public static byte computeAttributes(byte magic, CompressionType type, TimestampType timestampType) {
         byte attributes = 0;
-        if (type.id > 0)
+        if (type.id > 0) {
             attributes |= COMPRESSION_CODEC_MASK & type.id;
+        }
         if (magic > RecordBatch.MAGIC_VALUE_V0) {
-            if (timestampType == TimestampType.NO_TIMESTAMP_TYPE)
+            if (timestampType == TimestampType.NO_TIMESTAMP_TYPE) {
                 throw new IllegalArgumentException("Timestamp type must be provided to compute attributes for " +
                         "message format v1");
-            if (timestampType == TimestampType.LOG_APPEND_TIME)
+            }
+            if (timestampType == TimestampType.LOG_APPEND_TIME) {
                 attributes |= TIMESTAMP_TYPE_MASK;
+            }
         }
         return attributes;
     }
@@ -298,8 +304,9 @@ public final class LegacyRecord {
         Crc32 crc = new Crc32();
         crc.update(magic);
         crc.update(attributes);
-        if (magic > RecordBatch.MAGIC_VALUE_V0)
+        if (magic > RecordBatch.MAGIC_VALUE_V0) {
             Checksums.updateLong(crc, timestamp);
+        }
         // update for the key
         if (key == null) {
             Checksums.updateInt(crc, -1);
@@ -320,36 +327,40 @@ public final class LegacyRecord {
     }
 
     static int recordOverhead(byte magic) {
-        if (magic == 0)
+        if (magic == 0) {
             return RECORD_OVERHEAD_V0;
-        else if (magic == 1)
+        } else if (magic == 1) {
             return RECORD_OVERHEAD_V1;
+        }
         throw new IllegalArgumentException("Invalid magic used in LegacyRecord: " + magic);
     }
 
     static int headerSize(byte magic) {
-        if (magic == 0)
+        if (magic == 0) {
             return HEADER_SIZE_V0;
-        else if (magic == 1)
+        } else if (magic == 1) {
             return HEADER_SIZE_V1;
+        }
         throw new IllegalArgumentException("Invalid magic used in LegacyRecord: " + magic);
     }
 
     private static int keyOffset(byte magic) {
-        if (magic == 0)
+        if (magic == 0) {
             return KEY_OFFSET_V0;
-        else if (magic == 1)
+        } else if (magic == 1) {
             return KEY_OFFSET_V1;
+        }
         throw new IllegalArgumentException("Invalid magic used in LegacyRecord: " + magic);
     }
 
     public static TimestampType timestampType(byte magic, TimestampType wrapperRecordTimestampType, byte attributes) {
-        if (magic == 0)
+        if (magic == 0) {
             return TimestampType.NO_TIMESTAMP_TYPE;
-        else if (wrapperRecordTimestampType != null)
+        } else if (wrapperRecordTimestampType != null) {
             return wrapperRecordTimestampType;
-        else
+        } else {
             return (attributes & TIMESTAMP_TYPE_MASK) == 0 ? TimestampType.CREATE_TIME : TimestampType.LOG_APPEND_TIME;
+        }
     }
 
     /**
@@ -385,13 +396,15 @@ public final class LegacyRecord {
      * Throw an InvalidRecordException if isValid is false for this record
      */
     public void ensureValid() {
-        if (sizeInBytes() < RECORD_OVERHEAD_V0)
+        if (sizeInBytes() < RECORD_OVERHEAD_V0) {
             throw new InvalidRecordException("Record is corrupt (crc could not be retrieved as the record is too "
                     + "small, size = " + sizeInBytes() + ")");
+        }
 
-        if (!isValid())
+        if (!isValid()) {
             throw new InvalidRecordException("Record is corrupt (stored crc = " + checksum()
                     + ", computed crc = " + computeChecksum() + ")");
+        }
     }
 
     /**
@@ -410,10 +423,11 @@ public final class LegacyRecord {
      * @return the size in bytes of the key (0 if the key is null)
      */
     public int keySize() {
-        if (magic() == RecordBatch.MAGIC_VALUE_V0)
+        if (magic() == RecordBatch.MAGIC_VALUE_V0) {
             return buffer.getInt(KEY_SIZE_OFFSET_V0);
-        else
+        } else {
             return buffer.getInt(KEY_SIZE_OFFSET_V1);
+        }
     }
 
     /**
@@ -429,10 +443,11 @@ public final class LegacyRecord {
      * The position where the value size is stored
      */
     private int valueSizeOffset() {
-        if (magic() == RecordBatch.MAGIC_VALUE_V0)
+        if (magic() == RecordBatch.MAGIC_VALUE_V0) {
             return KEY_OFFSET_V0 + Math.max(0, keySize());
-        else
+        } else {
             return KEY_OFFSET_V1 + Math.max(0, keySize());
+        }
     }
 
     /**
@@ -480,15 +495,17 @@ public final class LegacyRecord {
      * @return the timestamp as determined above
      */
     public long timestamp() {
-        if (magic() == RecordBatch.MAGIC_VALUE_V0)
+        if (magic() == RecordBatch.MAGIC_VALUE_V0) {
             return RecordBatch.NO_TIMESTAMP;
-        else {
+        } else {
             // case 2
-            if (wrapperRecordTimestampType == TimestampType.LOG_APPEND_TIME && wrapperRecordTimestamp != null)
+            if (wrapperRecordTimestampType == TimestampType.LOG_APPEND_TIME && wrapperRecordTimestamp != null) {
                 return wrapperRecordTimestamp;
+            }
                 // Case 1, 3
-            else
+            else {
                 return buffer.getLong(TIMESTAMP_OFFSET);
+            }
         }
     }
 
@@ -523,10 +540,11 @@ public final class LegacyRecord {
      * @return the buffer or null if the key for this record is null
      */
     public ByteBuffer key() {
-        if (magic() == RecordBatch.MAGIC_VALUE_V0)
+        if (magic() == RecordBatch.MAGIC_VALUE_V0) {
             return Utils.sizeDelimited(buffer, KEY_SIZE_OFFSET_V0);
-        else
+        } else {
             return Utils.sizeDelimited(buffer, KEY_SIZE_OFFSET_V1);
+        }
     }
 
     /**
@@ -538,8 +556,9 @@ public final class LegacyRecord {
         return this.buffer;
     }
 
+    @Override
     public String toString() {
-        if (magic() > 0)
+        if (magic() > 0) {
             return String.format("Record(magic=%d, attributes=%d, compression=%s, crc=%d, %s=%d, key=%d bytes, value=%d bytes)",
                     magic(),
                     attributes(),
@@ -549,7 +568,7 @@ public final class LegacyRecord {
                     timestamp(),
                     key() == null ? 0 : key().limit(),
                     value() == null ? 0 : value().limit());
-        else
+        } else {
             return String.format("Record(magic=%d, attributes=%d, compression=%s, crc=%d, key=%d bytes, value=%d bytes)",
                     magic(),
                     attributes(),
@@ -557,19 +576,25 @@ public final class LegacyRecord {
                     checksum(),
                     key() == null ? 0 : key().limit(),
                     value() == null ? 0 : value().limit());
+        }
     }
 
+    @Override
     public boolean equals(Object other) {
-        if (this == other)
+        if (this == other) {
             return true;
-        if (other == null)
+        }
+        if (other == null) {
             return false;
-        if (!other.getClass().equals(LegacyRecord.class))
+        }
+        if (!other.getClass().equals(LegacyRecord.class)) {
             return false;
+        }
         LegacyRecord record = (LegacyRecord) other;
         return this.buffer.equals(record.buffer);
     }
 
+    @Override
     public int hashCode() {
         return buffer.hashCode();
     }

@@ -111,6 +111,7 @@ public class Frequencies extends SampledStat implements CompoundStat {
         for (Frequency frequency : frequencies) {
             final double center = frequency.centerValue();
             ms.add(new NamedMeasurable(frequency.name(), new Measurable() {
+                @Override
                 public double measure(MetricConfig config, long now) {
                     return frequency(config, now, center);
                 }

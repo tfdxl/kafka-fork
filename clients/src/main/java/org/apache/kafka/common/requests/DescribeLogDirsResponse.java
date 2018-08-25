@@ -162,8 +162,9 @@ public class DescribeLogDirsResponse extends AbstractResponse {
     @Override
     public Map<Errors, Integer> errorCounts() {
         Map<Errors, Integer> errorCounts = new HashMap<>();
-        for (LogDirInfo logDirInfo : logDirInfos.values())
+        for (LogDirInfo logDirInfo : logDirInfos.values()) {
             updateErrorCounts(errorCounts, logDirInfo.error);
+        }
         return errorCounts;
     }
 

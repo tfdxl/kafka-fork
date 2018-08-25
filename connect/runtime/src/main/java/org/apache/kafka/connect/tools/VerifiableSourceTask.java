@@ -78,10 +78,11 @@ public class VerifiableSourceTask extends SourceTask {
 
         partition = Collections.singletonMap(ID_FIELD, id);
         Map<String, Object> previousOffset = this.context.offsetStorageReader().offset(partition);
-        if (previousOffset != null)
+        if (previousOffset != null) {
             seqno = (Long) previousOffset.get(SEQNO_FIELD) + 1;
-        else
+        } else {
             seqno = 0;
+        }
         startingSeqno = seqno;
         throttler = new ThroughputThrottler(throughput, System.currentTimeMillis());
 
@@ -91,8 +92,9 @@ public class VerifiableSourceTask extends SourceTask {
     @Override
     public List<SourceRecord> poll() throws InterruptedException {
         long sendStartMs = System.currentTimeMillis();
-        if (throttler.shouldThrottle(seqno - startingSeqno, sendStartMs))
+        if (throttler.shouldThrottle(seqno - startingSeqno, sendStartMs)) {
             throttler.throttle();
+        }
 
         long nowMs = System.currentTimeMillis();
 

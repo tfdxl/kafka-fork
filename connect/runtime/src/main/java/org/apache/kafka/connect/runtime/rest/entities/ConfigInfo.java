@@ -46,8 +46,12 @@ public class ConfigInfo {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
         ConfigInfo that = (ConfigInfo) o;
         return Objects.equals(configKey, that.configKey) &&
                 Objects.equals(configValue, that.configValue);

@@ -79,8 +79,9 @@ public class ScramSaslClient implements SaslClient {
         try {
             switch (state) {
                 case SEND_CLIENT_FIRST_MESSAGE:
-                    if (challenge != null && challenge.length != 0)
+                    if (challenge != null && challenge.length != 0) {
                         throw new SaslException("Expected empty challenge");
+                    }
                     clientNonce = formatter.secureRandomString();
                     NameCallback nameCallback = new NameCallback("Name:");
                     ScramExtensionsCallback extensionsCallback = new ScramExtensionsCallback();
@@ -100,10 +101,12 @@ public class ScramSaslClient implements SaslClient {
 
                 case RECEIVE_SERVER_FIRST_MESSAGE:
                     this.serverFirstMessage = new ServerFirstMessage(challenge);
-                    if (!serverFirstMessage.nonce().startsWith(clientNonce))
+                    if (!serverFirstMessage.nonce().startsWith(clientNonce)) {
                         throw new SaslException("Invalid server nonce: does not start with client nonce");
-                    if (serverFirstMessage.iterations() < mechanism.minIterations())
+                    }
+                    if (serverFirstMessage.iterations() < mechanism.minIterations()) {
                         throw new SaslException("Requested iterations " + serverFirstMessage.iterations() + " is less than the minimum " + mechanism.minIterations() + " for " + mechanism);
+                    }
                     PasswordCallback passwordCallback = new PasswordCallback("Password:", false);
                     try {
                         callbackHandler.handle(new Callback[]{passwordCallback});
@@ -116,8 +119,9 @@ public class ScramSaslClient implements SaslClient {
 
                 case RECEIVE_SERVER_FINAL_MESSAGE:
                     ServerFinalMessage serverFinalMessage = new ServerFinalMessage(challenge);
-                    if (serverFinalMessage.error() != null)
+                    if (serverFinalMessage.error() != null) {
                         throw new SaslException("Sasl authentication using " + mechanism + " failed with error: " + serverFinalMessage.error());
+                    }
                     handleServerFinalMessage(serverFinalMessage.serverSignature());
                     setState(State.COMPLETE);
                     return null;
@@ -138,22 +142,25 @@ public class ScramSaslClient implements SaslClient {
 
     @Override
     public byte[] unwrap(byte[] incoming, int offset, int len) throws SaslException {
-        if (!isComplete())
+        if (!isComplete()) {
             throw new IllegalStateException("Authentication exchange has not completed");
+        }
         return Arrays.copyOfRange(incoming, offset, offset + len);
     }
 
     @Override
     public byte[] wrap(byte[] outgoing, int offset, int len) throws SaslException {
-        if (!isComplete())
+        if (!isComplete()) {
             throw new IllegalStateException("Authentication exchange has not completed");
+        }
         return Arrays.copyOfRange(outgoing, offset, offset + len);
     }
 
     @Override
     public Object getNegotiatedProperty(String propName) {
-        if (!isComplete())
+        if (!isComplete()) {
             throw new IllegalStateException("Authentication exchange has not completed");
+        }
         return null;
     }
 
@@ -184,8 +191,9 @@ public class ScramSaslClient implements SaslClient {
         try {
             byte[] serverKey = formatter.serverKey(saltedPassword);
             byte[] serverSignature = formatter.serverSignature(serverKey, clientFirstMessage, serverFirstMessage, clientFinalMessage);
-            if (!Arrays.equals(signature, serverSignature))
+            if (!Arrays.equals(signature, serverSignature)) {
                 throw new SaslException("Invalid server signature in server final message");
+            }
         } catch (InvalidKeyException e) {
             throw new SaslException("Sasl server signature verification failed", e);
         }
@@ -212,12 +220,14 @@ public class ScramSaslClient implements SaslClient {
             ScramMechanism mechanism = null;
             for (String mech : mechanisms) {
                 mechanism = ScramMechanism.forMechanismName(mech);
-                if (mechanism != null)
+                if (mechanism != null) {
                     break;
+                }
             }
-            if (mechanism == null)
+            if (mechanism == null) {
                 throw new SaslException(String.format("Requested mechanisms '%s' not supported. Supported mechanisms are '%s'.",
                         Arrays.asList(mechanisms), ScramMechanism.mechanismNames()));
+            }
 
             try {
                 return new ScramSaslClient(mechanism, cbh);

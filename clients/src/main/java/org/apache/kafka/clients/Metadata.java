@@ -151,8 +151,9 @@ public final class Metadata {
             AuthenticationException exception = authenticationException;
             authenticationException = null;
             return exception;
-        } else
+        } else {
             return null;
+        }
     }
 
     /**
@@ -166,13 +167,16 @@ public final class Metadata {
         long remainingWaitMs = maxWaitMs;
         while (this.version <= lastVersion) {
             AuthenticationException ex = getAndClearAuthenticationException();
-            if (ex != null)
+            if (ex != null) {
                 throw ex;
-            if (remainingWaitMs != 0)
+            }
+            if (remainingWaitMs != 0) {
                 wait(remainingWaitMs);
+            }
             long elapsed = System.currentTimeMillis() - begin;
-            if (elapsed >= maxWaitMs)
+            if (elapsed >= maxWaitMs) {
                 throw new TimeoutException("Failed to update metadata after " + maxWaitMs + " ms.");
+            }
             remainingWaitMs = maxWaitMs - elapsed;
         }
     }
@@ -189,8 +193,9 @@ public final class Metadata {
             requestUpdateForNewTopics();
         }
         this.topics.clear();
-        for (String topic : topics)
+        for (String topic : topics) {
             this.topics.put(topic, TOPIC_EXPIRY_NEEDS_UPDATE);
+        }
     }
 
     /**
@@ -232,17 +237,18 @@ public final class Metadata {
             for (Iterator<Map.Entry<String, Long>> it = topics.entrySet().iterator(); it.hasNext(); ) {
                 Map.Entry<String, Long> entry = it.next();
                 long expireMs = entry.getValue();
-                if (expireMs == TOPIC_EXPIRY_NEEDS_UPDATE)
+                if (expireMs == TOPIC_EXPIRY_NEEDS_UPDATE) {
                     entry.setValue(now + TOPIC_EXPIRY_MS);
-                else if (expireMs <= now) {
+                } else if (expireMs <= now) {
                     it.remove();
                     log.debug("Removing unused topic {} from the metadata list, expiryMs {} now {}", entry.getKey(), expireMs, now);
                 }
             }
         }
 
-        for (Listener listener : listeners)
+        for (Listener listener : listeners) {
             listener.onMetadataUpdate(newCluster, unavailableTopics);
+        }
 
         String previousClusterId = cluster.clusterResource().clusterId();
 
@@ -258,8 +264,9 @@ public final class Metadata {
         // The bootstrap cluster is guaranteed not to have any useful information
         if (!newCluster.isBootstrapConfigured()) {
             String newClusterId = newCluster.clusterResource().clusterId();
-            if (newClusterId == null ? previousClusterId != null : !newClusterId.equals(previousClusterId))
+            if (newClusterId == null ? previousClusterId != null : !newClusterId.equals(previousClusterId)) {
                 log.info("Cluster ID: {}", newClusterId);
+            }
             clusterResourceListeners.onUpdate(newCluster.clusterResource());
         }
 
@@ -274,8 +281,9 @@ public final class Metadata {
     public synchronized void failedUpdate(long now, AuthenticationException authenticationException) {
         this.lastRefreshMs = now;
         this.authenticationException = authenticationException;
-        if (authenticationException != null)
+        if (authenticationException != null) {
             this.notifyAll();
+        }
     }
 
     /**

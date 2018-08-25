@@ -85,10 +85,11 @@ public class MetadataRequest extends AbstractRequest {
         } else {
             topics = null;
         }
-        if (struct.hasField(ALLOW_AUTO_TOPIC_CREATION_KEY_NAME))
+        if (struct.hasField(ALLOW_AUTO_TOPIC_CREATION_KEY_NAME)) {
             allowAutoTopicCreation = struct.getBoolean(ALLOW_AUTO_TOPIC_CREATION_KEY_NAME);
-        else
+        } else {
             allowAutoTopicCreation = true;
+        }
     }
 
     public static Schema[] schemaVersions() {
@@ -107,8 +108,9 @@ public class MetadataRequest extends AbstractRequest {
         List<MetadataResponse.PartitionMetadata> partitions = Collections.emptyList();
 
         if (topics != null) {
-            for (String topic : topics)
+            for (String topic : topics) {
                 topicMetadatas.add(new MetadataResponse.TopicMetadata(error, topic, false, partitions));
+            }
         }
 
         short versionId = version();
@@ -142,12 +144,14 @@ public class MetadataRequest extends AbstractRequest {
     @Override
     protected Struct toStruct() {
         Struct struct = new Struct(ApiKeys.METADATA.requestSchema(version()));
-        if (topics == null)
+        if (topics == null) {
             struct.set(TOPICS_KEY_NAME, null);
-        else
+        } else {
             struct.set(TOPICS_KEY_NAME, topics.toArray());
-        if (struct.hasField(ALLOW_AUTO_TOPIC_CREATION_KEY_NAME))
+        }
+        if (struct.hasField(ALLOW_AUTO_TOPIC_CREATION_KEY_NAME)) {
             struct.set(ALLOW_AUTO_TOPIC_CREATION_KEY_NAME, allowAutoTopicCreation);
+        }
         return struct;
     }
 
@@ -180,11 +184,13 @@ public class MetadataRequest extends AbstractRequest {
 
         @Override
         public MetadataRequest build(short version) {
-            if (version < 1)
+            if (version < 1) {
                 throw new UnsupportedVersionException("MetadataRequest versions older than 1 are not supported.");
-            if (!allowAutoTopicCreation && version < 4)
+            }
+            if (!allowAutoTopicCreation && version < 4) {
                 throw new UnsupportedVersionException("MetadataRequest versions older than 4 don't support the " +
                         "allowAutoTopicCreation field");
+            }
             return new MetadataRequest(this.topics, allowAutoTopicCreation, version);
         }
 

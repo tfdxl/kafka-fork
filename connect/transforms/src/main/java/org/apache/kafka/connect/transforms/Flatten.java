@@ -208,10 +208,12 @@ public abstract class Flatten<R extends ConnectRecord<R>> implements Transformat
         // only care about caching top-level schema translations.
 
         final SchemaBuilder builder = SchemaUtil.copySchemaBasics(orig);
-        if (optional)
+        if (optional) {
             builder.optional();
-        if (defaultFromParent != null)
+        }
+        if (defaultFromParent != null) {
             builder.defaultValue(defaultFromParent);
+        }
         return builder.build();
     }
 

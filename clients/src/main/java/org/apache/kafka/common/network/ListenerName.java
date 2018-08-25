@@ -51,8 +51,9 @@ public final class ListenerName {
 
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof ListenerName))
+        if (!(o instanceof ListenerName)) {
             return false;
+        }
         ListenerName that = (ListenerName) o;
         return value.equals(that.value);
     }

@@ -62,6 +62,7 @@ class CachingSessionStore<K, AGG> extends WrappedStateStore.AbstractStateStore i
         this.cacheFunction = new SegmentedCacheFunction(keySchema, segmentInterval);
     }
 
+    @Override
     public void init(final ProcessorContext context, final StateStore root) {
         topic = ProcessorStateManager.storeChangelogTopic(context.applicationId(), root.name());
         bytesStore.init(context, root);
@@ -91,6 +92,7 @@ class CachingSessionStore<K, AGG> extends WrappedStateStore.AbstractStateStore i
         });
     }
 
+    @Override
     public KeyValueIterator<Windowed<Bytes>, byte[]> findSessions(final Bytes key,
                                                                   final long earliestSessionEndTime,
                                                                   final long latestSessionStartTime) {
@@ -189,17 +191,20 @@ class CachingSessionStore<K, AGG> extends WrappedStateStore.AbstractStateStore i
         }
     }
 
+    @Override
     public void flush() {
         cache.flush(cacheName);
         bytesStore.flush();
     }
 
+    @Override
     public void close() {
         flush();
         cache.close(cacheName);
         bytesStore.close();
     }
 
+    @Override
     public void setFlushListener(final CacheFlushListener<Windowed<K>, AGG> flushListener,
                                  final boolean sendOldValues) {
         this.flushListener = flushListener;

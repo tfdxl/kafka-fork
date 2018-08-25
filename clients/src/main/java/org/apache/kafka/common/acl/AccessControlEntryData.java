@@ -57,18 +57,24 @@ class AccessControlEntryData {
      * no such field.
      */
     public String findIndefiniteField() {
-        if (principal() == null)
+        if (principal() == null) {
             return "Principal is NULL";
-        if (host() == null)
+        }
+        if (host() == null) {
             return "Host is NULL";
-        if (operation() == AclOperation.ANY)
+        }
+        if (operation() == AclOperation.ANY) {
             return "Operation is ANY";
-        if (operation() == AclOperation.UNKNOWN)
+        }
+        if (operation() == AclOperation.UNKNOWN) {
             return "Operation is UNKNOWN";
-        if (permissionType() == AclPermissionType.ANY)
+        }
+        if (permissionType() == AclPermissionType.ANY) {
             return "Permission type is ANY";
-        if (permissionType() == AclPermissionType.UNKNOWN)
+        }
+        if (permissionType() == AclPermissionType.UNKNOWN) {
             return "Permission type is UNKNOWN";
+        }
         return null;
     }
 
@@ -89,8 +95,9 @@ class AccessControlEntryData {
 
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof AccessControlEntryData))
+        if (!(o instanceof AccessControlEntryData)) {
             return false;
+        }
         AccessControlEntryData other = (AccessControlEntryData) o;
         return Objects.equals(principal, other.principal) &&
                 Objects.equals(host, other.host) &&

@@ -109,6 +109,7 @@ class CachingKeyValueStore<K, V> extends WrappedStateStore.AbstractStateStore im
         }
     }
 
+    @Override
     public void setFlushListener(final CacheFlushListener<K, V> flushListener,
                                  final boolean sendOldValues) {
 

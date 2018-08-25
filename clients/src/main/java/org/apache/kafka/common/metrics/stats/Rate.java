@@ -88,8 +88,9 @@ public class Rate implements MeasurableStat {
         int minFullWindows = config.samples() - 1;
 
         // If the available windows are less than the minimum required, add the difference to the totalElapsedTime
-        if (numFullWindows < minFullWindows)
+        if (numFullWindows < minFullWindows) {
             totalElapsedTimeMs += (minFullWindows - numFullWindows) * config.timeWindowMs();
+        }
 
         return totalElapsedTimeMs;
     }
@@ -129,8 +130,9 @@ public class Rate implements MeasurableStat {
         @Override
         public double combine(List<Sample> samples, MetricConfig config, long now) {
             double total = 0.0;
-            for (Sample sample : samples)
+            for (Sample sample : samples) {
                 total += sample.value;
+            }
             return total;
         }
 

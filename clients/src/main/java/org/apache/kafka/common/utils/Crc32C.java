@@ -37,10 +37,11 @@ public final class Crc32C {
     private static final ChecksumFactory CHECKSUM_FACTORY;
 
     static {
-        if (Java.IS_JAVA9_COMPATIBLE)
+        if (Java.IS_JAVA9_COMPATIBLE) {
             CHECKSUM_FACTORY = new Java9ChecksumFactory();
-        else
+        } else {
             CHECKSUM_FACTORY = new PureJavaChecksumFactory();
+        }
     }
 
     private Crc32C() {

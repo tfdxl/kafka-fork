@@ -90,8 +90,9 @@ public class NodeApiVersions {
      */
     public short latestUsableVersion(ApiKeys apiKey, short oldestAllowedVersion, short latestAllowedVersion) {
         ApiVersion usableVersion = supportedVersions.get(apiKey);
-        if (usableVersion == null)
+        if (usableVersion == null) {
             throw new UnsupportedVersionException("The broker does not support " + apiKey);
+        }
         return latestUsableVersion(apiKey, usableVersion, oldestAllowedVersion, latestAllowedVersion);
     }
 
@@ -99,10 +100,11 @@ public class NodeApiVersions {
                                       short minAllowedVersion, short maxAllowedVersion) {
         short minVersion = (short) Math.max(minAllowedVersion, supportedVersions.minVersion);
         short maxVersion = (short) Math.min(maxAllowedVersion, supportedVersions.maxVersion);
-        if (minVersion > maxVersion)
+        if (minVersion > maxVersion) {
             throw new UnsupportedVersionException("The broker does not support " + apiKey +
                     " with version in range [" + minAllowedVersion + "," + maxAllowedVersion + "]. The supported" +
                     " range is [" + supportedVersions.minVersion + "," + supportedVersions.maxVersion + "].");
+        }
         return maxVersion;
     }
 
@@ -126,10 +128,12 @@ public class NodeApiVersions {
         // a TreeMap before printing it out to ensure that we always print in
         // ascending order.
         TreeMap<Short, String> apiKeysText = new TreeMap<>();
-        for (ApiVersion supportedVersion : this.supportedVersions.values())
+        for (ApiVersion supportedVersion : this.supportedVersions.values()) {
             apiKeysText.put(supportedVersion.apiKey, apiVersionToText(supportedVersion));
-        for (ApiVersion apiVersion : unknownApis)
+        }
+        for (ApiVersion apiVersion : unknownApis) {
             apiKeysText.put(apiVersion.apiKey, apiVersionToText(apiVersion));
+        }
 
         // Also handle the case where some apiKey types are not specified at all in the given ApiVersions,
         // which may happen when the remote is too old.
@@ -144,11 +148,13 @@ public class NodeApiVersions {
         String separator = lineBreaks ? ",\n\t" : ", ";
         StringBuilder bld = new StringBuilder();
         bld.append("(");
-        if (lineBreaks)
+        if (lineBreaks) {
             bld.append("\n\t");
+        }
         bld.append(Utils.join(apiKeysText.values(), separator));
-        if (lineBreaks)
+        if (lineBreaks) {
             bld.append("\n");
+        }
         bld.append(")");
         return bld.toString();
     }

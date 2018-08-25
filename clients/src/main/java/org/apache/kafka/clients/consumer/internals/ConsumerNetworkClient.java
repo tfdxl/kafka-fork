@@ -202,8 +202,9 @@ public class ConsumerNetworkClient implements Closeable {
      * @throws InterruptException if the calling thread is interrupted
      */
     public void poll(RequestFuture<?> future) {
-        while (!future.isDone())
+        while (!future.isDone()) {
             poll(Long.MAX_VALUE, time.milliseconds(), future);
+        }
     }
 
     /**
@@ -279,8 +280,9 @@ public class ConsumerNetworkClient implements Closeable {
 
                 //如果没有还米有响应的请求，那么就不用阻塞比retry backoff更长的时间
                 // if there are no requests in flight, do not block longer than the retry backoff
-                if (client.inFlightRequestCount() == 0)
+                if (client.inFlightRequestCount() == 0) {
                     timeout = Math.min(timeout, retryBackoffMs);
+                }
                 client.poll(Math.min(maxPollTimeoutMs, timeout), now);
                 //重置当前时间
                 now = time.milliseconds();
@@ -375,8 +377,9 @@ public class ConsumerNetworkClient implements Closeable {
      * @return A boolean indicating whether there is pending request
      */
     public boolean hasPendingRequests(Node node) {
-        if (unsent.hasRequests(node))
+        if (unsent.hasRequests(node)) {
             return true;
+        }
         lock.lock();
         try {
             return client.hasInFlightRequests(node.idString());
@@ -476,13 +479,15 @@ public class ConsumerNetworkClient implements Closeable {
                     AuthenticationException authenticationException = client.authenticationException(node);
 
                     //认证异常，构造一个认证异常的结果
-                    if (authenticationException != null)
+                    if (authenticationException != null) {
                         handler.onFailure(authenticationException);
-                    else
+                    } else
                         //没有认证异常的，那么直接完成这次请求
+                    {
                         handler.onComplete(new ClientResponse(request.makeHeader(request.requestBuilder().latestAllowedVersion()),
                                 request.callback(), request.destination(), request.createdTimeMs(), now, true,
                                 null, null));
+                    }
                 }
             }
         }
@@ -736,8 +741,9 @@ public class ConsumerNetworkClient implements Closeable {
                     if (request.createdTimeMs() < now - unsentExpiryMs) {
                         expiredRequests.add(request);
                         requestIterator.remove();
-                    } else
+                    } else {
                         break;
+                    }
                 }
             }
             return expiredRequests;

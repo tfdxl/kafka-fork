@@ -119,10 +119,11 @@ public class ConnectProtocol {
             String connector = assignment.getString(CONNECTOR_KEY_NAME);
             for (Object taskIdObj : assignment.getArray(TASKS_KEY_NAME)) {
                 Integer taskId = (Integer) taskIdObj;
-                if (taskId == CONNECTOR_TASK)
+                if (taskId == CONNECTOR_TASK) {
                     connectorIds.add(connector);
-                else
+                } else {
                     taskIds.add(new ConnectorTaskId(connector, taskId));
+                }
             }
         }
         return new Assignment(error, leader, leaderUrl, offset, connectorIds, taskIds);
@@ -130,8 +131,9 @@ public class ConnectProtocol {
 
     private static void checkVersionCompatibility(short version) {
         // check for invalid versions
-        if (version < CONNECT_PROTOCOL_V0)
+        if (version < CONNECT_PROTOCOL_V0) {
             throw new SchemaException("Unsupported subscription version: " + version);
+        }
 
         // otherwise, assume versions can be parsed as V0
     }

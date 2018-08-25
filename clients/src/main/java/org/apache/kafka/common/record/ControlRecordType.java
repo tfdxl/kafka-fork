@@ -60,18 +60,21 @@ public enum ControlRecordType {
     }
 
     public static short parseTypeId(ByteBuffer key) {
-        if (key.remaining() < CURRENT_CONTROL_RECORD_KEY_SIZE)
+        if (key.remaining() < CURRENT_CONTROL_RECORD_KEY_SIZE) {
             throw new InvalidRecordException("Invalid value size found for end control record key. Must have " +
                     "at least " + CURRENT_CONTROL_RECORD_KEY_SIZE + " bytes, but found only " + key.remaining());
+        }
 
         short version = key.getShort(0);
-        if (version < 0)
+        if (version < 0) {
             throw new InvalidRecordException("Invalid version found for control record: " + version +
                     ". May indicate data corruption");
+        }
 
-        if (version != CURRENT_CONTROL_RECORD_KEY_VERSION)
+        if (version != CURRENT_CONTROL_RECORD_KEY_VERSION) {
             log.debug("Received unknown control record key version {}. Parsing as version {}", version,
                     CURRENT_CONTROL_RECORD_KEY_VERSION);
+        }
         return key.getShort(2);
     }
 
@@ -91,8 +94,9 @@ public enum ControlRecordType {
     }
 
     public Struct recordKey() {
-        if (this == UNKNOWN)
+        if (this == UNKNOWN) {
             throw new IllegalArgumentException("Cannot serialize UNKNOWN control record type");
+        }
 
         Struct struct = new Struct(CONTROL_RECORD_KEY_SCHEMA_VERSION_V0);
         struct.set("version", CURRENT_CONTROL_RECORD_KEY_VERSION);

@@ -118,8 +118,9 @@ public class OffsetFetchResponse extends AbstractResponse {
                 long offset = partitionResponse.getLong(COMMIT_OFFSET_KEY_NAME);
                 String metadata = partitionResponse.getString(METADATA_KEY_NAME);
                 Errors error = Errors.forCode(partitionResponse.get(ERROR_CODE));
-                if (error != Errors.NONE && !PARTITION_ERRORS.contains(error))
+                if (error != Errors.NONE && !PARTITION_ERRORS.contains(error)) {
                     topLevelError = error;
+                }
                 PartitionData partitionData = new PartitionData(offset, metadata, error);
                 this.responseData.put(new TopicPartition(topic, partition), partitionData);
             }
@@ -144,8 +145,9 @@ public class OffsetFetchResponse extends AbstractResponse {
     public void maybeThrowFirstPartitionError() {
         Collection<PartitionData> partitionsData = this.responseData.values();
         for (PartitionData data : partitionsData) {
-            if (data.hasError())
+            if (data.hasError()) {
                 throw data.error.exception();
+            }
         }
     }
 
@@ -195,8 +197,9 @@ public class OffsetFetchResponse extends AbstractResponse {
         }
         struct.set(RESPONSES_KEY_NAME, topicArray.toArray());
 
-        if (version > 1)
+        if (version > 1) {
             struct.set(ERROR_CODE, this.error.code());
+        }
 
         return struct;
     }

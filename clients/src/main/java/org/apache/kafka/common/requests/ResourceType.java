@@ -29,10 +29,12 @@ public enum ResourceType {
     }
 
     public static ResourceType forId(byte id) {
-        if (id < 0)
+        if (id < 0) {
             throw new IllegalArgumentException("id should be positive, id: " + id);
-        if (id >= VALUES.length)
+        }
+        if (id >= VALUES.length) {
             return UNKNOWN;
+        }
         return VALUES[id];
     }
 

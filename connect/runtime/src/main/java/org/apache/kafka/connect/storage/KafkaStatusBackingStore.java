@@ -106,8 +106,9 @@ public class KafkaStatusBackingStore implements StatusBackingStore {
     @Override
     public void configure(final WorkerConfig config) {
         this.topic = config.getString(DistributedConfig.STATUS_STORAGE_TOPIC_CONFIG);
-        if (topic.equals(""))
+        if (topic.equals("")) {
             throw new ConfigException("Must specify topic for connector status.");
+        }
 
         Map<String, Object> producerProps = new HashMap<>();
         producerProps.putAll(config.originals());
@@ -211,8 +212,9 @@ public class KafkaStatusBackingStore implements StatusBackingStore {
         final int sequence;
         synchronized (this) {
             this.generation = status.generation();
-            if (safeWrite && !entry.canWriteSafely(status))
+            if (safeWrite && !entry.canWriteSafely(status)) {
                 return;
+            }
             sequence = entry.increment();
         }
 
@@ -226,8 +228,9 @@ public class KafkaStatusBackingStore implements StatusBackingStore {
                         synchronized (KafkaStatusBackingStore.this) {
                             if (entry.isDeleted()
                                     || status.generation() != generation
-                                    || (safeWrite && !entry.canWriteSafely(status, sequence)))
+                                    || (safeWrite && !entry.canWriteSafely(status, sequence))) {
                                 return;
+                            }
                         }
                         kafkaLog.send(key, value, this);
                     } else {
@@ -249,13 +252,15 @@ public class KafkaStatusBackingStore implements StatusBackingStore {
 
     private synchronized void remove(String connector) {
         CacheEntry<ConnectorStatus> removed = connectors.remove(connector);
-        if (removed != null)
+        if (removed != null) {
             removed.delete();
+        }
 
         Map<Integer, CacheEntry<TaskStatus>> tasks = this.tasks.remove(connector);
         if (tasks != null) {
-            for (CacheEntry<TaskStatus> taskEntry : tasks.values())
+            for (CacheEntry<TaskStatus> taskEntry : tasks.values()) {
                 taskEntry.delete();
+            }
         }
     }
 
@@ -270,8 +275,9 @@ public class KafkaStatusBackingStore implements StatusBackingStore {
 
     private synchronized void remove(ConnectorTaskId id) {
         CacheEntry<TaskStatus> removed = tasks.remove(id.connector(), id.task());
-        if (removed != null)
+        if (removed != null) {
             removed.delete();
+        }
     }
 
     @Override
@@ -291,8 +297,9 @@ public class KafkaStatusBackingStore implements StatusBackingStore {
         List<TaskStatus> res = new ArrayList<>();
         for (CacheEntry<TaskStatus> statusEntry : tasks.row(connector).values()) {
             TaskStatus status = statusEntry.get();
-            if (status != null)
+            if (status != null) {
                 res.add(status);
+            }
         }
         return res;
     }
@@ -346,8 +353,9 @@ public class KafkaStatusBackingStore implements StatusBackingStore {
     private byte[] serialize(AbstractStatus status) {
         Struct struct = new Struct(STATUS_SCHEMA_V0);
         struct.put(STATE_KEY_NAME, status.state().name());
-        if (status.trace() != null)
+        if (status.trace() != null) {
             struct.put(TRACE_KEY_NAME, status.trace());
+        }
         struct.put(WORKER_ID_KEY_NAME, status.workerId());
         struct.put(GENERATION_KEY_NAME, status.generation());
         return converter.fromConnectData(topic, STATUS_SCHEMA_V0, struct);
@@ -359,7 +367,9 @@ public class KafkaStatusBackingStore implements StatusBackingStore {
 
     private ConnectorTaskId parseConnectorTaskId(String key) {
         String[] parts = key.split("-");
-        if (parts.length < 4) return null;
+        if (parts.length < 4) {
+            return null;
+        }
 
         try {
             int taskNum = Integer.parseInt(parts[parts.length - 1]);
@@ -385,8 +395,9 @@ public class KafkaStatusBackingStore implements StatusBackingStore {
         }
 
         ConnectorStatus status = parseConnectorStatus(connector, value);
-        if (status == null)
+        if (status == null) {
             return;
+        }
 
         synchronized (this) {
             log.trace("Received connector {} status update {}", connector, status);

@@ -55,8 +55,9 @@ public class DescribeDelegationTokenRequest extends AbstractRequest {
                 String principalName = ownerObjStruct.get(PRINCIPAL_NAME);
                 owners.add(new KafkaPrincipal(principalType, principalName));
             }
-        } else
+        } else {
             owners = null;
+        }
     }
 
     public static Schema[] schemaVersions() {

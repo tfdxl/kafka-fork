@@ -75,8 +75,9 @@ public class ResourceFilter {
 
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof ResourceFilter))
+        if (!(o instanceof ResourceFilter)) {
             return false;
+        }
         ResourceFilter other = (ResourceFilter) o;
         return resourceType.equals(other.resourceType) && Objects.equals(name, other.name);
     }
@@ -90,10 +91,12 @@ public class ResourceFilter {
      * Return true if this filter matches the given Resource.
      */
     public boolean matches(Resource other) {
-        if ((name != null) && (!name.equals(other.name())))
+        if ((name != null) && (!name.equals(other.name()))) {
             return false;
-        if ((resourceType != ResourceType.ANY) && (!resourceType.equals(other.resourceType())))
+        }
+        if ((resourceType != ResourceType.ANY) && (!resourceType.equals(other.resourceType()))) {
             return false;
+        }
         return true;
     }
 
@@ -108,12 +111,15 @@ public class ResourceFilter {
      * Return a string describing an ANY or UNKNOWN field, or null if there is no such field.
      */
     public String findIndefiniteField() {
-        if (resourceType == ResourceType.ANY)
+        if (resourceType == ResourceType.ANY) {
             return "Resource type is ANY.";
-        if (resourceType == ResourceType.UNKNOWN)
+        }
+        if (resourceType == ResourceType.UNKNOWN) {
             return "Resource type is UNKNOWN.";
-        if (name == null)
+        }
+        if (name == null) {
             return "Resource name is NULL.";
+        }
         return null;
     }
 }

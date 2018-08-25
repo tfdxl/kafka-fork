@@ -76,6 +76,7 @@ public class SchemaSourceTask extends SourceTask {
     private boolean multipleSchema;
     private int partitionCount;
 
+    @Override
     public String version() {
         return new SchemaSourceConnector().version();
     }

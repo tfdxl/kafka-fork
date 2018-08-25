@@ -47,8 +47,9 @@ public class Bytes implements Comparable<Bytes> {
     }
 
     public static Bytes wrap(byte[] bytes) {
-        if (bytes == null)
+        if (bytes == null) {
             return null;
+        }
         return new Bytes(bytes);
     }
 
@@ -67,15 +68,18 @@ public class Bytes implements Comparable<Bytes> {
     private static String toString(final byte[] b, int off, int len) {
         StringBuilder result = new StringBuilder();
 
-        if (b == null)
+        if (b == null) {
             return result.toString();
+        }
 
         // just in case we are passed a 'len' that is > buffer length...
-        if (off >= b.length)
+        if (off >= b.length) {
             return result.toString();
+        }
 
-        if (off + len > b.length)
+        if (off + len > b.length) {
             len = b.length - off;
+        }
 
         for (int i = off; i < off + len; ++i) {
             int ch = b[i] & 0xFF;
@@ -116,17 +120,21 @@ public class Bytes implements Comparable<Bytes> {
 
     @Override
     public boolean equals(Object other) {
-        if (this == other)
+        if (this == other) {
             return true;
-        if (other == null)
+        }
+        if (other == null) {
             return false;
+        }
 
         // we intentionally use the function to compute hashcode here
-        if (this.hashCode() != other.hashCode())
+        if (this.hashCode() != other.hashCode()) {
             return false;
+        }
 
-        if (other instanceof Bytes)
+        if (other instanceof Bytes) {
             return Arrays.equals(this.bytes, ((Bytes) other).get());
+        }
 
         return false;
     }
@@ -154,6 +162,7 @@ public class Bytes implements Comparable<Bytes> {
             return compare(buffer1, 0, buffer1.length, buffer2, 0, buffer2.length);
         }
 
+        @Override
         public int compare(final byte[] buffer1, int offset1, int length1,
                            final byte[] buffer2, int offset2, int length2) {
 

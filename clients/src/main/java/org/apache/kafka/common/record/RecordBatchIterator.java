@@ -33,8 +33,9 @@ class RecordBatchIterator<T extends RecordBatch> extends AbstractIterator<T> {
     protected T makeNext() {
         try {
             T batch = logInputStream.nextBatch();
-            if (batch == null)
+            if (batch == null) {
                 return allDone();
+            }
             return batch;
         } catch (IOException e) {
             throw new KafkaException(e);

@@ -64,10 +64,11 @@ public class ProducerInterceptors<K, V> implements Closeable {
             } catch (Exception e) {
                 // do not propagate interceptor exception, log and continue calling other interceptors
                 // be careful not to throw exception from here
-                if (record != null)
+                if (record != null) {
                     log.warn("Error executing interceptor onSend callback for topic: {}, partition: {}", record.topic(), record.partition(), e);
-                else
+                } else {
                     log.warn("Error executing interceptor onSend callback", e);
+                }
             }
         }
         return interceptRecord;

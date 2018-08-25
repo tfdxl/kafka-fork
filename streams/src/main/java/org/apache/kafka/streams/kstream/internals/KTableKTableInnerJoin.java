@@ -51,6 +51,7 @@ class KTableKTableInnerJoin<K, R, V1, V2> extends KTableKTableAbstractJoin<K, R,
             super(valueGetterSupplier1, valueGetterSupplier2);
         }
 
+        @Override
         public KTableValueGetter<K, R> get() {
             return new KTableKTableInnerJoinValueGetter(valueGetterSupplier1.get(), valueGetterSupplier2.get());
         }

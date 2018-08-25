@@ -91,8 +91,9 @@ public class CreateAclsRequest extends AbstractRequest {
         switch (versionId) {
             case 0:
                 List<CreateAclsResponse.AclCreationResponse> responses = new ArrayList<>();
-                for (int i = 0; i < aclCreations.size(); i++)
+                for (int i = 0; i < aclCreations.size(); i++) {
                     responses.add(new CreateAclsResponse.AclCreationResponse(ApiError.fromThrowable(throwable)));
+                }
                 return new CreateAclsResponse(throttleTimeMs, responses);
             default:
                 throw new IllegalArgumentException(String.format("Version %d is not valid. Valid versions for %s are 0 to %d",

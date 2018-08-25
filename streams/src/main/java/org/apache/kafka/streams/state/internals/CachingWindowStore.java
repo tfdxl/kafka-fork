@@ -119,6 +119,7 @@ class CachingWindowStore<K, V> extends WrappedStateStore.AbstractStateStore impl
         }
     }
 
+    @Override
     public void setFlushListener(final CacheFlushListener<Windowed<K>, V> flushListener,
                                  final boolean sendOldValues) {
 

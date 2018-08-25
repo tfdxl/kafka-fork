@@ -76,10 +76,11 @@ public class RestServer {
     }
 
     public static String urlJoin(String base, String path) {
-        if (base.endsWith("/") && path.startsWith("/"))
+        if (base.endsWith("/") && path.startsWith("/")) {
             return base + path.substring(1);
-        else
+        } else {
             return base + path;
+        }
     }
 
     List<String> parseListeners() {
@@ -87,8 +88,9 @@ public class RestServer {
         if (listeners == null || listeners.size() == 0) {
             String hostname = config.getString(WorkerConfig.REST_HOST_NAME_CONFIG);
 
-            if (hostname == null)
+            if (hostname == null) {
                 hostname = "";
+            }
 
             listeners = Collections.singletonList(String.format("%s://%s:%d", PROTOCOL_HTTP, hostname, config.getInt(WorkerConfig.REST_PORT_CONFIG)));
         }
@@ -120,13 +122,15 @@ public class RestServer {
         Pattern listenerPattern = Pattern.compile("^(.*)://\\[?([0-9a-zA-Z\\-%._:]*)\\]?:(-?[0-9]+)");
         Matcher listenerMatcher = listenerPattern.matcher(listener);
 
-        if (!listenerMatcher.matches())
+        if (!listenerMatcher.matches()) {
             throw new ConfigException("Listener doesn't have the right format (protocol://hostname:port).");
+        }
 
         String protocol = listenerMatcher.group(1).toLowerCase(Locale.ENGLISH);
 
-        if (!PROTOCOL_HTTP.equals(protocol) && !PROTOCOL_HTTPS.equals(protocol))
+        if (!PROTOCOL_HTTP.equals(protocol) && !PROTOCOL_HTTPS.equals(protocol)) {
             throw new ConfigException(String.format("Listener protocol must be either \"%s\" or \"%s\".", PROTOCOL_HTTP, PROTOCOL_HTTPS));
+        }
 
         String hostname = listenerMatcher.group(2);
         int port = Integer.parseInt(listenerMatcher.group(3));
@@ -142,8 +146,9 @@ public class RestServer {
             connector.setName(String.format("%s_%s%d", PROTOCOL_HTTP, hostname, port));
         }
 
-        if (!hostname.isEmpty())
+        if (!hostname.isEmpty()) {
             connector.setHost(hostname);
+        }
 
         connector.setPort(port);
 
@@ -233,16 +238,18 @@ public class RestServer {
         builder.scheme(advertisedSecurityProtocol);
 
         String advertisedHostname = config.getString(WorkerConfig.REST_ADVERTISED_HOST_NAME_CONFIG);
-        if (advertisedHostname != null && !advertisedHostname.isEmpty())
+        if (advertisedHostname != null && !advertisedHostname.isEmpty()) {
             builder.host(advertisedHostname);
-        else if (serverConnector != null && serverConnector.getHost() != null && serverConnector.getHost().length() > 0)
+        } else if (serverConnector != null && serverConnector.getHost() != null && serverConnector.getHost().length() > 0) {
             builder.host(serverConnector.getHost());
+        }
 
         Integer advertisedPort = config.getInt(WorkerConfig.REST_ADVERTISED_PORT_CONFIG);
-        if (advertisedPort != null)
+        if (advertisedPort != null) {
             builder.port(advertisedPort);
-        else if (serverConnector != null)
+        } else if (serverConnector != null) {
             builder.port(serverConnector.getPort());
+        }
 
         log.info("Advertised URI: {}", builder.build());
 
@@ -254,17 +261,19 @@ public class RestServer {
         if (advertisedSecurityProtocol == null) {
             String listeners = (String) config.originals().get(WorkerConfig.LISTENERS_CONFIG);
 
-            if (listeners == null)
+            if (listeners == null) {
                 return PROTOCOL_HTTP;
-            else
+            } else {
                 listeners = listeners.toLowerCase(Locale.ENGLISH);
+            }
 
-            if (listeners.contains(String.format("%s://", PROTOCOL_HTTP)))
+            if (listeners.contains(String.format("%s://", PROTOCOL_HTTP))) {
                 return PROTOCOL_HTTP;
-            else if (listeners.contains(String.format("%s://", PROTOCOL_HTTPS)))
+            } else if (listeners.contains(String.format("%s://", PROTOCOL_HTTPS))) {
                 return PROTOCOL_HTTPS;
-            else
+            } else {
                 return PROTOCOL_HTTP;
+            }
         } else {
             return advertisedSecurityProtocol.toLowerCase(Locale.ENGLISH);
         }
@@ -272,8 +281,9 @@ public class RestServer {
 
     ServerConnector findConnector(String protocol) {
         for (Connector connector : jettyServer.getConnectors()) {
-            if (connector.getName().startsWith(protocol))
+            if (connector.getName().startsWith(protocol)) {
                 return (ServerConnector) connector;
+            }
         }
 
         return null;

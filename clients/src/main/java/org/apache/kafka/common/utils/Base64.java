@@ -30,10 +30,11 @@ public final class Base64 {
     private static final Factory FACTORY;
 
     static {
-        if (Java.IS_JAVA8_COMPATIBLE)
+        if (Java.IS_JAVA8_COMPATIBLE) {
             FACTORY = new Java8Factory();
-        else
+        } else {
             FACTORY = new Java7Factory();
+        }
     }
 
     private Base64() {
@@ -228,8 +229,9 @@ public final class Base64 {
 
             @Override
             public String encodeToString(byte[] bytes) {
-                if (bytes.length == 0)
+                if (bytes.length == 0) {
                     return "";
+                }
                 String base64EncodedUUID = Java7Factory.encodeToString(bytes);
                 // Convert to URL safe variant by replacing + and / with - and _ respectively.
                 String urlSafeBase64EncodedUUID = base64EncodedUUID.replace("+", "-").replace("/", "_");

@@ -49,6 +49,7 @@ public class KTableRepartitionMap<K, V, K1, V1> implements KTableProcessorSuppli
 
         return new KTableValueGetterSupplier<K, KeyValue<K1, V1>>() {
 
+            @Override
             public KTableValueGetter<K, KeyValue<K1, V1>> get() {
                 return new KTableMapValueGetter(parentValueGetterSupplier.get());
             }
@@ -77,8 +78,9 @@ public class KTableRepartitionMap<K, V, K1, V1> implements KTableProcessorSuppli
         @Override
         public void process(K key, Change<V> change) {
             // the original key should never be null
-            if (key == null)
+            if (key == null) {
                 throw new StreamsException("Record key for the grouping KTable should not be null.");
+            }
 
             // if the value is null, we do not need to forward its selected key-value further
             KeyValue<? extends K1, ? extends V1> newPair = change.newValue == null ? null : mapper.apply(key, change.newValue);

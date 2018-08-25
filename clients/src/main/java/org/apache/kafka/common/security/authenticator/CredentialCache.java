@@ -32,11 +32,13 @@ public class CredentialCache {
     public <C> Cache<C> cache(String mechanism, Class<C> credentialClass) {
         Cache<?> cache = cacheMap.get(mechanism);
         if (cache != null) {
-            if (cache.credentialClass() != credentialClass)
+            if (cache.credentialClass() != credentialClass) {
                 throw new IllegalArgumentException("Invalid credential class " + credentialClass + ", expected " + cache.credentialClass());
+            }
             return (Cache<C>) cache;
-        } else
+        } else {
             return null;
+        }
     }
 
     public static class Cache<C> {
