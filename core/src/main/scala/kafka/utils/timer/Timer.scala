@@ -63,6 +63,7 @@ class SystemTimer(executorName: String,
                   startMs: Long = Time.SYSTEM.hiResClockMs) extends Timer {
 
   // timeout timer
+  //单线程的调度器
   private[this] val taskExecutor = Executors.newFixedThreadPool(1, new ThreadFactory() {
     def newThread(runnable: Runnable): Thread =
       KafkaThread.nonDaemon("executor-" + executorName, runnable)
@@ -73,6 +74,8 @@ class SystemTimer(executorName: String,
 
   //task的计数器
   private[this] val taskCounter = new AtomicInteger(0)
+
+  //最底层的时间轮
   private[this] val timingWheel = new TimingWheel(
     tickMs = tickMs,
     wheelSize = wheelSize,
@@ -105,10 +108,11 @@ class SystemTimer(executorName: String,
 
   private[this] val reinsert = (timerTaskEntry: TimerTaskEntry) => addTimerTaskEntry(timerTaskEntry)
 
-  /*
-   * Advances the clock if there is an expired bucket. If there isn't any expired bucket when called,
-   * waits up to timeoutMs before giving up.
-   */
+  /**
+    * 完成时间轮表针的推进，同时对到期的TimerTaskList中的任务进行处理
+    * Advances the clock if there is an expired bucket. If there isn't any expired bucket when called,
+    * waits up to timeoutMs before giving up.
+    */
   def advanceClock(timeoutMs: Long): Boolean = {
     var bucket = delayQueue.poll(timeoutMs, TimeUnit.MILLISECONDS)
     if (bucket != null) {
