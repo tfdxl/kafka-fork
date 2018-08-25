@@ -26,14 +26,24 @@ import java.util.Queue;
 
 /**
  * A set of composite sends, sent one after another
+ *
+ * @author monlie
  */
 public class MultiSend implements Send {
+
     private static final Logger log = LoggerFactory.getLogger(MultiSend.class);
 
     private final String dest;
+
+    /**
+     * 发送的队列
+     */
     private final Queue<Send> sendQueue;
     private final long size;
 
+    /**
+     * 已经写入的
+     */
     private long totalWritten = 0;
     private Send current;
 
@@ -69,7 +79,11 @@ public class MultiSend implements Send {
         return current == null;
     }
 
-    // Visible for testing
+    /**
+     * Visible for testing
+     *
+     * @return
+     */
     int numResidentSends() {
         int count = 0;
         if (current != null) {
@@ -85,6 +99,7 @@ public class MultiSend implements Send {
             throw new KafkaException("This operation cannot be invoked on a complete request.");
         }
 
+        //每一次调用的写入的字节数
         int totalWrittenPerCall = 0;
         boolean sendComplete;
         do {
@@ -92,6 +107,7 @@ public class MultiSend implements Send {
             totalWrittenPerCall += written;
             sendComplete = current.completed();
             if (sendComplete) {
+                //获取下一次的要发送的东西
                 current = sendQueue.poll();
             }
         } while (!completed() && sendComplete);

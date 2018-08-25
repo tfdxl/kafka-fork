@@ -18,6 +18,9 @@ package org.apache.kafka.common.serialization;
 
 import java.util.Map;
 
+/**
+ * @author monlie
+ */
 public class LongSerializer implements Serializer<Long> {
 
     @Override

@@ -147,9 +147,10 @@ private[log] class LogCleanerManager(val logDirs: Seq[File],
     */
   def grabFilthiestCompactedLog(time: Time): Option[LogToClean] = {
     inLock(lock) {
+
       //当前时间
       val now = time.milliseconds
-      //最后一次run的实践
+      //最后一次run的时间
       this.timeOfLastRun = now
       //全部log的cleaner-checkpoint
       val lastClean = allCleanerCheckpoints
@@ -204,7 +205,6 @@ private[log] class LogCleanerManager(val logDirs: Seq[File],
       toClean.foreach { case (tp, _) => inProgress.put(tp, LogCleaningInProgress) }
       toClean
     }
-
   }
 
   /**
@@ -276,6 +276,7 @@ private[log] class LogCleanerManager(val logDirs: Seq[File],
     */
   private def isCleaningInState(topicPartition: TopicPartition, expectedState: LogCleaningState): Boolean = {
     inProgress.get(topicPartition) match {
+      //进行匹配
       case None => false
       case Some(state) =>
         if (state == expectedState)

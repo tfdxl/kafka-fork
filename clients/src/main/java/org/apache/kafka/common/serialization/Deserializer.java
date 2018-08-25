@@ -27,6 +27,7 @@ import java.util.Map;
  * Implement {@link org.apache.kafka.common.ClusterResourceListener} to receive cluster metadata once it's available. Please see the class documentation for ClusterResourceListener for more information.
  *
  * @param <T> Type to be deserialized into.
+ * @author monlie
  */
 public interface Deserializer<T> extends Closeable {
 
@@ -47,6 +48,9 @@ public interface Deserializer<T> extends Closeable {
      */
     T deserialize(String topic, byte[] data);
 
+    /**
+     * 不知道干什么用的
+     */
     @Override
     void close();
 }

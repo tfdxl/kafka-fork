@@ -106,7 +106,7 @@ case class CompletedTxn(producerId: Long, firstOffset: Long, lastOffset: Long, i
 }
 
 /**
-  * 一个只读的log存储消息
+  * 一个只能追加的log存储消息
   * An append-only log for storing messages.
   *
   * The log is a sequence of LogSegments, each with a base offset denoting the first message in the segment.
@@ -153,7 +153,7 @@ class Log(@volatile var dir: File, //Log对应的磁盘目录
   this.logIdent = s"[Log partition=$topicPartition, dir=${dir.getParent}] "
 
   /**
-    * 保护所有的修改的锁头
+    * 保护所有的修改的锁
     */
   /* A lock that guards all modifications to the log */
   private val lock = new Object
@@ -1093,7 +1093,7 @@ class Log(@volatile var dir: File, //Log对应的磁盘目录
             // New log segment has rolled out, we can read up to the file end.
               segment.size
             else
-              //没有产生轮换
+            //没有产生轮换
               exposedPos
           } else {
             segment.size

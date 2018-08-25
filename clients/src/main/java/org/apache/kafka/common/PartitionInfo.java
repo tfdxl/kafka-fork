@@ -18,6 +18,8 @@ package org.apache.kafka.common;
 
 /**
  * This is used to describe per-partition state in the MetadataResponse.
+ *
+ * @author monlie
  */
 public class PartitionInfo {
 
@@ -40,12 +42,26 @@ public class PartitionInfo {
      * 所有的副本
      */
     private final Node[] replicas;
-    //isr
+
+    /**
+     * isr
+     */
     private final Node[] inSyncReplicas;
-    //offline
+
+    /**
+     * offline
+     */
     private final Node[] offlineReplicas;
 
-    // Used only by tests
+    /**
+     * Used only by tests
+     *
+     * @param topic
+     * @param partition
+     * @param leader
+     * @param replicas
+     * @param inSyncReplicas
+     */
     public PartitionInfo(String topic, int partition, Node leader, Node[] replicas, Node[] inSyncReplicas) {
         this(topic, partition, leader, replicas, inSyncReplicas, new Node[0]);
     }

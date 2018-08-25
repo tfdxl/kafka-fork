@@ -262,7 +262,9 @@ class LogManager(logDirs: Seq[File], //日志目录
 
   private def loadLog(logDir: File, recoveryPoints: Map[TopicPartition, Long], logStartOffsets: Map[TopicPartition, Long]): Unit = {
     debug("Loading log '" + logDir.getName + "'")
+    //解析目录为topic and partition
     val topicPartition = Log.parseTopicPartitionName(logDir)
+    //获取配置或者使用默认的配置
     val config = topicConfigs.getOrElse(topicPartition.topic, currentDefaultConfig)
     val logRecoveryPoint = recoveryPoints.getOrElse(topicPartition, 0L)
     val logStartOffset = logStartOffsets.getOrElse(topicPartition, 0L)
@@ -311,6 +313,7 @@ class LogManager(logDirs: Seq[File], //日志目录
     val offlineDirs = mutable.Set.empty[(String, IOException)]
     val jobs = mutable.Map.empty[File, Seq[Future[_]]]
 
+    //遍历每一个log目录
     for (dir <- liveLogDirs) {
       try {
         val pool = Executors.newFixedThreadPool(numRecoveryThreadsPerDataDir)
@@ -343,7 +346,9 @@ class LogManager(logDirs: Seq[File], //日志目录
         }
 
         val jobsForDir = for {
+          //遍历所有的log目录的子文件，并且将文件过滤掉，
           dirContent <- Option(dir.listFiles).toList
+          //只要目录
           logDir <- dirContent if logDir.isDirectory
         } yield {
           CoreUtils.runnable {
@@ -384,6 +389,7 @@ class LogManager(logDirs: Seq[File], //日志目录
         error("There was an error in one of the threads during logs loading: " + e.getCause)
         throw e.getCause
     } finally {
+      //关闭所有创建的线程池
       threadPools.foreach(_.shutdown())
     }
 

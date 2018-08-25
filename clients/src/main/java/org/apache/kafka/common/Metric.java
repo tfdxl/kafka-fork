@@ -18,6 +18,8 @@ package org.apache.kafka.common;
 
 /**
  * A metric tracked for monitoring purposes.
+ *
+ * @author monlie
  */
 public interface Metric {
 

@@ -20,6 +20,8 @@ import java.util.Map;
 
 /**
  * A Mix-in style interface for classes that are instantiated by reflection and need to take configuration parameters
+ *
+ * @author monlie
  */
 public interface Configurable {
 

@@ -23,11 +23,14 @@ import java.util.Map;
 
 /**
  * Factory for creating serializers / deserializers.
+ *
+ * @author monlie
  */
 public class Serdes {
 
     @SuppressWarnings("unchecked")
     static public <T> Serde<T> serdeFrom(Class<T> type) {
+
         if (String.class.isAssignableFrom(type)) {
             return (Serde<T>) String();
         }

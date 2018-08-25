@@ -20,6 +20,8 @@ package org.apache.kafka.common;
 /**
  * 封装了kafka集群的元数据
  * The <code>ClusterResource</code> class encapsulates metadata for a Kafka cluster.
+ *
+ * @author monlie
  */
 public class ClusterResource {
 

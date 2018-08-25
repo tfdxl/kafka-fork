@@ -21,11 +21,16 @@ import java.util.Map;
 
 /**
  * A cache implementing a least recently used policy.
+ *
+ * @author monlie
  */
 public class LRUCache<K, V> implements Cache<K, V> {
+
     private final LinkedHashMap<K, V> cache;
 
     public LRUCache(final int maxSize) {
+
+        //重新实现了底层的队列
         cache = new LinkedHashMap<K, V>(16, .75f, true) {
             @Override
             protected boolean removeEldestEntry(Map.Entry<K, V> eldest) {

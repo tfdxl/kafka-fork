@@ -22,6 +22,8 @@ import java.nio.channels.GatheringByteChannel;
 /**
  * 进行中的发送到指定的目的地
  * This interface models the in-progress sending of data to a specific destination
+ *
+ * @author monlie
  */
 public interface Send {
 
@@ -46,9 +48,11 @@ public interface Send {
      */
     long writeTo(GatheringByteChannel channel) throws IOException;
 
+
     /**
      * Size of the send
+     *
+     * @return
      */
     long size();
-
 }

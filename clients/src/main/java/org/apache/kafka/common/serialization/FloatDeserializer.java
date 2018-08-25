@@ -20,6 +20,9 @@ import org.apache.kafka.common.errors.SerializationException;
 
 import java.util.Map;
 
+/**
+ * @author monlie
+ */
 public class FloatDeserializer implements Deserializer<Float> {
 
     @Override
@@ -29,9 +32,12 @@ public class FloatDeserializer implements Deserializer<Float> {
 
     @Override
     public Float deserialize(final String topic, final byte[] data) {
+
         if (data == null) {
             return null;
         }
+
+        //float的是4个字节的
         if (data.length != 4) {
             throw new SerializationException("Size of data received by Deserializer is not 4");
         }
@@ -41,6 +47,8 @@ public class FloatDeserializer implements Deserializer<Float> {
             value <<= 8;
             value |= b & 0xFF;
         }
+
+        //int转换成为浮点数
         return Float.intBitsToFloat(value);
     }
 
