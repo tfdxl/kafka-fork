@@ -34,6 +34,7 @@ public class DeleteTopicsOptions extends AbstractOptions<DeleteTopicsOptions> {
      * AdminClient should be used.
      */
     // This method is retained to keep binary compatibility with 0.11
+    @Override
     public DeleteTopicsOptions timeoutMs(Integer timeoutMs) {
         this.timeoutMs = timeoutMs;
         return this;

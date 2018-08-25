@@ -23,6 +23,9 @@ import java.io.Serializable;
  */
 public final class TopicPartition implements Serializable {
 
+    /**
+     * partition
+     */
     private final int partition;
     private final String topic;
     private int hash = 0;

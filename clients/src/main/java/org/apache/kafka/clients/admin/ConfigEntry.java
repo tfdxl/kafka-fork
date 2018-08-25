@@ -28,6 +28,7 @@ import java.util.Objects;
  * <p>
  * The API of this class is evolving, see {@link AdminClient} for details.
  */
+@SuppressWarnings("AliDeprecation")
 @InterfaceStability.Evolving
 public class ConfigEntry {
 
@@ -45,6 +46,7 @@ public class ConfigEntry {
      * @param value the config value or null
      */
     public ConfigEntry(String name, String value) {
+        //noinspection AliDeprecation
         this(name, value, false, false, false);
     }
 
@@ -142,10 +144,13 @@ public class ConfigEntry {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o)
+
+        if (this == o) {
             return true;
-        if (o == null || getClass() != o.getClass())
+        }
+        if (o == null || getClass() != o.getClass()) {
             return false;
+        }
 
         ConfigEntry that = (ConfigEntry) o;
 
@@ -240,8 +245,12 @@ public class ConfigEntry {
 
         @Override
         public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
+            if (this == o) {
+                return true;
+            }
+            if (o == null || getClass() != o.getClass()) {
+                return false;
+            }
 
             ConfigSynonym that = (ConfigSynonym) o;
             return Objects.equals(name, that.name) && Objects.equals(value, that.value) && source == that.source;

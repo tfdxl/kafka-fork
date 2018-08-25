@@ -32,6 +32,7 @@ public class DescribeClusterOptions extends AbstractOptions<DescribeClusterOptio
      * AdminClient should be used.
      */
     // This method is retained to keep binary compatibility with 0.11
+    @Override
     public DescribeClusterOptions timeoutMs(Integer timeoutMs) {
         this.timeoutMs = timeoutMs;
         return this;

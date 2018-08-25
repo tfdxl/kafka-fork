@@ -34,6 +34,7 @@ public class ListTopicsOptions extends AbstractOptions<ListTopicsOptions> {
      * AdminClient should be used.
      */
     // This method is retained to keep binary compatibility with 0.11
+    @Override
     public ListTopicsOptions timeoutMs(Integer timeoutMs) {
         this.timeoutMs = timeoutMs;
         return this;

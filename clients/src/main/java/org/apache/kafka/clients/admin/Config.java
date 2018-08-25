@@ -26,6 +26,8 @@ import java.util.Collections;
  * A configuration object containing the configuration entries for a resource.
  * <p>
  * The API of this class is evolving, see {@link AdminClient} for details.
+ *
+ * @author monlie
  */
 @InterfaceStability.Evolving
 public class Config {
@@ -50,18 +52,22 @@ public class Config {
      * Get the configuration entry with the provided name or null if there isn't one.
      */
     public ConfigEntry get(String name) {
-        for (ConfigEntry entry : entries)
-            if (entry.name().equals(name))
+        for (ConfigEntry entry : entries) {
+            if (entry.name().equals(name)) {
                 return entry;
+            }
+        }
         return null;
     }
 
     @Override
     public boolean equals(Object o) {
-        if (this == o)
+        if (this == o) {
             return true;
-        if (o == null || getClass() != o.getClass())
+        }
+        if (o == null || getClass() != o.getClass()) {
             return false;
+        }
 
         Config config = (Config) o;
 
