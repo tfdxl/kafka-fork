@@ -127,6 +127,7 @@ public class ProduceResponse extends AbstractResponse {
     private static final Schema PRODUCE_RESPONSE_V4 = PRODUCE_RESPONSE_V3;
     private final Map<TopicPartition, PartitionResponse> responses;
     private final int throttleTime;
+
     /**
      * Constructor for Version 0
      *
@@ -227,7 +228,7 @@ public class ProduceResponse extends AbstractResponse {
 
     @Override
     public Map<Errors, Integer> errorCounts() {
-        Map<Errors, Integer> errorCounts = new HashMap<>();
+        Map<Errors, Integer> errorCounts = new HashMap<>(responses.size());
         for (PartitionResponse response : responses.values()) {
             updateErrorCounts(errorCounts, response.error);
         }
