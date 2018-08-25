@@ -2018,8 +2018,14 @@ object Log {
     new TopicPartition(topic, partition)
   }
 
+  /**
+    * 判断文件是否是索引文件，索引文件，时间索引文件，事务索引文件
+    *
+    * @param file
+    * @return
+    */
   private def isIndexFile(file: File): Boolean = {
-    val filename = file.getName
+    val filename: String = file.getName
     filename.endsWith(IndexFileSuffix) || filename.endsWith(TimeIndexFileSuffix) || filename.endsWith(TxnIndexFileSuffix)
   }
 
