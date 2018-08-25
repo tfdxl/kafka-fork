@@ -16,13 +16,18 @@
  */
 package kafka.utils.timer
 
+/**
+  * 定时任务，处理方法是run
+  */
 trait TimerTask extends Runnable {
 
-  //延迟操作的延迟时长
+  //延迟操作的延迟时长，超时时间戳
   val delayMs: Long // timestamp in millisecond
 
+  //外层的entry
   private[this] var timerTaskEntry: TimerTaskEntry = null
 
+  //取消任务，就是将任务指向的entry设置为null
   def cancel(): Unit = {
     synchronized {
       if (timerTaskEntry != null) timerTaskEntry.remove()

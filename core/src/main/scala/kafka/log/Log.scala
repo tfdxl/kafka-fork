@@ -137,7 +137,7 @@ case class CompletedTxn(producerId: Long, firstOffset: Long, lastOffset: Long, i
 @threadsafe
 class Log(@volatile var dir: File, //Log对应的磁盘目录
           @volatile var config: LogConfig, //Log的相关配置
-          @volatile var logStartOffset: Long,
+          @volatile var logStartOffset: Long, //开始的offset
           @volatile var recoveryPoint: Long, //指定恢复操作起始的offset
           scheduler: Scheduler,
           brokerTopicStats: BrokerTopicStats,

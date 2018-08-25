@@ -1,29 +1,34 @@
 /**
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+  * Licensed to the Apache Software Foundation (ASF) under one or more
+  * contributor license agreements.  See the NOTICE file distributed with
+  * this work for additional information regarding copyright ownership.
+  * The ASF licenses this file to You under the Apache License, Version 2.0
+  * (the "License"); you may not use this file except in compliance with
+  * the License.  You may obtain a copy of the License at
+  *
+  * http://www.apache.org/licenses/LICENSE-2.0
+  *
+  * Unless required by applicable law or agreed to in writing, software
+  * distributed under the License is distributed on an "AS IS" BASIS,
+  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  * See the License for the specific language governing permissions and
+  * limitations under the License.
+  */
 package kafka.utils.timer
 
-import java.util.concurrent.{Delayed, TimeUnit}
 import java.util.concurrent.atomic.{AtomicInteger, AtomicLong}
+import java.util.concurrent.{Delayed, TimeUnit}
 
 import kafka.utils.threadsafe
 import org.apache.kafka.common.utils.Time
 
 import scala.math._
 
+/**
+  * 其实他妈的就是一个双向的链表
+  *
+  * @param taskCounter
+  */
 @threadsafe
 private[timer] class TimerTaskList(taskCounter: AtomicInteger) extends Delayed {
 
@@ -34,6 +39,7 @@ private[timer] class TimerTaskList(taskCounter: AtomicInteger) extends Delayed {
   root.next = root
   root.prev = root
 
+  //表示整个list的超时时间
   private[this] val expiration = new AtomicLong(-1L)
 
   // Set the bucket's expiration time
@@ -47,8 +53,9 @@ private[timer] class TimerTaskList(taskCounter: AtomicInteger) extends Delayed {
     expiration.get()
   }
 
+  //这里定义了f就是一个函数
   // Apply the supplied function to each of tasks in this list
-  def foreach(f: (TimerTask)=>Unit): Unit = {
+  def foreach(f: (TimerTask) => Unit): Unit = {
     synchronized {
       var entry = root.next
       while (entry ne root) {
@@ -90,7 +97,9 @@ private[timer] class TimerTaskList(taskCounter: AtomicInteger) extends Delayed {
 
   // Remove the specified timer task entry from this list
   def remove(timerTaskEntry: TimerTaskEntry): Unit = {
+    //先获取list的锁
     synchronized {
+      //然后获取entry的锁
       timerTaskEntry.synchronized {
         if (timerTaskEntry.list eq this) {
           timerTaskEntry.next.prev = timerTaskEntry.prev
@@ -105,7 +114,7 @@ private[timer] class TimerTaskList(taskCounter: AtomicInteger) extends Delayed {
   }
 
   // Remove all task entries and apply the supplied function to each of them
-  def flush(f: (TimerTaskEntry)=>Unit): Unit = {
+  def flush(f: (TimerTaskEntry) => Unit): Unit = {
     synchronized {
       var head = root.next
       while (head ne root) {
@@ -125,8 +134,8 @@ private[timer] class TimerTaskList(taskCounter: AtomicInteger) extends Delayed {
 
     val other = d.asInstanceOf[TimerTaskList]
 
-    if(getExpiration < other.getExpiration) -1
-    else if(getExpiration > other.getExpiration) 1
+    if (getExpiration < other.getExpiration) -1
+    else if (getExpiration > other.getExpiration) 1
     else 0
   }
 
@@ -147,7 +156,11 @@ private[timer] class TimerTaskEntry(val timerTask: TimerTask, val expirationMs: 
     timerTask.getTimerTaskEntry != this
   }
 
+  /**
+    * 将自己从链表中删除
+    */
   def remove(): Unit = {
+    //获取当前的额list
     var currentList = list
     // If remove is called when another thread is moving the entry from a task entry list to another,
     // this may fail to remove the entry due to the change of value of list. Thus, we retry until the list becomes null.
