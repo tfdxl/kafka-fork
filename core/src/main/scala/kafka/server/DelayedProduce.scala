@@ -43,7 +43,7 @@ case class ProducePartitionStatus(requiredOffset: Long, responseStatus: Partitio
 case class ProduceMetadata(produceRequiredAcks: Short,
                            produceStatus: Map[TopicPartition, ProducePartitionStatus]) {
 
-  override def toString = "[requiredAcks: %d, partitionStatus: %s]"
+  override def toString: String = "[requiredAcks: %d, partitionStatus: %s]"
     .format(produceRequiredAcks, produceStatus)
 }
 
