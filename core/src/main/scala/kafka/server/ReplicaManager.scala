@@ -798,6 +798,7 @@ class ReplicaManager(val config: KafkaConfig,
   }
 
   /**
+    * 从leader的replica获取消息，等待到足够的数据之后才返回，callback函数超时或者需要的数据达到要求之后就被触发
     * Fetch messages from the leader replica, and wait until enough data can be fetched and return;
     * the callback function will be triggered either when timeout or required fetch info is satisfied
     */
