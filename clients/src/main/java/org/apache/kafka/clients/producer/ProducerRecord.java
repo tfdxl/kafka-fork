@@ -43,6 +43,8 @@ import org.apache.kafka.common.header.internals.RecordHeaders;
  * <p>
  * In either of the cases above, the timestamp that has actually been used will be returned to user in
  * {@link RecordMetadata}
+ *
+ * @author monlie
  */
 public class ProducerRecord<K, V> {
 

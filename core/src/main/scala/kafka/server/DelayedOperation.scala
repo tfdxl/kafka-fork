@@ -174,6 +174,9 @@ final class DelayedOperationPurgatory[T <: DelayedOperation](purgatoryName: Stri
   extends Logging with KafkaMetricsGroup {
 
   /* a list of operation watching keys */
+  /**
+    * key是watchers关注的对象
+    */
   private val watchersForKey = new Pool[Any, Watchers](Some((key: Any) => new Watchers(key)))
 
   private val removeWatchersLock = new ReentrantReadWriteLock()
@@ -352,18 +355,24 @@ final class DelayedOperationPurgatory[T <: DelayedOperation](purgatoryName: Stri
   }
 
   /**
+    * DelayedOperation的集合，用的是链表实现的
     * A linked list of watched delayed operations based on some key
     */
   private class Watchers(val key: Any) {
+
     private[this] val operations = new ConcurrentLinkedQueue[T]()
 
     // count the current number of watched operations. This is O(n), so use isEmpty() if possible
-    def countWatched: Int = operations.size
+    def countWatched: Int = {
+      operations.size
+    }
 
-    def isEmpty: Boolean = operations.isEmpty
+    def isEmpty: Boolean = {
+      operations.isEmpty
+    }
 
     // add the element to watch
-    def watch(t: T) {
+    def watch(t: T): Unit = {
       operations.add(t)
     }
 
@@ -371,10 +380,12 @@ final class DelayedOperationPurgatory[T <: DelayedOperation](purgatoryName: Stri
     def tryCompleteWatched(): Int = {
       var completed = 0
 
+      //获取迭代器
       val iter = operations.iterator()
       while (iter.hasNext) {
         val curr = iter.next()
         if (curr.isCompleted) {
+          //已经完成了那么删除
           // another thread has completed this operation, just remove it
           iter.remove()
         } else if (curr.maybeTryComplete()) {
@@ -383,6 +394,7 @@ final class DelayedOperationPurgatory[T <: DelayedOperation](purgatoryName: Stri
         }
       }
 
+      //将watcher从DelayedOperationPurgator中删除
       if (operations.isEmpty)
         removeKeyIfEmpty(key, this)
 
@@ -401,6 +413,7 @@ final class DelayedOperationPurgatory[T <: DelayedOperation](purgatoryName: Stri
       cancelled.toList
     }
 
+    //清除已经完成的操作
     // traverse the list and purge elements that are already completed by others
     def purgeCompleted(): Int = {
       var purged = 0
@@ -421,6 +434,10 @@ final class DelayedOperationPurgatory[T <: DelayedOperation](purgatoryName: Stri
     }
   }
 
+  /**
+    * 尝试推进时间轮的表计
+    * @param timeoutMs
+    */
   def advanceClock(timeoutMs: Long) {
     timeoutTimer.advanceClock(timeoutMs)
 

@@ -31,6 +31,11 @@ object DelayedOperationKey {
   val globalLabel = "All"
 }
 
+/**
+  * 用于delayed-produce 和 delayed-fetch操作
+  * @param topic
+  * @param partition
+  */
 /* used by delayed-produce and delayed-fetch operations */
 case class TopicPartitionOperationKey(topic: String, partition: Int) extends DelayedOperationKey {
 

@@ -24,15 +24,22 @@ import kafka.common.KafkaException
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 
+//可以迭代的k,v存储
 class Pool[K, V](valueFactory: Option[K => V] = None) extends Iterable[(K, V)] {
 
   //底层使用ConcurrentHashMap保存的
   private val pool: ConcurrentMap[K, V] = new ConcurrentHashMap[K, V]
+
+  //创建时候的锁
   private val createLock = new Object
 
-  def put(k: K, v: V): V = pool.put(k, v)
+  def put(k: K, v: V): V = {
+    return pool.put(k, v)
+  }
 
-  def putIfNotExists(k: K, v: V): V = pool.putIfAbsent(k, v)
+  def putIfNotExists(k: K, v: V): V = {
+    return pool.putIfAbsent(k, v)
+  }
 
   /**
     * Gets the value associated with the given key. If there is no associated
@@ -44,6 +51,7 @@ class Pool[K, V](valueFactory: Option[K => V] = None) extends Iterable[(K, V)] {
     * @return The final value associated with the key.
     */
   def getAndMaybePut(key: K): V = {
+
     if (valueFactory.isEmpty)
       throw new KafkaException("Empty value factory in pool.")
     getAndMaybePut(key, valueFactory.get(key))

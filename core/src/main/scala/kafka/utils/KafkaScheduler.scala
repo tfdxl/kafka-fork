@@ -72,6 +72,7 @@ trait Scheduler {
 class KafkaScheduler(val threads: Int,
                      val threadNamePrefix: String = "kafka-scheduler-",
                      daemon: Boolean = true) extends Scheduler with Logging {
+  //底层还不是依赖jdk的调度器
   private var executor: ScheduledThreadPoolExecutor = null
   private val schedulerThreadId = new AtomicInteger(0)
 
@@ -100,6 +101,7 @@ class KafkaScheduler(val threads: Int,
         cachedExecutor.shutdown()
         this.executor = null
       }
+      //什么鬼子，要等一天
       cachedExecutor.awaitTermination(1, TimeUnit.DAYS)
     }
   }
