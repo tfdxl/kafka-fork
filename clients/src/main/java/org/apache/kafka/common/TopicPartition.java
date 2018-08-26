@@ -20,6 +20,8 @@ import java.io.Serializable;
 
 /**
  * A topic name and partition number
+ *
+ * @author monlie
  */
 public final class TopicPartition implements Serializable {
 
@@ -28,8 +30,14 @@ public final class TopicPartition implements Serializable {
      */
     private final int partition;
 
+    /**
+     * topic
+     */
     private final String topic;
 
+    /**
+     * hash
+     */
     private int hash = 0;
 
     public TopicPartition(String topic, int partition) {
@@ -60,15 +68,19 @@ public final class TopicPartition implements Serializable {
 
     @Override
     public boolean equals(Object obj) {
+
         if (this == obj) {
             return true;
         }
+
         if (obj == null) {
             return false;
         }
+
         if (getClass() != obj.getClass()) {
             return false;
         }
+
         TopicPartition other = (TopicPartition) obj;
         if (partition != other.partition) {
             return false;

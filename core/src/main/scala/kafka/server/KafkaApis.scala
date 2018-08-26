@@ -406,11 +406,15 @@ class KafkaApis(val requestChannel: RequestChannel,
     // the callback for sending a produce response
     def sendResponseCallback(responseStatus: Map[TopicPartition, PartitionResponse]) {
 
+      //生成响应状态集合，其中包括通过授权验证并且处理完成的状态+没有存在的topic的响应
       val mergedResponseStatus = responseStatus ++ unauthorizedTopicResponses ++ nonExistingTopicResponses
       var errorInResponse = false
 
+      //遍历这些状态
+      //类似于for(Entry entry:mergedResponseStatus.entrySet()){}
       mergedResponseStatus.foreach { case (topicPartition, status) =>
         if (status.error != Errors.NONE) {
+          //如果初先错误了记录日志
           errorInResponse = true
           debug("Produce request with correlation id %d from client %s on partition %s failed due to %s".format(
             request.header.correlationId,
@@ -421,6 +425,8 @@ class KafkaApis(val requestChannel: RequestChannel,
       }
 
       def produceResponseCallback(bandwidthThrottleTimeMs: Int) {
+
+        //acks=0表示生产者不需要服务端返回响应
         if (produceRequest.acks == 0) {
           // no operation needed if producer request.required.acks = 0; however, if there is any error in handling
           // the request, since no response is expected by the producer, the server will close socket server so that
@@ -434,11 +440,14 @@ class KafkaApis(val requestChannel: RequestChannel,
                 s"from client id ${request.header.clientId} with ack=0\n" +
                 s"Topic and partition to exceptions: $exceptionsSummary"
             )
+            //出现错误那么关闭连接
             closeConnection(request, new ProduceResponse(mergedResponseStatus.asJava).errorCounts)
           } else {
+            //发送没有内容的响应
             sendNoOpResponseExemptThrottle(request)
           }
         } else {
+          //发送正常的响应内容
           sendResponseMaybeThrottle(request, requestThrottleMs =>
             new ProduceResponse(mergedResponseStatus.asJava, bandwidthThrottleTimeMs + requestThrottleMs))
         }
@@ -456,6 +465,7 @@ class KafkaApis(val requestChannel: RequestChannel,
 
     /**
       * 处理统计值回调
+      *
       * @param processingStats
       */
     def processingStatsCallback(processingStats: Map[TopicPartition, RecordsProcessingStats]): Unit = {
@@ -488,17 +498,25 @@ class KafkaApis(val requestChannel: RequestChannel,
   /**
     * Handle a fetch request
     */
-  def handleFetchRequest(request: RequestChannel.Request) {
+  def handleFetchRequest(request: RequestChannel.Request): Unit = {
+
+    //获取版本
     val versionId = request.header.apiVersion
+
+    //获取客户端id
     val clientId = request.header.clientId
+
+    //获取请求体
     val fetchRequest = request.body[FetchRequest]
-    val fetchContext = fetchManager.newContext(fetchRequest.metadata(),
+    val fetchContext: FetchContext = fetchManager.newContext(fetchRequest.metadata(),
       fetchRequest.fetchData(),
       fetchRequest.toForget(),
       fetchRequest.isFromFollower())
 
     val erroneous = mutable.ArrayBuffer[(TopicPartition, FetchResponse.PartitionData)]()
     val interesting = mutable.ArrayBuffer[(TopicPartition, FetchRequest.PartitionData)]()
+
+    //请求来自Follower
     if (fetchRequest.isFromFollower()) {
       // The follower must have ClusterAction on ClusterResource in order to fetch partition data.
       if (authorize(request.session, ClusterAction, Resource.ClusterResource)) {
@@ -513,12 +531,14 @@ class KafkaApis(val requestChannel: RequestChannel,
         })
       } else {
         fetchContext.foreachPartition((part, data) => {
+          logger.info(s"这里有一个数据没有使用:{}", data.toString);
           erroneous += part -> new FetchResponse.PartitionData(Errors.TOPIC_AUTHORIZATION_FAILED,
             FetchResponse.INVALID_HIGHWATERMARK, FetchResponse.INVALID_LAST_STABLE_OFFSET,
             FetchResponse.INVALID_LOG_START_OFFSET, null, MemoryRecords.EMPTY)
         })
       }
     } else {
+      //普通的消费者获取数据是需要读取权限的，对应每一个partition
       // Regular Kafka consumers need READ permission on each partition they are fetching.
       fetchContext.foreachPartition((part, data) => {
         if (!authorize(request.session, Read, new Resource(Topic, part.topic)))
@@ -622,15 +642,16 @@ class KafkaApis(val requestChannel: RequestChannel,
       }
     }
 
+    //如果感兴趣的内容是空的
     if (interesting.isEmpty)
       processResponseCallback(Seq.empty)
     else {
       // call the replica manager to fetch messages from the local replica
       replicaManager.fetchMessages(
         fetchRequest.maxWait.toLong,
-        fetchRequest.replicaId,
-        fetchRequest.minBytes,
-        fetchRequest.maxBytes,
+        fetchRequest.replicaId,//消费者的replicaId是-1
+        fetchRequest.minBytes,//最小的字节数
+        fetchRequest.maxBytes,//最大字节数
         versionId <= 2,
         interesting,
         replicationQuota(fetchRequest),

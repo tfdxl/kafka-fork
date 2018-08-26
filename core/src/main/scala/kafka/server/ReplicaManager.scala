@@ -814,6 +814,7 @@ class ReplicaManager(val config: KafkaConfig,
     val fetchOnlyFromLeader = replicaId != Request.DebuggingConsumerId && replicaId != Request.FutureLocalReplicaId
     val fetchOnlyCommitted = !isFromFollower && replicaId != Request.FutureLocalReplicaId
 
+    //从Log中读取消息
     def readFromLog(): Seq[(TopicPartition, LogReadResult)] = {
       val result = readFromLocalLog(
         replicaId = replicaId,
