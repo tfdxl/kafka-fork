@@ -371,6 +371,7 @@ class KafkaApis(val requestChannel: RequestChannel,
     authorizer.forall(_.authorize(session, operation, resource))
 
   /**
+    * 处理来自生产者的消息
     * Handle a produce request
     */
   def handleProduceRequest(request: RequestChannel.Request) {
@@ -453,6 +454,10 @@ class KafkaApis(val requestChannel: RequestChannel,
         produceResponseCallback)
     }
 
+    /**
+      * 处理统计值回调
+      * @param processingStats
+      */
     def processingStatsCallback(processingStats: Map[TopicPartition, RecordsProcessingStats]): Unit = {
       processingStats.foreach { case (tp, info) =>
         updateRecordsProcessingStats(request, tp, info)

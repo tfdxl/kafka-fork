@@ -209,6 +209,8 @@ final class DelayedOperationPurgatory[T <: DelayedOperation](purgatoryName: Stri
     expirationReaper.start()
 
   /**
+    * 检测DelayedOpertion是否已经完成了，没有完成那么添加到watchersForKey以及SystemTimer中，一个操作可能关心多个key
+    * 比如ProduceRequest发送的数据涉及多个分区
     * Check if the operation can be completed, if not watch it based on the given watch keys
     *
     * Note that a delayed operation can be watched on multiple keys. It is possible that
@@ -413,7 +415,7 @@ final class DelayedOperationPurgatory[T <: DelayedOperation](purgatoryName: Stri
       cancelled.toList
     }
 
-    //清除已经完成的操作
+    //清除已经完成的操作，每次重新计算清除的个数
     // traverse the list and purge elements that are already completed by others
     def purgeCompleted(): Int = {
       var purged = 0

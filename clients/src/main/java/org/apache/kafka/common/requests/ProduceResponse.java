@@ -37,6 +37,8 @@ import static org.apache.kafka.common.protocol.types.Type.INT64;
 
 /**
  * This wrapper supports both v0 and v1 of ProduceResponse.
+ *
+ * @author monlie
  */
 public class ProduceResponse extends AbstractResponse {
 
@@ -181,7 +183,8 @@ public class ProduceResponse extends AbstractResponse {
 
     @Override
     protected Struct toStruct(short version) {
-        Struct struct = new Struct(ApiKeys.PRODUCE.responseSchema(version));
+
+        final Struct struct = new Struct(ApiKeys.PRODUCE.responseSchema(version));
 
         Map<String, Map<Integer, PartitionResponse>> responseByTopic = CollectionUtils.groupDataByTopic(responses);
         List<Struct> topicDatas = new ArrayList<>(responseByTopic.size());

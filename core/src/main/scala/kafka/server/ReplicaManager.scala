@@ -463,13 +463,18 @@ class ReplicaManager(val config: KafkaConfig,
                     entriesPerPartition: Map[TopicPartition, MemoryRecords],
                     responseCallback: Map[TopicPartition, PartitionResponse] => Unit,
                     delayedProduceLock: Option[Lock] = None,
-                    processingStatsCallback: Map[TopicPartition, RecordsProcessingStats] => Unit = _ => ()) {
+                    processingStatsCallback: Map[TopicPartition, RecordsProcessingStats] => Unit = _ => ()): Unit = {
+
+    //检查一下ack是否合法的
     if (isValidRequiredAcks(requiredAcks)) {
       val sTime = time.milliseconds
+      //追加到本地的日志中，同时还会检查delayedFetchPurgatory中相关的key对象的DelayedFetch，满足条件
+      //那么将其完成
       val localProduceResults = appendToLocalLog(internalTopicsAllowed = internalTopicsAllowed,
         isFromClient = isFromClient, entriesPerPartition, requiredAcks)
       debug("Produce to local log in %d ms".format(time.milliseconds - sTime))
 
+      //对追加结果进行转换，注意ProducePartitionStatus参数
       val produceStatus = localProduceResults.map { case (topicPartition, result) =>
         topicPartition ->
           ProducePartitionStatus(
@@ -479,9 +484,12 @@ class ReplicaManager(val config: KafkaConfig,
 
       processingStatsCallback(localProduceResults.mapValues(_.info.recordsProcessingStats))
 
+      //检查acks字段是否是-1
       if (delayedProduceRequestRequired(requiredAcks, entriesPerPartition, localProduceResults)) {
+
         // create delayed produce operation
         val produceMetadata = ProduceMetadata(requiredAcks, produceStatus)
+
         val delayedProduce = new DelayedProduce(timeout, produceMetadata, this, responseCallback, delayedProduceLock)
 
         // create a list of (topic, partition) pairs to use as keys for this delayed produce operation
