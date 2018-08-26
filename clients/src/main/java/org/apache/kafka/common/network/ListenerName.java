@@ -21,9 +21,13 @@ import org.apache.kafka.common.security.auth.SecurityProtocol;
 import java.util.Locale;
 import java.util.Objects;
 
+/**
+ * @author monlie
+ */
 public final class ListenerName {
 
     private static final String CONFIG_STATIC_PREFIX = "listener.name";
+
     private final String value;
 
     public ListenerName(String value) {
