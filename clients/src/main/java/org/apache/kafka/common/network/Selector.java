@@ -188,6 +188,7 @@ public class Selector implements Selectable, AutoCloseable {
 
         //保证ID没有注册过
         ensureNotRegistered(id);
+
         //打开一个SocketChannel
         SocketChannel socketChannel = SocketChannel.open();
         try {
@@ -235,8 +236,8 @@ public class Selector implements Selectable, AutoCloseable {
         socketChannel.configureBlocking(false);
         //underlying socket
         Socket socket = socketChannel.socket();
-        /**
-         * 这里他妈的很重要，长连接
+        /*
+          这里他妈的很重要，长连接
          */
         socket.setKeepAlive(true);
         //设置socket读写buffer的大小

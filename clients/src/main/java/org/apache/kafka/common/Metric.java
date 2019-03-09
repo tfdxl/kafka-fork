@@ -17,6 +17,7 @@
 package org.apache.kafka.common;
 
 /**
+ * 监控的目的度量数据
  * A metric tracked for monitoring purposes.
  *
  * @author monlie
