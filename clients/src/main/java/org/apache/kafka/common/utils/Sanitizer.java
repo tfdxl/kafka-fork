@@ -49,7 +49,7 @@ public class Sanitizer {
      * using URL-encoding.
      */
     public static String sanitize(String name) {
-        String encoded = "";
+        String encoded;
         try {
             encoded = URLEncoder.encode(name, StandardCharsets.UTF_8.name());
             StringBuilder builder = new StringBuilder();

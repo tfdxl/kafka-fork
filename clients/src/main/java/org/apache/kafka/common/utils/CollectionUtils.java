@@ -36,10 +36,11 @@ public final class CollectionUtils {
      * @return partitioned data
      */
     public static <T> Map<String, Map<Integer, T>> groupDataByTopic(Map<TopicPartition, ? extends T> data) {
-        Map<String, Map<Integer, T>> dataByTopic = new HashMap<>();
+        final Map<String, Map<Integer, T>> dataByTopic = new HashMap<>();
+
         for (Map.Entry<TopicPartition, ? extends T> entry : data.entrySet()) {
-            String topic = entry.getKey().topic();
-            int partition = entry.getKey().partition();
+            final String topic = entry.getKey().topic();
+            final int partition = entry.getKey().partition();
             Map<Integer, T> topicData = dataByTopic.get(topic);
             if (topicData == null) {
                 topicData = new HashMap<>();
