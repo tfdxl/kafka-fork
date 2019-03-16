@@ -22,6 +22,7 @@ import kafka.metrics.KafkaMetricsGroup
 import org.apache.kafka.common.utils.AppInfoParser
 
 object AppInfo extends KafkaMetricsGroup {
+
   private var isRegistered = false
   private val lock = new Object()
 

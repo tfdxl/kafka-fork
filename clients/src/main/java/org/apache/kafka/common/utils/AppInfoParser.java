@@ -31,12 +31,13 @@ import java.lang.management.ManagementFactory;
 import java.util.Properties;
 
 public class AppInfoParser {
+
     private static final Logger log = LoggerFactory.getLogger(AppInfoParser.class);
     private static final String VERSION;
     private static final String COMMIT_ID;
 
     static {
-        Properties props = new Properties();
+        final Properties props = new Properties();
         try (InputStream resourceStream = AppInfoParser.class.getResourceAsStream("/kafka/kafka-version.properties")) {
             props.load(resourceStream);
         } catch (Exception e) {
@@ -99,9 +100,10 @@ public class AppInfoParser {
     }
 
     public interface AppInfoMBean {
-        public String getVersion();
 
-        public String getCommitId();
+        String getVersion();
+
+        String getCommitId();
     }
 
     public static class AppInfo implements AppInfoMBean {
