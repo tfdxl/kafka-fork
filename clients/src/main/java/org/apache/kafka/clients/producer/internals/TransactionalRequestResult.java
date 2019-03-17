@@ -21,7 +21,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 public final class TransactionalRequestResult {
-    static final TransactionalRequestResult COMPLETE = new TransactionalRequestResult(new CountDownLatch(0));
 
     private final CountDownLatch latch;
     private volatile RuntimeException error = null;

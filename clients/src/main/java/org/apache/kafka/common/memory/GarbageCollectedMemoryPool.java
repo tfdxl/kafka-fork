@@ -54,8 +54,8 @@ public class GarbageCollectedMemoryPool extends SimpleMemoryPool implements Auto
         BufferReference ref = new BufferReference(justAllocated, garbageCollectedBuffers);
         BufferMetadata metadata = new BufferMetadata(justAllocated.capacity());
         if (buffersInFlight.put(ref, metadata) != null)
-            //this is a bug. it means either 2 different co-existing buffers got
-            //the same identity or we failed to register a released/GC'ed buffer
+        //this is a bug. it means either 2 different co-existing buffers got
+        //the same identity or we failed to register a released/GC'ed buffer
         {
             throw new IllegalStateException("allocated buffer identity " + ref.hashCode + " already registered as in use?!");
         }
@@ -68,8 +68,8 @@ public class GarbageCollectedMemoryPool extends SimpleMemoryPool implements Auto
         BufferReference ref = new BufferReference(justReleased); //used ro lookup only
         BufferMetadata metadata = buffersInFlight.remove(ref);
         if (metadata == null)
-            //its impossible for the buffer to have already been GC'ed (because we have a hard ref to it
-            //in the function arg) so this means either a double free or not our buffer.
+        //its impossible for the buffer to have already been GC'ed (because we have a hard ref to it
+        //in the function arg) so this means either a double free or not our buffer.
         {
             throw new IllegalArgumentException("returned buffer " + ref.hashCode + " was never allocated by this pool");
         }

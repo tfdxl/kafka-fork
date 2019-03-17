@@ -36,6 +36,7 @@ import static org.apache.kafka.common.utils.Utils.getHost;
 import static org.apache.kafka.common.utils.Utils.getPort;
 
 public final class ClientUtils {
+
     private static final Logger log = LoggerFactory.getLogger(ClientUtils.class);
 
     private ClientUtils() {
