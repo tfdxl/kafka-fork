@@ -489,7 +489,7 @@ public class TransactionManager {
         lastAckedSequence.remove(topicPartition);
     }
 
-    synchronized boolean hasInflightBatches(TopicPartition topicPartition) {
+    private synchronized boolean hasInflightBatches(TopicPartition topicPartition) {
         return inflightBatchesBySequence.containsKey(topicPartition) && !inflightBatchesBySequence.get(topicPartition).isEmpty();
     }
 
@@ -534,7 +534,7 @@ public class TransactionManager {
         return false;
     }
 
-    synchronized boolean isNextSequence(TopicPartition topicPartition, int sequence) {
+    private synchronized boolean isNextSequence(TopicPartition topicPartition, int sequence) {
         return sequence - lastAckedSequence(topicPartition) == 1;
     }
 
@@ -615,7 +615,7 @@ public class TransactionManager {
         inFlightRequestCorrelationId = correlationId;
     }
 
-    void clearInFlightTransactionalRequestCorrelationId() {
+    private void clearInFlightTransactionalRequestCorrelationId() {
         inFlightRequestCorrelationId = NO_INFLIGHT_REQUEST_CORRELATION_ID;
     }
 
@@ -1029,7 +1029,7 @@ public class TransactionManager {
                 Errors error = topicPartitionErrorEntry.getValue();
 
                 if (error == Errors.NONE) {
-                    continue;
+                    log.error("has no error");
                 } else if (error == Errors.COORDINATOR_NOT_AVAILABLE || error == Errors.NOT_COORDINATOR) {
                     lookupCoordinator(FindCoordinatorRequest.CoordinatorType.TRANSACTION, transactionalId);
                     reenqueue();
