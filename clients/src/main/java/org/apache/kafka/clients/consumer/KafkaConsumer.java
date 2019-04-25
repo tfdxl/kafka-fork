@@ -1879,6 +1879,7 @@ public class KafkaConsumer<K, V> implements Consumer<K, V> {
     }
 
     /**
+     * 释放保护消费者免于多线程访问的轻量级锁
      * Release the light lock protecting the consumer from multi-threaded access.
      */
     private void release() {

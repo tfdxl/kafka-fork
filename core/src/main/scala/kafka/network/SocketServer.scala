@@ -886,6 +886,8 @@ private[kafka] class Processor(val id: Int,
 
   // 'protected` to allow override for testing
   protected[network] def connectionId(socket: Socket): String = {
+
+    //获取本地和远程的地址和端口号，并且创建连接id
     val localHost = socket.getLocalAddress.getHostAddress
     val localPort = socket.getLocalPort
     val remoteHost = socket.getInetAddress.getHostAddress
