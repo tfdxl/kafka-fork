@@ -52,6 +52,7 @@ trait KafkaMetricsGroup extends Logging {
   protected def explicitMetricName(group: String, typeName: String, name: String,
                                    tags: scala.collection.Map[String, String]): MetricName = {
 
+    //创建一个StringBuilder
     val nameBuilder: StringBuilder = new StringBuilder
 
     nameBuilder.append(group)
@@ -86,8 +87,6 @@ trait KafkaMetricsGroup extends Logging {
 
   def removeMetric(name: String, tags: scala.collection.Map[String, String] = Map.empty) =
     Metrics.defaultRegistry().removeMetric(metricName(name, tags))
-
-
 }
 
 object KafkaMetricsGroup extends KafkaMetricsGroup with Logging {
